@@ -1,5 +1,8 @@
 # Minilang
 
+## TODO:
+- **Scanning**: Recognize `"_"` blank identifier, either in the weeder or delay until type checking.
+
 ## Coding convention:
 
 `branching`: Branch naming should follow convention `name`-`feature/bug`-`short_title`, eg: `sophia-feature-scanner` where possible.
@@ -7,6 +10,9 @@
 ## Report:
 
 [Report Link.](https://docs.google.com/document/d/1H60gGayERn9IGiQ-lXdMc65WfG8EbcELD4KvlptWegU/edit?usp=sharing)
+
+## Resources Consulted:
+[Optional Semi-colons.](https://github.com/comp520/Examples/tree/master/flex%2Bbison/optional-semicolon)
 
 # Assignment Template
 
