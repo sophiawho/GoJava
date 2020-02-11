@@ -2,5 +2,6 @@ src/golite
 *.class
 parser.tab.*
 lex.yy.c
-MyLoginHistory.text
+MyLoginHistory.txt
 *.o
+src/lex.yy.c
