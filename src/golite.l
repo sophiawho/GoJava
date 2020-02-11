@@ -7,12 +7,30 @@
 #define YY_USER_ACTION yylloc.first_line = yylloc.last_line = yylineno;
 
 extern int g_tokens;
+
+/* Helper code */
+char *get_raw_string(char *str) {
+	char *raw = malloc((2 * strlen(str) + 1)*sizeof(char));
+	int i = 0;
+	int j = 0;
+	while (str[i] != '\0') {
+		if (str[i] == '\\') {
+			raw[j] = '\\';
+			j++;
+		}
+		raw[j] = str[i];
+		i++; j++;
+	}
+	raw[j] = '\0';
+	return raw;
+}
+
 %}
 
 /* Helper definitions */
 DIGIT [0-9]
 LETTER [a-zA-Z_]
-SYMBOL [!#$%&()*+,-./:;<=>?@[]\^_`{}|~]
+SYMBOL []!#$%&()*+,-./:;<=>?@[]\^_`{}|~
 ESCAPE [atbvfnr\\']
 
 %option yylineno
@@ -162,6 +180,18 @@ var 		{ if (g_tokens) printf("tVAR\n"); }
 	}
 	yylval.runeval = yytext[1];
 	return tRUNEVAL;
+}
+
+\"(\\.|[^\\"])*\" { // Interpreted string literal
+    if (g_tokens) printf("tSTRVAL(%s)\n", yytext);
+    yylval.strval = strdup(yytext);
+    return tSTRVAL;
+}
+
+`[^`]*` { // Raw string literal
+	if (g_tokens) printf("tSTRVAL(%s)\n", get_raw_string(yytext));
+	yylval.strval = get_raw_string(yytext); 
+	return tSTRVAL;
 }
 
 .       { fprintf(stderr, "Error: (line %d) unexpected character '%s'\n", yylineno, yytext); exit(1); }

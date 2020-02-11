@@ -25,7 +25,7 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 	int intval;
 	float floatval;
 	char runeval;
-	char *stringval;
+	char *strval;
 	// EXP *exp;
 }
 
@@ -34,7 +34,7 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 %token <intval> tINTVAL
 %token <floatval> tFLOATVAL
 %token <runeval> tRUNEVAL
-%token <stringval> tIDENTIFIER 
+%token <strval> tSTRVAL 
 
 %left '+' '-'
 %left '*' '/'
