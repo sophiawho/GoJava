@@ -1,3 +1,7 @@
+# Minilang
+
+`branching`: Branch naming should follow convention `name`-`feature/bug`-`short_title`, eg: `sophia-feature-scanner` where possible.
+
 # Assignment Template
 
 To organize your assignments and project for class, please follow the skeleton provided in this repository
