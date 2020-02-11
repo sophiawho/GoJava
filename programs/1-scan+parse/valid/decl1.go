@@ -1,4 +1,5 @@
 // simple valid identifiers
+var _ int = 0;
 var x int = 0;
 var T int = 0;
 var xT float = 0.0;
