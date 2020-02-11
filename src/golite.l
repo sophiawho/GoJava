@@ -16,10 +16,16 @@ SYMBOL [!#$%&()*+,-./:;<=>?@[]\^_`{}|~]
 %option yylineno
 %option noinput
 %option nounput
+%x MULTILINE_COMMENT
 
 %%
 
 "//".*
+
+"/*"					{ BEGIN(MULTILINE_COMMENT); }
+<MULTILINE_COMMENT>"*/" { BEGIN(INITIAL); }
+<MULTILINE_COMMENT>. 	{ }
+<MULTILINE_COMMENT>\n 	{ }
 
 [ \t\n\r]+
 
@@ -64,7 +70,7 @@ var { if (g_tokens) printf("tVAR\n"); }
 "-="     { if (g_tokens) printf("-=\n"); }
 "*="     { if (g_tokens) printf("*=\n"); }
 "/="     { if (g_tokens) printf("/=\n"); }
-"%="     { if (g_tokens) printf("%%=\n"); }
+"%="     { if (g_tokens) printf("%%=\n"); } // escape % with %%
 "&="     { if (g_tokens) printf("&=\n"); }
 "|="     { if (g_tokens) printf("|=\n"); }
 "^="     { if (g_tokens) printf("^=\n"); }
