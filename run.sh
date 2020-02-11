@@ -28,4 +28,4 @@ fi
 #
 # You MUST replace the following command with the command for invoking your compiler
 
-./src/minic "$1" < "$2"
+./src/golite "$1" < "$2"
