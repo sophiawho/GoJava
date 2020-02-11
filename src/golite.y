@@ -22,15 +22,19 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 }
 
 %union {
-	int int_val;
-	char *string_val;
+	int intval;
+	float floatval;
+	char runeval;
+	char *stringval;
 	// EXP *exp;
 }
 
 // %type <exp> program exp
 
-%token <int_val> tINTVAL
-%token <string_val> tIDENTIFIER 
+%token <intval> tINTVAL
+%token <floatval> tFLOATVAL
+%token <runeval> tRUNEVAL
+%token <stringval> tIDENTIFIER 
 
 %left '+' '-'
 %left '*' '/'
