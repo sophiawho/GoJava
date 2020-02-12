@@ -76,8 +76,8 @@ ESCAPE [atbvfnr\\']
     }
 }
 
-break { if (g_tokens) printf("tBREAK\n"); RETURN(tBREAK); }
-case { if (g_tokens) printf("tCASE\n"); RETURN(tCASE); }
+break 		{ if (g_tokens) printf("tBREAK\n"); RETURN(tBREAK); }
+case		{ if (g_tokens) printf("tCASE\n"); RETURN(tCASE); }
 chan { if (g_tokens) printf("tCHAN\n"); RETURN(tCHAN); }
 const { if (g_tokens) printf("tCONST\n"); RETURN(tCONST); }
 continue { if (g_tokens) printf("tCONTINUE\n"); RETURN(tCONTINUE); }
