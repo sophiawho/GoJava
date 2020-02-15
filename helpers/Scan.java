@@ -10,13 +10,13 @@ class Scan {
 
         String[] keywords = {"break", "case", "chan", "const", "continue", "default", "defer", "else", "fallthrough", "for", "func",
                             "go", "goto", "if", "import", "interface", "map", "package", "range", "return", "select", "struct",
-                            "switch", "type", "var"};
+                            "switch", "type", "var", "print", "println", "append", "len", "cap"};
 
         // printOpTokens();
 
-        // for (String s: keywords) {
-        //     printTokens(s);
-        // }
+        for (String s: keywords) {
+            printTokens(s);
+        }
 
         for (String s: keywords) {
             prettyPrint(s, true);

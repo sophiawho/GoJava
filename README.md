@@ -1,8 +1,5 @@
 # Golite
 
-## TODO:
-- **Scanning**: Recognize the blank identifier `_`, either in the weeder or delay until type checking. Currently, the scanner recognizes `_` as a valid identifier. More details in Assignment Specification.
-
 ## Coding convention:
 
 `branching`: Branch naming should follow convention `name`-`feature/bug`-`short_title`, eg: `sophia-feature-scanner` where possible.
