@@ -101,6 +101,11 @@ struct 		{ if (g_tokens) printf("tSTRUCT\n"); RETURN(tSTRUCT); }
 switch 		{ if (g_tokens) printf("tSWITCH\n"); RETURN(tSWITCH); }
 type 		{ if (g_tokens) printf("tTYPE\n"); RETURN(tTYPE); }
 var 		{ if (g_tokens) printf("tVAR\n"); RETURN(tVAR); }
+print 		{ if (g_tokens) printf("tPRINT\n"); RETURN(tPRINT); }
+println 	{ if (g_tokens) printf("tPRINTLN\n"); RETURN(tPRINTLN); }
+append 		{ if (g_tokens) printf("tAPPEND\n"); RETURN(tAPPEND); }
+len 		{ if (g_tokens) printf("tLEN\n"); RETURN(tLEN); }
+cap 		{ if (g_tokens) printf("tCAP\n"); RETURN(tCAP); }
 
 "+"      { if (g_tokens) printf("tADD\n"); RETURN(tADD); }
 "-"      { if (g_tokens) printf("tMINUS\n"); RETURN(tMINUS); }
