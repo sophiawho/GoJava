@@ -143,9 +143,9 @@ variableDecl: tVAR variableSpec
 	| tVAR tLPAR variableSpecs tRPAR
 	;
 
-variableSpec: identifiers tIDENTIFIER tSEMICOLON
+variableSpec: identifiers type tSEMICOLON
 	| identifiers tASSIGN expressions tSEMICOLON
-	| identifiers tIDENTIFIER tASSIGN expressions tSEMICOLON
+	| identifiers type tASSIGN expressions tSEMICOLON
 	;
 
 variableSpecs:
@@ -160,7 +160,7 @@ typeSpecs:
 	| typeSpecs typeSpec
 	;
 
-typeSpec: tIDENTIFIER tIDENTIFIER tSEMICOLON
+typeSpec: tIDENTIFIER type tSEMICOLON
 	| tIDENTIFIER tSTRUCT tLBRACE structSpecs tRBRACE tSEMICOLON
 	;
 
@@ -173,6 +173,15 @@ structSpec: identifiers tIDENTIFIER tSEMICOLON;
 identifiers: tIDENTIFIER
 	| identifiers tCOMMA tIDENTIFIER
 	;
+
+type: sliceType
+	| arrayType
+	| tIDENTIFIER
+	;
+
+sliceType: tLBRACKET tRBRACKET type;
+
+arrayType: tLBRACKET tINTVAL tRBRACKET type;
 
 expressions: expression
 	| expressions tCOMMA expression
