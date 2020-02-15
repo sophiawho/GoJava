@@ -136,8 +136,25 @@ topLevelDecls:
 
 topLevelDecl: variableDecl ;
 
-variableDecl: tVAR tIDENTIFIER tIDENTIFIER tSEMICOLON
-	| tVAR tIDENTIFIER tASSIGN expression tSEMICOLON
+variableDecl: tVAR variableSpec
+	| tVAR tLPAR variableSpecs tRPAR
+	;
+
+variableSpec: identifiers tIDENTIFIER tSEMICOLON
+	| identifiers tASSIGN expressions tSEMICOLON
+	| identifiers tIDENTIFIER tASSIGN expressions tSEMICOLON
+	;
+
+variableSpecs:
+	| variableSpecs variableSpec
+	;
+
+identifiers: tIDENTIFIER
+	| identifiers tCOMMA tIDENTIFIER
+	;
+
+expressions: expression
+	| expressions tCOMMA expression
 	;
 
 expression: expression tOR expression
