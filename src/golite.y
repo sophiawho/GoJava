@@ -118,6 +118,7 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 
 %left tOR tAND tEQ tNOTEQ tLESS tLESSEQ tGRTR tGRTREQ tBITOR tMULT tDIV tMOD tLEFTSHIFT tRIGHTSHIFT tBITAND tBITCLEAR
 %left tADD tMINUS tBANG tBITXOR
+%left tLPAR tRPAR
 // TODO write precedence for all operators
 
 %start program
@@ -210,6 +211,10 @@ expression: expression tOR expression
 	| tMINUS expression
 	| tBANG expression
 	| tBITXOR expression
+	| tLPAR expression tRPAR
+	| tAPPEND tLPAR expression tCOMMA expression tRPAR
+	| tLEN tLPAR expression tRPAR
+	| tCAP tLPAR expression tRPAR
 	| tIDENTIFIER tLBRACKET tINTVAL tRBRACKET
 	| tINTVAL
 	| tFLOATVAL
