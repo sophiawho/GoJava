@@ -220,10 +220,11 @@ expression: expression tOR expression
 	;
 
 functionDecl: tFUNC tIDENTIFIER tLPAR inputParams tRPAR block // no return type
-	tFUNC tIDENTIFIER tLPAR inputParams tRPAR identifiers block
+	| tFUNC tIDENTIFIER tLPAR inputParams tRPAR identifiers block
 	;
 
-inputParams: inputParams tCOMMA identifiers tIDENTIFIER 
+inputParams: 
+	| inputParams tCOMMA identifiers tIDENTIFIER 
 	| identifiers tIDENTIFIER
 	;
 
