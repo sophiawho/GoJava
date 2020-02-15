@@ -116,8 +116,8 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 %token tGRTR
 %token tGRTREQ
 
-%left tOR tAND tEQ tNOTEQ tLESS tLESSEQ tGRTR tGRTREQ tADD tMINUS tBITOR tBITXOR tMULT tDIV tMOD tLEFTSHIFT tRIGHTSHIFT tBITAND tBITCLEAR
-%left tBANG
+%left tOR tAND tEQ tNOTEQ tLESS tLESSEQ tGRTR tGRTREQ tBITOR tMULT tDIV tMOD tLEFTSHIFT tRIGHTSHIFT tBITAND tBITCLEAR
+%left tADD tMINUS tBANG tBITXOR
 // TODO write precedence for all operators
 
 %start program
@@ -134,14 +134,69 @@ topLevelDecls:
 	| topLevelDecls topLevelDecl
 	;
 
-topLevelDecl: variableDecl | functionDecl;
-
-variableDecl: tVAR tIDENTIFIER tIDENTIFIER tSEMICOLON
-	| tVAR tIDENTIFIER tASSIGN expression tSEMICOLON
+topLevelDecl: variableDecl 
+	| typeDecl
+	| functionDecl
 	;
 
-expression: 
-	| expression tOR expression
+variableDecl: tVAR variableSpec
+	| tVAR tLPAR variableSpecs tRPAR
+	;
+
+variableSpec: identifiers tIDENTIFIER tSEMICOLON
+	| identifiers tASSIGN expressions tSEMICOLON
+	| identifiers tIDENTIFIER tASSIGN expressions tSEMICOLON
+	;
+
+variableSpecs:
+	| variableSpecs variableSpec
+	;
+
+typeDecl: tTYPE typeSpec
+	| tTYPE tLPAR typeSpecs tRPAR
+	;
+
+typeSpecs:
+	| typeSpecs typeSpec
+	;
+
+typeSpec: tIDENTIFIER tIDENTIFIER tSEMICOLON
+	| tIDENTIFIER tSTRUCT tLBRACE structSpecs tRBRACE tSEMICOLON
+	;
+
+structSpecs:
+	| structSpecs structSpec
+	;
+
+structSpec: identifiers tIDENTIFIER tSEMICOLON;
+
+identifiers: tIDENTIFIER
+	| identifiers tCOMMA tIDENTIFIER
+	;
+
+expressions: expression
+	| expressions tCOMMA expression
+	;
+
+expression: expression tOR expression
+	| expression tAND expression
+	| expression tEQ expression
+	| expression tNOTEQ expression
+	| expression tLESS expression
+	| expression tLESSEQ expression
+	| expression tGRTR expression
+	| expression tGRTREQ expression
+	| expression tADD expression
+	| expression tMINUS expression
+	| expression tBITOR expression
+	| expression tBITXOR expression
+	| expression tMULT expression
+	| expression tDIV expression
+	| expression tMOD expression
+	| expression tLEFTSHIFT expression
+	| expression tRIGHTSHIFT expression
+	| expression tBITAND expression
+	| expression tBITCLEAR expression
 	| tADD expression
 	| tMINUS expression
 	| tBANG expression
@@ -152,10 +207,6 @@ expression:
 	| tFLOATVAL
 	| tRUNEVAL
 	| tSTRVAL
-	| tIDENTIFIER
-	;
-
-identifiers: identifiers tCOMMA tIDENTIFIER 
 	| tIDENTIFIER
 	;
 
