@@ -134,7 +134,7 @@ topLevelDecls:
 	| topLevelDecls topLevelDecl
 	;
 
-topLevelDecl: variableDecl ;
+topLevelDecl: variableDecl | functionDecl;
 
 variableDecl: tVAR tIDENTIFIER tIDENTIFIER tSEMICOLON
 	| tVAR tIDENTIFIER tASSIGN expression tSEMICOLON
@@ -153,6 +153,28 @@ expression:
 	| tRUNEVAL
 	| tSTRVAL
 	| tIDENTIFIER
+	;
+
+identifiers: identifiers tCOMMA tIDENTIFIER 
+	| tIDENTIFIER
+	;
+
+functionDecl: tFUNC tIDENTIFIER tLPAR inputParams tRPAR block // no return type
+	tFUNC tIDENTIFIER tLPAR inputParams tRPAR identifiers block
+	;
+
+inputParams: inputParams tCOMMA identifiers tIDENTIFIER 
+	| identifiers tIDENTIFIER
+	;
+
+block: tLBRACE stmts tRBRACE tSEMICOLON;
+
+stmts: 
+	| stmts stmt
+	;
+
+stmt: tRETURN tSEMICOLON
+	| tRETURN tIDENTIFIER tSEMICOLON
 	;
 
 %%
