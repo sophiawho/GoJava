@@ -113,10 +113,87 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 
 %left '+' '-'
 %left '*' '/'
+// TODO write precedence for all operators
 
 %start program
 
+// TODO able to parse blank programs
+// TODO are we doing methods?
+
 %% 
-program: tINTVAL;
+program: packageClause topLevelDecls;
+
+packageClause: tPACKAGE tIDENTIFIER;
+
+topLevelDecls: ;
+	| topLevelDecl topLevelDecls;
+
+topLevelDecl: decl;
+	| functionDecl ;
+
+decl: constDecl;
+	| typeDecl;
+	| variableDecl;
+
+constDecl: ;
+
+typeDecl: ;
+
+variableDecls: ;
+	| variableDecl variableDecls;
+
+variableDecl: tVAR tIDENTIFIER tIDENTIFIER;
+	| tVAR identifiers tASSIGN expression;
+	| tVAR identifiers tIDENTIFIER tASSIGN expression;
+
+identifiers: ;
+	| tIDENTIFIER tCOMMA identifiers;
+	| tIDENTIFIER;
+
+functionDecl: tFUNC tIDENTIFIER tLPAR variableDecls tRPAR;
+	| tFUNC tIDENTIFIER tLPAR variableDecls tRPAR tIDENTIFIER;
+
+expressions: ;
+	| expression tCOMMA expressions;
+
+expression: 
+	| expression binaryOperator expression;
+	| functionCall; 
+	| tADD expression;
+	| tMINUS expression;
+	| tBANG expression;
+	| tBITXOR expression;
+	| tLBRACKET tINTVAL tRBRACKET tIDENTIFIER;
+	| tIDENTIFIER tLBRACKET tINTVAL tRBRACKET;
+	| tINTVAL;
+	| tFLOATVAL;
+	| tRUNEVAL;
+	| tSTRVAL;
+	| tIDENTIFIER;
+
+functionCall: tIDENTIFIER tLPAR functionArgs tRPAR;
+
+functionArgs: ;
+	| tIDENTIFIER tCOMMA functionArgs;
+
+binaryOperator: tOR;
+	| tAND;
+	| tEQ;
+	| tNOTEQ;
+	| tLESS;
+	| tLESSEQ;
+	| tGRTR;
+	| tGRTREQ;
+	| tADD;
+	| tMINUS;
+	| tBITOR;
+	| tBITXOR;
+	| tMULT;
+	| tDIV;
+	| tMOD;
+	| tLEFTSHIFT;
+	| tRIGHTSHIFT;
+	| tBITAND;
+	| tBITCLEAR;
 
 %%
