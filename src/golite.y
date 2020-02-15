@@ -62,6 +62,11 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 %token tSWITCH
 %token tTYPE
 %token tVAR
+%token tPRINT
+%token tPRINTLN
+%token tAPPEND
+%token tLEN
+%token tCAP
 
 %token tLEFTSHIFT
 %token tRIGHTSHIFT

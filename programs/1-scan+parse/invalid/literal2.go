@@ -1,1 +1,2 @@
-'aa' // too many characters
+// too many characters for rune literal
+'aa'
