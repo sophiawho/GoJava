@@ -116,8 +116,8 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 %token tGRTR
 %token tGRTREQ
 
-%left '+' '-'
-%left '*' '/'
+%left tOR tAND tEQ tNOTEQ tLESS tLESSEQ tGRTR tGRTREQ tADD tMINUS tBITOR tBITXOR tMULT tDIV tMOD tLEFTSHIFT tRIGHTSHIFT tBITAND tBITCLEAR
+%left tBANG
 // TODO write precedence for all operators
 
 %start program
@@ -128,77 +128,31 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 %% 
 program: packageClause topLevelDecls;
 
-packageClause: tPACKAGE tIDENTIFIER;
+packageClause: tPACKAGE tIDENTIFIER tSEMICOLON;
 
-topLevelDecls: ;
-	| topLevelDecl topLevelDecls;
+topLevelDecls:
+	| topLevelDecls topLevelDecl
+	;
 
-topLevelDecl: decl;
-	| functionDecl ;
+topLevelDecl: variableDecl ;
 
-decl: constDecl;
-	| typeDecl;
-	| variableDecl;
-
-constDecl: ;
-
-typeDecl: ;
-
-variableDecls: ;
-	| variableDecl variableDecls;
-
-variableDecl: tVAR tIDENTIFIER tIDENTIFIER;
-	| tVAR identifiers tASSIGN expression;
-	| tVAR identifiers tIDENTIFIER tASSIGN expression;
-
-identifiers: ;
-	| tIDENTIFIER tCOMMA identifiers;
-	| tIDENTIFIER;
-
-functionDecl: tFUNC tIDENTIFIER tLPAR variableDecls tRPAR;
-	| tFUNC tIDENTIFIER tLPAR variableDecls tRPAR tIDENTIFIER;
-
-expressions: ;
-	| expression tCOMMA expressions;
+variableDecl: tVAR tIDENTIFIER tIDENTIFIER tSEMICOLON
+	| tVAR tIDENTIFIER tASSIGN expression tSEMICOLON
+	;
 
 expression: 
-	| expression binaryOperator expression;
-	| functionCall; 
-	| tADD expression;
-	| tMINUS expression;
-	| tBANG expression;
-	| tBITXOR expression;
-	| tLBRACKET tINTVAL tRBRACKET tIDENTIFIER;
-	| tIDENTIFIER tLBRACKET tINTVAL tRBRACKET;
-	| tINTVAL;
-	| tFLOATVAL;
-	| tRUNEVAL;
-	| tSTRVAL;
-	| tIDENTIFIER;
-
-functionCall: tIDENTIFIER tLPAR functionArgs tRPAR;
-
-functionArgs: ;
-	| tIDENTIFIER tCOMMA functionArgs;
-
-binaryOperator: tOR;
-	| tAND;
-	| tEQ;
-	| tNOTEQ;
-	| tLESS;
-	| tLESSEQ;
-	| tGRTR;
-	| tGRTREQ;
-	| tADD;
-	| tMINUS;
-	| tBITOR;
-	| tBITXOR;
-	| tMULT;
-	| tDIV;
-	| tMOD;
-	| tLEFTSHIFT;
-	| tRIGHTSHIFT;
-	| tBITAND;
-	| tBITCLEAR;
+	| expression tOR expression
+	| tADD expression
+	| tMINUS expression
+	| tBANG expression
+	| tBITXOR expression
+	| tLBRACKET tINTVAL tRBRACKET tIDENTIFIER
+	| tIDENTIFIER tLBRACKET tINTVAL tRBRACKET
+	| tINTVAL
+	| tFLOATVAL
+	| tRUNEVAL
+	| tSTRVAL
+	| tIDENTIFIER
+	;
 
 %%
