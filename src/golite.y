@@ -236,6 +236,11 @@ stmts:
 
 stmt: tRETURN tSEMICOLON
 	| tRETURN tIDENTIFIER tSEMICOLON
+	| assignmentStmt tSEMICOLON
+	;
+
+assignmentStmt: tIDENTIFIER tASSIGN expression
+	| tIDENTIFIER tLBRACKET tINTVAL tRBRACKET tASSIGN expression
 	;
 
 %%
