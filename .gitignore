@@ -5,3 +5,4 @@ lex.yy.c
 MyLoginHistory.txt
 *.o
 src/lex.yy.c
+src/*.output
