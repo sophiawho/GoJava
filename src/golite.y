@@ -210,7 +210,6 @@ expression: expression tOR expression
 	| tMINUS expression
 	| tBANG expression
 	| tBITXOR expression
-	| tLBRACKET tINTVAL tRBRACKET tIDENTIFIER
 	| tIDENTIFIER tLBRACKET tINTVAL tRBRACKET
 	| tINTVAL
 	| tFLOATVAL
