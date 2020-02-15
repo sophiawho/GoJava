@@ -134,7 +134,9 @@ topLevelDecls:
 	| topLevelDecls topLevelDecl
 	;
 
-topLevelDecl: variableDecl ;
+topLevelDecl: variableDecl 
+	| typeDecl
+	;
 
 variableDecl: tVAR variableSpec
 	| tVAR tLPAR variableSpecs tRPAR
@@ -148,6 +150,24 @@ variableSpec: identifiers tIDENTIFIER tSEMICOLON
 variableSpecs:
 	| variableSpecs variableSpec
 	;
+
+typeDecl: tTYPE typeSpec
+	| tTYPE tLPAR typeSpecs tRPAR
+	;
+
+typeSpecs:
+	| typeSpecs typeSpec
+	;
+
+typeSpec: tIDENTIFIER tIDENTIFIER tSEMICOLON
+	| tIDENTIFIER tSTRUCT tLBRACE structSpecs tRBRACE tSEMICOLON
+	;
+
+structSpecs:
+	| structSpecs structSpec
+	;
+
+structSpec: identifiers tIDENTIFIER tSEMICOLON;
 
 identifiers: tIDENTIFIER
 	| identifiers tCOMMA tIDENTIFIER
