@@ -235,11 +235,13 @@ stmts:
 
 stmt: tRETURN tSEMICOLON
 	| tRETURN tIDENTIFIER tSEMICOLON
+	| variableDecl
 	| assignmentStmt tSEMICOLON
 	;
 
 assignmentStmt: tIDENTIFIER tASSIGN expression
 	| tIDENTIFIER tLBRACKET tINTVAL tRBRACKET tASSIGN expression
+	| tIDENTIFIER tPERIOD tIDENTIFIER tASSIGN expression
 	;
 
 %%
