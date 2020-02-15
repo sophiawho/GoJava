@@ -71,7 +71,7 @@ ESCAPE [atbvfnr\\']
 [ \t\r]+
 \n {
     if (needsSemiColon()) {
-        if (g_tokens) printf(";\n");
+        if (g_tokens) printf("tSEMICOLON;\n");
         RETURN(tSEMICOLON);
     }
 }
