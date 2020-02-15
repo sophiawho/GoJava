@@ -65,8 +65,8 @@ ESCAPE [atbvfnr\\']
 "/*"					    { BEGIN(MULTILINE_COMMENT); }
 <MULTILINE_COMMENT>"*/"     { BEGIN(INITIAL); }
 <MULTILINE_COMMENT><<EOF>>  { fprintf(stderr, "Error: (line %d) Unclosed multi-line comment.\n", yylineno); exit(1); }
-<MULTILINE_COMMENT>. 	    { }
-<MULTILINE_COMMENT>\n 	    { }
+<MULTILINE_COMMENT>.		{ }
+<MULTILINE_COMMENT>\n 	    { yylineno++; }
 
 [ \t\r]+
 \n {
