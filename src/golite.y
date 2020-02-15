@@ -143,13 +143,13 @@ variableDecl: tVAR variableSpec
 	| tVAR tLPAR variableSpecs tRPAR
 	;
 
+variableSpecs:
+	| variableSpecs variableSpec
+	;
+
 variableSpec: identifiers type tSEMICOLON
 	| identifiers tASSIGN expressions tSEMICOLON
 	| identifiers type tASSIGN expressions tSEMICOLON
-	;
-
-variableSpecs:
-	| variableSpecs variableSpec
 	;
 
 typeDecl: tTYPE typeSpec
