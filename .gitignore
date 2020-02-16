@@ -6,3 +6,5 @@ MyLoginHistory.txt
 *.o
 src/lex.yy.c
 src/*.output
+.vscode
+*.bak
