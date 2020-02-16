@@ -170,7 +170,7 @@ structSpecs:
 	| structSpecs structSpec
 	;
 
-structSpec: identifiers tIDENTIFIER tSEMICOLON;
+structSpec: identifiers type tSEMICOLON;
 
 identifiers: tIDENTIFIER
 	| identifiers tCOMMA tIDENTIFIER
@@ -192,7 +192,7 @@ expressions: expression
 expression: binaryExpr
 	| unaryExpr
 	| builtinExpr
-	| type tLPAR expression tRPAR
+	| functionCallExpr
 	| tIDENTIFIER tLBRACKET tINTVAL tRBRACKET
 	| tIDENTIFIER tPERIOD tIDENTIFIER
 	| tLPAR expression tRPAR
@@ -235,14 +235,21 @@ builtinExpr: tAPPEND tLPAR expression tCOMMA expression tRPAR
 	| tCAP tLPAR expression tRPAR
 	;
 
-functionDecl: tFUNC tIDENTIFIER tLPAR inputParams tRPAR block tSEMICOLON // no return type
-	| tFUNC tIDENTIFIER tLPAR inputParams tRPAR type block tSEMICOLON
-	| tFUNC tIDENTIFIER tLPAR tRPAR block tSEMICOLON // empty params no return 
-	| tFUNC tIDENTIFIER tLPAR tRPAR type block tSEMICOLON // empty params
+functionCallExpr: type tLPAR expression tRPAR
+	| type tLPAR tRPAR
 	;
 
-inputParams: inputParams tCOMMA identifiers tIDENTIFIER 
-	| identifiers tIDENTIFIER
+functionDecl:  tFUNC tIDENTIFIER tLPAR inputParams tRPAR optType block tSEMICOLON
+	| tFUNC tIDENTIFIER tLPAR inputParams tRPAR optType tLBRACE statements returnStmt tRBRACE tSEMICOLON
+	;
+
+inputParams: 
+	| inputParams tCOMMA identifiers type 
+	| identifiers type
+	;
+
+optType: 
+	| type
 	;
 
 block: tLBRACE statements tRBRACE;
@@ -252,8 +259,7 @@ statements:
 	;
 
 statement: simpleStmt tSEMICOLON
-	| tRETURN tSEMICOLON
-	| tRETURN expression tSEMICOLON
+	| returnStmt tSEMICOLON
 	| block tSEMICOLON
 	| variableDecl
 	| typeDecl
@@ -274,6 +280,10 @@ simpleStmt: /* empty statement */
 	| expressions tASSIGN expressions
 	| expression assignOp expression
 	| expressions tCOLONASSIGN expressions
+	;
+
+returnStmt: tRETURN
+	| tRETURN expression
 	;
 
 assignOp: tPLUSEQ
@@ -305,8 +315,8 @@ exprCaseClauses:
 	| exprCaseClauses exprCaseClause
 	;
 
-exprCaseClause: tCASE expressions tCOLON statement
-	| tDEFAULT tCOLON statement
+exprCaseClause: tCASE expressions tCOLON statements
+	| tDEFAULT tCOLON statements
 	;
 
 forStmt: tFOR block 
