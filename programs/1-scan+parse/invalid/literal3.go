@@ -1,2 +1,5 @@
 // invalid hex integer
-var abc = 0xxxff;
+package main
+func main() {
+	var abc = 0xxxff;
+}
