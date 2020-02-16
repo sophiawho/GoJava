@@ -215,6 +215,7 @@ expression: expression tOR expression
 	| tAPPEND tLPAR expression tCOMMA expression tRPAR
 	| tLEN tLPAR expression tRPAR
 	| tCAP tLPAR expression tRPAR
+	| type tLPAR expression tRPAR
 	| tIDENTIFIER tLBRACKET tINTVAL tRBRACKET
 	| tINTVAL
 	| tFLOATVAL
