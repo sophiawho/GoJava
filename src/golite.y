@@ -210,7 +210,9 @@ expression: expression tOR expression
 	| tMINUS expression
 	| tBANG expression
 	| tBITXOR expression
-	| indexing
+	| tIDENTIFIER tLBRACKET tINTVAL tRBRACKET
+	| tIDENTIFIER tPERIOD tIDENTIFIER
+	| tLPAR expression tRPAR
 	| tINTVAL
 	| tFLOATVAL
 	| tRUNEVAL
@@ -233,23 +235,6 @@ block: tLBRACE stmts tRBRACE;
 
 stmts: 
 	| stmts stmt
-	;
-
-assignmentStmt: lhsAssignmentOps tASSIGN expressions
-	| lhsAssignmentOp opAssign expression
-	;
-
-fieldAccess: tIDENTIFIER tPERIOD tIDENTIFIER;
-
-indexing: tIDENTIFIER tLBRACKET tINTVAL tRBRACKET;
-
-lhsAssignmentOps: lhsAssignmentOp
-	| lhsAssignmentOps tCOMMA lhsAssignmentOp
-	;
-
-lhsAssignmentOp: tIDENTIFIER
-	| fieldAccess
-	| indexing
 	;
 
 opAssign: tPLUSEQ
@@ -281,11 +266,12 @@ stmt: simpleStmt tSEMICOLON
 	;
 
 simpleStmt: /* empty statement */
-	| lhsAssignmentOp
+	| expression
 	| expressions tLEFTARROW expression
 	| expression tINCREMENT
 	| expression tDECREMENT
-	| assignmentStmt
+	| expressions tASSIGN expressions
+	| expression opAssign expression
 	| expressions tCOLONASSIGN expressions
 	;
 
