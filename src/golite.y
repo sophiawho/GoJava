@@ -142,7 +142,7 @@ topLevelDecl: variableDecl
 	;
 
 variableDecl: tVAR variableSpec
-	| tVAR tLPAR variableSpecs tRPAR
+	| tVAR tLPAR variableSpecs tRPAR tSEMICOLON
 	;
 
 variableSpecs:
@@ -155,7 +155,7 @@ variableSpec: identifiers type tSEMICOLON
 	;
 
 typeDecl: tTYPE typeSpec
-	| tTYPE tLPAR typeSpecs tRPAR
+	| tTYPE tLPAR typeSpecs tRPAR tSEMICOLON
 	;
 
 typeSpecs:
