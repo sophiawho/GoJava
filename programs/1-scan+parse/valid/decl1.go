@@ -12,6 +12,5 @@ func main() {
 	var x01 bool = False;
 	var X01 bool = False;
 	var X02 = T + 3;
-	var X03 = (T -= 3) * 0.9;
 }
 

@@ -1,2 +1,5 @@
 // too many characters for rune literal
-'aa'
+package main
+func main() {
+	var abc = 'aa'
+}

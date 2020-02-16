@@ -3,7 +3,8 @@ package main
 func main() {
 	// Valid unary op
 	var x = 0; 
-	x = --3;
+	x = - -3;
+	// --3 isn't valid!
 
 	// Valid bang op
 	var y = false;
