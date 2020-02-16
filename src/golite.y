@@ -127,7 +127,8 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 // TODO are we doing methods?
 
 %% 
-program: packageClause topLevelDecls;
+program: 
+	| packageClause topLevelDecls;
 
 packageClause: tPACKAGE tIDENTIFIER tSEMICOLON;
 
