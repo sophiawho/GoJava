@@ -13,11 +13,11 @@ int main(int argc, char *argv[])
                 while(yylex()) {}
                 printf("OK\n");
         }
-        // else if (strcmp(argv[1], "tokens") == 0){
-        //         g_tokens = 1;
-        //         while(yylex()) {}
-        //         printf("OK\n");
-        // }
+        else if (strcmp(argv[1], "tokens") == 0){
+                g_tokens = 1;
+                while(yylex()) {}
+                printf("OK\n");
+        }
         else if (strcmp(argv[1], "parse") == 0) {
                 g_tokens = 0;
                 yyparse();
