@@ -210,22 +210,82 @@ expression: expression tOR expression
 	| tIDENTIFIER
 	;
 
-functionDecl: tFUNC tIDENTIFIER tLPAR inputParams tRPAR block // no return type
-	tFUNC tIDENTIFIER tLPAR inputParams tRPAR identifiers block
+functionDecl: tFUNC tIDENTIFIER tLPAR inputParams tRPAR block tSEMICOLON // no return type
+	| tFUNC tIDENTIFIER tLPAR inputParams tRPAR tIDENTIFIER block tSEMICOLON
+	| tFUNC tIDENTIFIER tLPAR tRPAR block tSEMICOLON // empty params no return 
+	| tFUNC tIDENTIFIER tLPAR tRPAR tIDENTIFIER block tSEMICOLON // empty params
 	;
 
 inputParams: inputParams tCOMMA identifiers tIDENTIFIER 
 	| identifiers tIDENTIFIER
 	;
 
-block: tLBRACE stmts tRBRACE tSEMICOLON;
+block: tLBRACE stmts tRBRACE;
 
 stmts: 
 	| stmts stmt
 	;
 
-stmt: tRETURN tSEMICOLON
-	| tRETURN tIDENTIFIER tSEMICOLON
+opAssign: tPLUSEQ
+	| tMINUSEQ
+	| tMULTEQ
+	| tDIVEQ
+ 	| tMODEQ
+	| tBITANDEQ
+	| tBITOREQ
+	| tBITXOREQ
+	| tLEFTSHIFTEQ
+	| tRIGHTSHIFTEQ
+	| tBITCLEAREQ
 	;
+
+stmt: simpleStmt tSEMICOLON
+	| tRETURN tSEMICOLON
+	| tRETURN expression tSEMICOLON
+	| block tSEMICOLON
+	| variableDecl
+	| typeDecl
+	| tPRINT tLPAR expressions tRPAR tSEMICOLON
+	| tPRINTLN tLPAR expressions tRPAR tSEMICOLON
+	| ifStmt tSEMICOLON
+	| switchStmt tSEMICOLON
+	| forStmt tSEMICOLON
+	| tBREAK tSEMICOLON
+	| tCONTINUE tSEMICOLON
+	;
+
+simpleStmt: /* empty statement */
+	| expression
+	| expressions tLEFTARROW expression
+	| expression tINCREMENT
+	| expression tDECREMENT
+	| expressions tASSIGN expressions
+	| expression opAssign expressions
+	| expressions tCOLONASSIGN expressions
+	;
+
+ifStmt: tIF simpleStmt tSEMICOLON expression block
+	| tIF simpleStmt tSEMICOLON expression block tELSE block
+	| tIF simpleStmt tSEMICOLON expression block tELSE ifStmt
+	| tIF expression block
+	| tIF expression block tELSE block
+	| tIF expression block tELSE ifStmt
+	;
+
+switchStmt: tSWITCH simpleStmt tSEMICOLON expression tLBRACE exprCaseClauses tRBRACE
+	| tSWITCH expression tLBRACE exprCaseClauses tRBRACE
+	;
+
+exprCaseClauses: 
+	| exprCaseClauses exprCaseClause
+	;
+
+exprCaseClause: tCASE expressions tCOLON stmt
+	| tDEFAULT tCOLON stmt
+	;
+
+forStmt: tFOR block 
+	| tFOR expression block
+	| tFOR simpleStmt tSEMICOLON expression tSEMICOLON simpleStmt block
 
 %%
