@@ -229,9 +229,9 @@ expression: expression tOR expression
 
 
 functionDecl: tFUNC tIDENTIFIER tLPAR inputParams tRPAR block tSEMICOLON // no return type
-	| tFUNC tIDENTIFIER tLPAR inputParams tRPAR tIDENTIFIER block tSEMICOLON
+	| tFUNC tIDENTIFIER tLPAR inputParams tRPAR type block tSEMICOLON
 	| tFUNC tIDENTIFIER tLPAR tRPAR block tSEMICOLON // empty params no return 
-	| tFUNC tIDENTIFIER tLPAR tRPAR tIDENTIFIER block tSEMICOLON // empty params
+	| tFUNC tIDENTIFIER tLPAR tRPAR type block tSEMICOLON // empty params
 	;
 
 inputParams: inputParams tCOMMA identifiers tIDENTIFIER 
