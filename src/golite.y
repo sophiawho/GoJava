@@ -189,7 +189,21 @@ expressions: expression
 	| expressions tCOMMA expression
 	;
 
-expression: expression tOR expression
+expression: binaryExpr
+	| unaryExpr
+	| builtinExpr
+	| type tLPAR expression tRPAR
+	| tIDENTIFIER tLBRACKET tINTVAL tRBRACKET
+	| tIDENTIFIER tPERIOD tIDENTIFIER
+	| tLPAR expression tRPAR
+	| tINTVAL
+	| tFLOATVAL
+	| tRUNEVAL
+	| tSTRVAL
+	| tIDENTIFIER
+	;
+
+binaryExpr: expression tOR expression
 	| expression tAND expression
 	| expression tEQ expression
 	| expression tNOTEQ expression
@@ -208,25 +222,18 @@ expression: expression tOR expression
 	| expression tRIGHTSHIFT expression
 	| expression tBITAND expression
 	| expression tBITCLEAR expression
-	| tADD expression
+	;
+ 
+unaryExpr: tADD expression
 	| tMINUS expression
 	| tBANG expression
 	| tBITXOR expression
-	| tLPAR expression tRPAR
-	| tAPPEND tLPAR expression tCOMMA expression tRPAR
-	| tLEN tLPAR expression tRPAR
-	| tCAP tLPAR expression tRPAR
-	| type tLPAR expression tRPAR
-	| tIDENTIFIER tLBRACKET tINTVAL tRBRACKET
-	| tIDENTIFIER tPERIOD tIDENTIFIER
-	| tLPAR expression tRPAR
-	| tINTVAL
-	| tFLOATVAL
-	| tRUNEVAL
-	| tSTRVAL
-	| tIDENTIFIER
 	;
 
+builtinExpr: tAPPEND tLPAR expression tCOMMA expression tRPAR
+	| tLEN tLPAR expression tRPAR
+	| tCAP tLPAR expression tRPAR
+	;
 
 functionDecl: tFUNC tIDENTIFIER tLPAR inputParams tRPAR block tSEMICOLON // no return type
 	| tFUNC tIDENTIFIER tLPAR inputParams tRPAR type block tSEMICOLON
@@ -238,26 +245,13 @@ inputParams: inputParams tCOMMA identifiers tIDENTIFIER
 	| identifiers tIDENTIFIER
 	;
 
-block: tLBRACE stmts tRBRACE;
+block: tLBRACE statements tRBRACE;
 
-stmts: 
-	| stmts stmt
+statements: 
+	| statements statement
 	;
 
-opAssign: tPLUSEQ
-	| tMINUSEQ
-	| tMULTEQ
-	| tDIVEQ
- 	| tMODEQ
-	| tBITANDEQ
-	| tBITOREQ
-	| tBITXOREQ
-	| tLEFTSHIFTEQ
-	| tRIGHTSHIFTEQ
-	| tBITCLEAREQ
-	;
-
-stmt: simpleStmt tSEMICOLON
+statement: simpleStmt tSEMICOLON
 	| tRETURN tSEMICOLON
 	| tRETURN expression tSEMICOLON
 	| block tSEMICOLON
@@ -278,8 +272,21 @@ simpleStmt: /* empty statement */
 	| expression tINCREMENT
 	| expression tDECREMENT
 	| expressions tASSIGN expressions
-	| expression opAssign expression
+	| expression assignOp expression
 	| expressions tCOLONASSIGN expressions
+	;
+
+assignOp: tPLUSEQ
+	| tMINUSEQ
+	| tMULTEQ
+	| tDIVEQ
+ 	| tMODEQ
+	| tBITANDEQ
+	| tBITOREQ
+	| tBITXOREQ
+	| tLEFTSHIFTEQ
+	| tRIGHTSHIFTEQ
+	| tBITCLEAREQ
 	;
 
 ifStmt: tIF simpleStmt tSEMICOLON expression block
@@ -298,8 +305,8 @@ exprCaseClauses:
 	| exprCaseClauses exprCaseClause
 	;
 
-exprCaseClause: tCASE expressions tCOLON stmt
-	| tDEFAULT tCOLON stmt
+exprCaseClause: tCASE expressions tCOLON statement
+	| tDEFAULT tCOLON statement
 	;
 
 forStmt: tFOR block 
