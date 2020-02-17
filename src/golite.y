@@ -216,8 +216,8 @@ sliceType: tLBRACKET tRBRACKET type;
 
 arrayType: tLBRACKET tINTVAL tRBRACKET type;
 
-expressions: expression
-	| expressions tCOMMA expression
+expressions: expression { $$ = $1; }
+	| expressions tCOMMA expression { $$ = $3; $$->next=$1; }
 	;
 
 expression: binaryExpr
@@ -227,7 +227,7 @@ expression: binaryExpr
 	| tIDENTIFIER tLBRACKET tINTVAL tRBRACKET
 	| tIDENTIFIER tPERIOD tIDENTIFIER
 	| tLPAR expression tRPAR
-	| tINTVAL
+	| tINTVAL { $$ = makeEXP_intLiteral($1); }
 	| tFLOATVAL
 	| tRUNEVAL
 	| tSTRVAL

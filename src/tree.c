@@ -1,4 +1,5 @@
 #include <stdbool.h> 
+#include <stdio.h>
 #include <stdlib.h>
 #include "tree.h"
 
@@ -21,6 +22,13 @@ TOPLEVELDECL *makeTopLevelDecl_var(VARSPEC *varspec) {
 
     IDENT *ident = varspec->ident;
     EXP *exp = varspec->rhs;
+
+    // TODO: variableSpecs can also have a next pointer, eg:
+    // var (
+    //     x1, x2 int
+    //     y1, y2 = 42, 43
+    //     z2, z2 int = 1, 2
+    // )   
     while (ident->next != NULL) {
         TOPLEVELDECL *decl_next = malloc(sizeof(TOPLEVELDECL));
 
@@ -29,13 +37,15 @@ TOPLEVELDECL *makeTopLevelDecl_var(VARSPEC *varspec) {
         decl_next->kind = k_topLevelDeclVar;
 
         ident = ident->next;
-        if (exp->next != NULL) {
+
+        if (exp != NULL && exp->next != NULL) {
             exp = exp->next;
         }
 
         decl_next->val.varDecl = makeVarSpec(ident, exp, varspec->type);
         decl = decl_next;
     }
+    printf("RETURNING: %s\n", decl->val.varDecl->ident->ident);
     return decl;
 }
 
@@ -51,4 +61,13 @@ IDENT *makeIDENT(char *ident) {
     IDENT *i = malloc(sizeof(ident));
     i->ident = ident;
     return i;
+}
+
+EXP *makeEXP_intLiteral(int intLiteral) {
+	EXP *e = malloc(sizeof(EXP));
+	e->lineno = yylineno;
+	e->kind = k_expKindIntLiteral;
+	e->val.intLiteral = intLiteral;
+	// TODO: set e->type
+	return e;
 }
