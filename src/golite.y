@@ -136,12 +136,9 @@ Precedence    Operator
 Unary operators have the highest precedence. 
 		! 	  + 	- 		ˆ 
 */
-%left tBANG UPLUS UMINUS UBITXOR
+%left tBANG UPLUS UMINUS UBITXOR tPERIOD tLBRACKET
 
 %start program
-
-// TODO able to parse blank programs
-// TODO are we doing methods?
 
 %% 
 program: 
@@ -200,7 +197,7 @@ type: sliceType
 
 sliceType: tLBRACKET tRBRACKET type;
 
-arrayType: tLBRACKET tINTVAL tRBRACKET type;
+arrayType: tLBRACKET expression tRBRACKET type;
 
 expressions: expression
 	| expressions tCOMMA expression
@@ -210,8 +207,8 @@ expression: binaryExpr
 	| unaryExpr
 	| builtinExpr
 	| functionCallExpr
-	| tIDENTIFIER tLBRACKET tINTVAL tRBRACKET
-	| tIDENTIFIER tPERIOD tIDENTIFIER
+	| expression tLBRACKET expression tRBRACKET
+	| expression tPERIOD tIDENTIFIER
 	| tLPAR expression tRPAR
 	| tINTVAL
 	| tFLOATVAL
