@@ -64,4 +64,7 @@ func main() {
 
 	}
 
+	var x__3 = some_func(3, 4);
+	some_func_2(4, 3, 0);
+
 }

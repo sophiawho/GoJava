@@ -267,7 +267,7 @@ builtinExpr: tAPPEND tLPAR expression tCOMMA expression tRPAR { $$ = makeEXP_app
 	| tCAP tLPAR expression tRPAR { $$ = makeEXP_cap($3); }
 	;
 
-functionCallExpr: type tLPAR expression tRPAR
+functionCallExpr: type tLPAR expressions tRPAR
 	| type tLPAR tRPAR
 	;
 
