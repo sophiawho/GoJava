@@ -146,14 +146,13 @@ Precedence    Operator
 %left tADD tMINUS tBITOR tBITXOR
 %left tMULT tDIV tMOD tLEFTSHIFT tRIGHTSHIFT tBITAND tBITCLEAR
 
-//  Unary operators have the highest precedence. 
-//		! 	  + 	- 		ˆ   
-%left tBANG UPLUS UMINUS UBITXOR
+/* 
+Unary operators have the highest precedence. 
+		! 	  + 	- 		ˆ 
+*/
+%left tBANG UPLUS UMINUS UBITXOR tPERIOD tLBRACKET
 
 %start program
-
-// TODO able to parse blank programs
-// TODO are we doing methods?
 
 %% 
 program: /* empty */ { $$ = NULL; }
@@ -214,7 +213,7 @@ type: sliceType
 
 sliceType: tLBRACKET tRBRACKET type;
 
-arrayType: tLBRACKET tINTVAL tRBRACKET type;
+arrayType: tLBRACKET expression tRBRACKET type;
 
 expressions: expression { $$ = $1; }
 	| expressions tCOMMA expression { $$ = $3; $$->next=$1; }
@@ -224,8 +223,8 @@ expression: binaryExpr
 	| unaryExpr
 	| builtinExpr
 	| functionCallExpr
-	| tIDENTIFIER tLBRACKET tINTVAL tRBRACKET
-	| tIDENTIFIER tPERIOD tIDENTIFIER
+	| expression tLBRACKET expression tRBRACKET
+	| expression tPERIOD tIDENTIFIER
 	| tLPAR expression tRPAR
 	| tINTVAL { $$ = makeEXP_intLiteral($1); }
 	| tFLOATVAL
