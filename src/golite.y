@@ -116,10 +116,27 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 %token tGRTR
 %token tGRTREQ
 
-%left tOR tAND tEQ tNOTEQ tLESS tLESSEQ tGRTR tGRTREQ tBITOR tMULT tDIV tMOD tLEFTSHIFT tRIGHTSHIFT tBITAND tBITCLEAR
-%left tADD tMINUS tBANG tBITXOR
-%left tLPAR tRPAR
-// TODO write precedence for all operators
+/*
+Binary operators have 5 precendence levels.
+Precedence    Operator
+    5             *  /  %  <<  >>  &  &^
+    4             +  -  |  ^
+    3             ==  !=  <  <=  >  >=
+    2             &&
+    1             ||
+*/
+
+%left tOR
+%left tAND
+%left tEQ tNOTEQ tLESS tLESSEQ tGRTR tGRTREQ
+%left tADD tMINUS tBITOR tBITXOR
+%left tMULT tDIV tMOD tLEFTSHIFT tRIGHTSHIFT tBITAND tBITCLEAR
+
+/* 
+Unary operators have the highest precedence. 
+		! 	  + 	- 		ˆ 
+*/
+%left tBANG UPLUS UMINUS UBITXOR
 
 %start program
 
@@ -224,10 +241,10 @@ binaryExpr: expression tOR expression
 	| expression tBITCLEAR expression
 	;
  
-unaryExpr: tADD expression
-	| tMINUS expression
+unaryExpr: tADD expression %prec UPLUS
+	| tMINUS expression %prec UMINUS
 	| tBANG expression
-	| tBITXOR expression
+	| tBITXOR expression %prec UBITXOR
 	;
 
 builtinExpr: tAPPEND tLPAR expression tCOMMA expression tRPAR
