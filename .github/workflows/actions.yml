@@ -1,0 +1,17 @@
+name: CI
+
+on: [pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install flex and bison
+      run: sudo apt-get install flex -y && sudo apt-get install bison -y
+    - name: Build
+      run: ./build.sh
+    - name: Test
+      run: ./test.sh
