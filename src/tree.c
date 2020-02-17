@@ -1,6 +1,7 @@
 #include <stdbool.h> 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "tree.h"
 
 extern int yylineno;
@@ -78,6 +79,25 @@ EXP *makeEXP_stringLiteral(char *stringLiteral) {
 	e->val.stringLiteral = stringLiteral;
 	// TODO: set e->type
 	return e;
+}
+
+TYPE *makeTYPE_ident(char *identifier) {
+	if (strcmp(identifier, "int") == 0) {
+		return makeTYPE(k_typeInt);
+	}
+	else if (strcmp(identifier, "float64") == 0) {
+		return makeTYPE(k_typeFloat);
+	}
+	else if (strcmp(identifier, "bool") == 0) {
+		return makeTYPE(k_typeBool);
+	}
+	else if (strcmp(identifier, "float64") == 0) {
+		return makeTYPE(k_typeFloat);
+	}
+	else if (strcmp(identifier, "float64") == 0) {
+		return makeTYPE(k_typeFloat);
+	}
+	//  int, float64, bool, rune, string
 }
 
 TYPE *makeTYPE(TypeKind kind) {

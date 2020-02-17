@@ -26,8 +26,6 @@ struct IDENT {
 };
 IDENT *makeIDENT(char *ident);
 
-// TODO: Figure out how parser will call AST for vars with multiple identifiers
-
 typedef enum {
     k_typeInt,
     k_typeFloat,
@@ -58,7 +56,7 @@ struct TYPE {
         struct { int size; TYPE *type; } arrayType;
     } val;
 }; 
-TYPE *makeTYPE(TypeKind kind);
+TYPE *makeTYPE_ident(char *identifier); 
 
 struct PROG {
     char *package; // A package declaration is the key word package followed by an identifier

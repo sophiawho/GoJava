@@ -152,9 +152,6 @@ Precedence    Operator
 
 %start program
 
-// TODO able to parse blank programs
-// TODO are we doing methods?
-
 %% 
 program: /* empty */ { $$ = NULL; }
 	| tPACKAGE tIDENTIFIER tSEMICOLON topLevelDecls { root = makePROG($2, $4); }
@@ -207,9 +204,9 @@ identifiers: identifier { $$ = $1; }
 
 identifier: tIDENTIFIER { $$ = makeIDENT($1); }
 
-type: sliceType
-	| arrayType
-	| tIDENTIFIER
+type: sliceType { $$ = $1; }
+	| arrayType { $$ = $1; }
+	| tIDENTIFIER { $$ = makeTYPE_ident($1); } 
 	;
 
 sliceType: tLBRACKET tRBRACKET type;
