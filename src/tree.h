@@ -9,20 +9,14 @@ typedef struct EXP EXP;
 typedef struct FUNC FUNC;
 
 // Helper structs
-typedef struct IDENT_LIST IDENT_LIST;
-typedef struct EXP_LIST EXP_LIST;
+typedef struct IDENT IDENT;
+typedef struct VARSPEC VARSPEC;
 
-struct IDENT_LIST {
+struct IDENT {
     char *ident;
-    IDENT_LIST *next;
+    IDENT *next;
 };
-IDENT_LIST *makeIDENT_LIST(IDENT_LIST *list, char *ident);
-
-struct EXP_LIST {
-    EXP *exp;
-    EXP_LIST *next;
-};
-EXP_LIST *makeEXP_LIST(EXP_LIST *list, EXP *exp);
+IDENT *makeIDENT(char *ident);
 
 // TODO: Figure out how parser will call AST for vars with multiple identifiers
 
@@ -73,15 +67,23 @@ struct TOPLEVELDECL {
     int lineno;
     TopLevelDeclKind kind;
     union {
-        struct { char *ident; EXP *rhs; TYPE *type; } varDecl;
+        VARSPEC *varDecl;
         struct { char *typeName; TYPE *type; } typeDecl;
         FUNC *funcDecl;
     } val;
     TOPLEVELDECL *next;
 };
-TOPLEVELDECL *makeTopLevelDecl_var(char *ident, EXP *rhs, TYPE *type); // may pass in an IDENT, EXP list
+TOPLEVELDECL *makeTopLevelDecl_var(VARSPEC *varspec); // may pass in an IDENT, EXP list
 TOPLEVELDECL *makeTopLevelDecl_type(char *typeName, TYPE *type); 
 TOPLEVELDECL *makeTopLevelDecl_func(FUNC *funcdecl);
+
+struct VARSPEC {
+    IDENT *ident;
+    EXP *rhs;
+    TYPE *type;
+    VARSPEC *next;
+};
+VARSPEC *makeVarSpec(IDENT *ident, EXP *rhs, TYPE *type);
 
 struct FUNC {
     int lineno;
@@ -113,7 +115,7 @@ struct STMT {
     int lineno;
     StatementKind kind;
     union {
-        struct { EXP_LIST *expList; int newLine; } printStmt;
+        struct { EXP *expList; int newLine; } printStmt;
         struct { EXP *exp; int amount; } incDecStmt; // If amount == -1, the statement is a decrement; if amount == 1, the statement is an increment
         struct { char *ident; EXP *rhs; TYPE *type; } varDecl;
         struct { char *typeName; TYPE *type; } typeDecl;
@@ -123,16 +125,16 @@ struct STMT {
         struct { EXP *condition; STMT *trueBody; STMT *falseBody; } ifStmt;
 		struct { EXP *condition; STMT *body; } whileStmt;
         struct { char type; EXP *condition; STMT *initStmt; STMT *postStmt; } forLoop; // type: 'i' = infinite, 'w' = while, 2 = '3' = 3 part loop
-        EXP_LIST *returnExpList;
+        EXP *returnExpList;
     } val;
     STMT *next;
 };
-STMT *makeSTMT_print(EXP_LIST *expList, int newLine);
+STMT *makeSTMT_print(EXP *expList, int newLine);
 STMT *makeSTMT_incDec(EXP *exp, int amount);
 STMT *makeSTMT_block(STMT *stmt);
 STMT *makeSTMT_if(EXP *condition, STMT *trueBody, STMT *falseBody);
 STMT *makeSTMT_while(EXP *condition, STMT *body);
-STMT *makeSTMT_return(EXP_LIST *returnExpList);
+STMT *makeSTMT_return(EXP *returnExpList);
 // TODO: Write function signatures
 
 typedef enum {
@@ -188,9 +190,10 @@ struct EXP {
         char *stringLiteral;
 		struct { EXP *lhs; EXP *rhs; } binary;
 		struct { EXP *rhs; } unary;
-        struct { char *funcName; IDENT_LIST *args; } funcCall;
+        struct { char *funcName; IDENT *args; } funcCall;
         struct { char *ident; int indexNum; } indexExp; 
     } val;
+    EXP *next;
 };
 EXP *makeEXP_identifier(char *id);
 EXP *makeEXP_intLiteral(int intLiteral);
@@ -200,7 +203,7 @@ EXP *makeEXP_runeLiteral(char runeLiteral);
 EXP *makeEXP_stringLiteral(char *stringLiteral);
 EXP *makeEXP_binary(ExpressionKind op, EXP *lhs, EXP *rhs);
 EXP *makeEXP_unary(ExpressionKind op, EXP *rhs);
-EXP *makeEXP_funcCall(char *funcName, IDENT_LIST *args);
+EXP *makeEXP_funcCall(char *funcName, IDENT *args);
 EXP *makeEXP_index(char *ident, int index);
 
 #endif /* !TREE_H */

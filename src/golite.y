@@ -19,7 +19,6 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 
 %code requires
 {
-	// #include "tree.h"
 }
 
 %union {
@@ -33,21 +32,25 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 	struct STMT *stmt;
 	struct EXP *exp;
 	struct FUNC *func;
+	struct VARSPEC *varspec;
+	struct IDENT *ident;
 }
 
 %type <prog> program
-%type <topleveldecl> topLevelDecls topLevelDecl
+%type <topleveldecl> topLevelDecls topLevelDecl variableDecl
+%type <type> type
 %type <stmt> statements statement simpleStmt returnStmt ifStmt switchStmt forStmt
 %type <exp> expressions expression binaryExpr unaryExpr builtinExpr functionCallExpr
 %type <func> functionDecl
+%type <varspec> variableSpecs variableSpec
+%type <ident> identifiers identifier
 
 // %type <exp> program exp
 
 %token <intval> tINTVAL
 %token <floatval> tFLOATVAL
 %token <runeval> tRUNEVAL
-%token <strval> tSTRVAL
-%token <strval> tIDENTIFIER
+%token <strval> tSTRVAL tIDENTIFIER
 
 %token tBREAK
 %token tCASE
@@ -137,17 +140,14 @@ Precedence    Operator
     2             &&
     1             ||
 */
-
 %left tOR
 %left tAND
 %left tEQ tNOTEQ tLESS tLESSEQ tGRTR tGRTREQ
 %left tADD tMINUS tBITOR tBITXOR
 %left tMULT tDIV tMOD tLEFTSHIFT tRIGHTSHIFT tBITAND tBITCLEAR
 
-/* 
-Unary operators have the highest precedence. 
-		! 	  + 	- 		ˆ 
-*/
+//  Unary operators have the highest precedence. 
+//		! 	  + 	- 		ˆ   
 %left tBANG UPLUS UMINUS UBITXOR
 
 %start program
@@ -160,26 +160,26 @@ program: /* empty */ { $$ = NULL; }
 	| tPACKAGE tIDENTIFIER tSEMICOLON topLevelDecls { root = makePROG($2, $4); }
 	;
 
-topLevelDecls:
-	| topLevelDecls topLevelDecl
+topLevelDecls: /* empty */ { $$ = NULL; }
+	| topLevelDecls topLevelDecl { $$ = $2; $$->next=$1; }
 	;
 
-topLevelDecl: variableDecl 
-	| typeDecl
-	| functionDecl
+topLevelDecl: variableDecl { $$ = $1; }
+	| typeDecl 
+	| functionDecl 
 	;
 
-variableDecl: tVAR variableSpec
-	| tVAR tLPAR variableSpecs tRPAR tSEMICOLON
+variableDecl: tVAR variableSpec { $$ = makeTopLevelDecl_var($2); }
+	| tVAR tLPAR variableSpecs tRPAR tSEMICOLON { $$ = makeTopLevelDecl_var($3); }
 	;
 
-variableSpecs:
-	| variableSpecs variableSpec
+variableSpecs: /* empty */ { $$ = NULL; }
+	| variableSpecs variableSpec { $$ = $2; $$->next=$1; } 
 	;
 
-variableSpec: identifiers type tSEMICOLON
-	| identifiers tASSIGN expressions tSEMICOLON
-	| identifiers type tASSIGN expressions tSEMICOLON
+variableSpec: identifiers type tSEMICOLON { $$ = makeVarSpec($1, NULL, $2); }
+	| identifiers tASSIGN expressions tSEMICOLON { $$ = makeVarSpec($1, $3, NULL); }
+	| identifiers type tASSIGN expressions tSEMICOLON { $$ = makeVarSpec($1, $4, $2); }
 	;
 
 typeDecl: tTYPE typeSpec
@@ -198,11 +198,14 @@ structSpecs:
 	| structSpecs structSpec
 	;
 
-structSpec: identifiers type tSEMICOLON;
+structSpec: identifiers type tSEMICOLON
+;
 
-identifiers: tIDENTIFIER
-	| identifiers tCOMMA tIDENTIFIER
+identifiers: identifier { $$ = $1; }
+	| identifiers tCOMMA identifier { $$ = $3; $$->next=$1; }
 	;
+
+identifier: tIDENTIFIER { $$ = makeIDENT($1); }
 
 type: sliceType
 	| arrayType
