@@ -20,7 +20,7 @@ TOPLEVELDECL *makeTopLevelDecl_var(VARSPEC *varspec) {
     decl->val.varDecl = varspec;
 
     IDENT *ident = varspec->ident;
-    EXP *exp = varspec->exp;
+    EXP *exp = varspec->rhs;
     while (ident->next != NULL) {
         TOPLEVELDECL *decl_next = malloc(sizeof(TOPLEVELDECL));
 
