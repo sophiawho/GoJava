@@ -53,10 +53,13 @@ struct TYPE {
     TypeKind kind;
     union {
         STRUCT *structType;
-        struct { int size; TYPE *type; } arrayType;
+        struct { TYPE *type; } sliceType;
+        struct { EXP *exp; TYPE *type; } arrayType;
     } val;
 }; 
 TYPE *makeTYPE_ident(char *identifier); 
+TYPE *makeTYPE_array(EXP *exp, TYPE *type); 
+TYPE *makeTYPE_slice(TYPE *type);
 TYPE *makeTYPE(TypeKind kind);
 
 struct PROG {
@@ -147,6 +150,7 @@ STMT *makeSTMT_return(EXP *returnExpList);
 
 typedef enum {
     k_expKindIdentifier,
+    // Literals
     k_expKindIntLiteral,
     k_expKindFloatLiteral,
     k_expKindBoolLiteral,
@@ -183,6 +187,10 @@ typedef enum {
     k_expKindParentheses,
     k_expKindFuncCall,
     k_expKindIndex, // Index into arrays and slices, eg: a := x[0]
+    // Builtins
+    k_expKindAppend,
+    k_expKindLen,
+    k_expKindCap,
 } ExpressionKind;
 
 struct EXP {
@@ -198,8 +206,11 @@ struct EXP {
         char *stringLiteral;
 		struct { EXP *lhs; EXP *rhs; } binary;
 		struct { EXP *rhs; } unary;
+        struct { EXP *slice; EXP *addend; } append;
+        EXP *lenExp;
+        EXP *capExp;
         struct { char *funcName; IDENT *args; } funcCall;
-        struct { char *ident; int indexNum; } indexExp; 
+        struct { char *ident; int indexNum; } index; // TODO: Fix this, exp and exp
     } val;
     EXP *next;
 };
@@ -211,6 +222,9 @@ EXP *makeEXP_runeLiteral(char runeLiteral);
 EXP *makeEXP_stringLiteral(char *stringLiteral);
 EXP *makeEXP_binary(ExpressionKind op, EXP *lhs, EXP *rhs);
 EXP *makeEXP_unary(ExpressionKind op, EXP *rhs);
+EXP *makeEXP_append(EXP *slice, EXP *addend);
+EXP *makeEXP_len(EXP *lenExp);
+EXP *makeEXP_cap(EXP *capExp);
 EXP *makeEXP_funcCall(char *funcName, IDENT *args);
 EXP *makeEXP_index(char *ident, int index);
 

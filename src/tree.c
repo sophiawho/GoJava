@@ -50,7 +50,7 @@ EXP *makeEXP_intLiteral(int intLiteral) {
 	e->lineno = yylineno;
 	e->kind = k_expKindIntLiteral;
 	e->val.intLiteral = intLiteral;
-	// TODO: set e->type
+	e->type = makeTYPE(k_typeInt);
 	return e;
 }
 
@@ -59,7 +59,7 @@ EXP *makeEXP_floatLiteral(float floatLiteral) {
 	e->lineno = yylineno;
 	e->kind = k_expKindFloatLiteral;
 	e->val.floatLiteral = floatLiteral;
-	// TODO: set e->type
+	e->type = makeTYPE(k_typeFloat);
 	return e;
 }
 
@@ -68,7 +68,7 @@ EXP *makeEXP_runeLiteral(char runeLiteral) {
 	e->lineno = yylineno;
 	e->kind = k_expKindRuneLiteral;
 	e->val.runeLiteral = runeLiteral;
-	// TODO: set e->type
+	e->type = makeTYPE(k_typeRune);
 	return e;
 }
 
@@ -77,7 +77,54 @@ EXP *makeEXP_stringLiteral(char *stringLiteral) {
 	e->lineno = yylineno;
 	e->kind = k_expKindRuneLiteral;
 	e->val.stringLiteral = stringLiteral;
-	// TODO: set e->type
+	e->type = makeTYPE(k_typeString);
+	return e;
+}
+
+EXP *makeEXP_binary(ExpressionKind op, EXP *lhs, EXP *rhs) {
+	EXP *e = malloc(sizeof(EXP));
+	e->lineno = yylineno;
+	e->kind = op;
+	e->val.binary.lhs = lhs;
+	e->val.binary.rhs = rhs;
+	e->type = makeTYPE(k_typeInfer);
+	return e;
+}
+
+EXP *makeEXP_unary(ExpressionKind op, EXP *rhs) {
+	EXP *e = malloc(sizeof(EXP));
+	e->lineno = yylineno;
+	e->kind = op;
+	e->val.unary.rhs = rhs;
+	e->type = makeTYPE(k_typeInfer);
+	return e;
+}
+
+EXP *makeEXP_append(EXP *slice, EXP *addend) {
+	EXP *e = malloc(sizeof(EXP));
+	e->lineno = yylineno;
+	e->kind = k_expKindAppend;
+	e->val.append.slice = slice;
+	e->val.append.addend = addend;
+	e->type = makeTYPE(k_typeInfer);
+	return e;
+}
+
+EXP *makeEXP_len(EXP *lenExp) {
+	EXP *e = malloc(sizeof(EXP));
+	e->lineno = yylineno;
+	e->kind = k_expKindLen;
+	e->val.lenExp = lenExp;
+	e->type = makeTYPE(k_typeInfer);
+	return e;
+}
+
+EXP *makeEXP_cap(EXP *capExp) {
+	EXP *e = malloc(sizeof(EXP));
+	e->lineno = yylineno;
+	e->kind = k_expKindCap;
+	e->val.capExp = capExp;
+	e->type = makeTYPE(k_typeInfer);
 	return e;
 }
 
@@ -91,14 +138,26 @@ TYPE *makeTYPE_ident(char *identifier) {
 	else if (strcmp(identifier, "bool") == 0) {
 		return makeTYPE(k_typeBool);
 	}
-	else if (strcmp(identifier, "float64") == 0) {
-		return makeTYPE(k_typeFloat);
+	else if (strcmp(identifier, "rune") == 0) {
+		return makeTYPE(k_typeRune);
 	}
-	else if (strcmp(identifier, "float64") == 0) {
-		return makeTYPE(k_typeFloat);
+	else if (strcmp(identifier, "string") == 0) {
+		return makeTYPE(k_typeString);
 	}
 	return NULL;
-	//  int, float64, bool, rune, string
+}
+
+TYPE *makeTYPE_array(EXP *exp, TYPE *type) {
+	TYPE *t = makeTYPE(k_typeArray);
+	t->val.arrayType.exp = exp;
+	t->val.arrayType.type = type;
+	return t;
+}
+
+TYPE *makeTYPE_slice(TYPE *type) {
+	TYPE *t = makeTYPE(k_typeSlice);
+	t->val.sliceType.type = type;
+	return t;
 }
 
 TYPE *makeTYPE(TypeKind kind) {

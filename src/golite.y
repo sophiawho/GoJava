@@ -211,21 +211,22 @@ type: sliceType { $$ = $1; }
 	| tIDENTIFIER { $$ = makeTYPE_ident($1); } 
 	;
 
-sliceType: tLBRACKET tRBRACKET type;
+sliceType: tLBRACKET tRBRACKET type { $$ = makeTYPE_slice($3); }
+	;
 
-arrayType: tLBRACKET expression tRBRACKET type;
+arrayType: tLBRACKET expression tRBRACKET type { $$ = makeTYPE_array($2, $4); }
+	;
 
 expressions: expression { $$ = $1; }
 	| expressions tCOMMA expression { $$ = $3; $$->next=$1; }
 	;
 
-expression: binaryExpr
-	| unaryExpr
+expression: binaryExpr { $$ = $1; }
+	| unaryExpr { $$ = $1; }
 	| builtinExpr
 	| functionCallExpr
 	| expression tLBRACKET expression tRBRACKET { /*array access */ }
 	| expression tPERIOD tIDENTIFIER { /*field access*/ }
-	| tLPAR expression tRPAR
 	| tINTVAL { $$ = makeEXP_intLiteral($1); }
 	| tFLOATVAL { $$ = makeEXP_floatLiteral($1); }
 	| tRUNEVAL { $$ = makeEXP_runeLiteral($1); }
@@ -233,36 +234,37 @@ expression: binaryExpr
 	| tIDENTIFIER { $$ = makeEXP_identifier($1); }
 	;
 
-binaryExpr: expression tOR expression
-	| expression tAND expression
-	| expression tEQ expression
-	| expression tNOTEQ expression
-	| expression tLESS expression
-	| expression tLESSEQ expression
-	| expression tGRTR expression
-	| expression tGRTREQ expression
-	| expression tADD expression
-	| expression tMINUS expression
-	| expression tBITOR expression
-	| expression tBITXOR expression
-	| expression tMULT expression
-	| expression tDIV expression
-	| expression tMOD expression
-	| expression tLEFTSHIFT expression
-	| expression tRIGHTSHIFT expression
-	| expression tBITAND expression
-	| expression tBITCLEAR expression
+binaryExpr: expression tOR expression { $$ = makeEXP_binary(k_expKindOr, $1, $3); }
+	| expression tAND expression { $$ = makeEXP_binary(k_expKindAnd, $1, $3); }
+	| expression tEQ expression { $$ = makeEXP_binary(k_expKindEq, $1, $3); }
+	| expression tNOTEQ expression { $$ = makeEXP_binary(k_expKindNotEq, $1, $3); }
+	| expression tLESS expression { $$ = makeEXP_binary(k_expKindLess, $1, $3); }
+	| expression tLESSEQ expression { $$ = makeEXP_binary(k_expKindLessEq, $1, $3); }
+	| expression tGRTR expression { $$ = makeEXP_binary(k_expKindGrtr, $1, $3); }
+	| expression tGRTREQ expression { $$ = makeEXP_binary(k_expKindGrtrEq, $1, $3); }
+	| expression tADD expression { $$ = makeEXP_binary(k_expKindAdd, $1, $3); }
+	| expression tMINUS expression { $$ = makeEXP_binary(k_expKindMinus, $1, $3); }
+	| expression tBITOR expression { $$ = makeEXP_binary(k_expKindBitOr, $1, $3); }
+	| expression tBITXOR expression { $$ = makeEXP_binary(k_expKindBitXOR, $1, $3); }
+	| expression tMULT expression { $$ = makeEXP_binary(k_expKindMult, $1, $3); }
+	| expression tDIV expression { $$ = makeEXP_binary(k_expKindDiv, $1, $3); }
+	| expression tMOD expression { $$ = makeEXP_binary(k_expKindMod, $1, $3); }
+	| expression tLEFTSHIFT expression { $$ = makeEXP_binary(k_expKindLeftShift, $1, $3); }
+	| expression tRIGHTSHIFT expression { $$ = makeEXP_binary(k_expKindRightShift, $1, $3); }
+	| expression tBITAND expression { $$ = makeEXP_binary(k_expKindBitAnd, $1, $3); }
+	| expression tBITCLEAR expression { $$ = makeEXP_binary(k_expKindBitClear, $1, $3); }
 	;
  
-unaryExpr: tADD expression %prec UPLUS
-	| tMINUS expression %prec UMINUS
-	| tBANG expression
-	| tBITXOR expression %prec UBITXOR
+unaryExpr: tADD expression %prec UPLUS { $$ = makeEXP_unary(k_expKindUPlus, $2); }
+	| tMINUS expression %prec UMINUS { $$ = makeEXP_unary(k_expKindUMinus, $2); }
+	| tBANG expression { $$ = makeEXP_unary(k_expKindBang, $2); }
+	| tBITXOR expression %prec UBITXOR { $$ = makeEXP_unary(k_expKindUBitXOR, $2); }
+	| tLPAR expression tRPAR { $$ = makeEXP_unary(k_expKindParentheses, $2); }
 	;
 
-builtinExpr: tAPPEND tLPAR expression tCOMMA expression tRPAR
-	| tLEN tLPAR expression tRPAR
-	| tCAP tLPAR expression tRPAR
+builtinExpr: tAPPEND tLPAR expression tCOMMA expression tRPAR { $$ = makeEXP_append($3, $5); }
+	| tLEN tLPAR expression tRPAR { $$ = makeEXP_len($3); }
+	| tCAP tLPAR expression tRPAR { $$ = makeEXP_cap($3); }
 	;
 
 functionCallExpr: type tLPAR expression tRPAR
