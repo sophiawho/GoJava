@@ -17,7 +17,7 @@ struct STRUCT {
     IDENT *attribute;
     TYPE *type;
     STRUCT *next;
-}
+};
 STRUCT *makeSTRUCT(IDENT *attribute, TYPE *type);
 
 struct IDENT {
