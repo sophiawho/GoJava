@@ -15,14 +15,14 @@ typedef struct EXP_LIST EXP_LIST;
 struct IDENT_LIST {
     char *ident;
     IDENT_LIST *next;
-}
-IDENT_LIST *makeIdentList(IDENT_LIST *list, char *ident);
+};
+IDENT_LIST *makeIDENT_LIST(IDENT_LIST *list, char *ident);
 
 struct EXP_LIST {
     EXP *exp;
     EXP_LIST *next;
-}
-EXP_LIST *makeExpList(EXP_LIST *list, EXP *exp);
+};
+EXP_LIST *makeEXP_LIST(EXP_LIST *list, EXP *exp);
 
 // TODO: Figure out how parser will call AST for vars with multiple identifiers
 
@@ -51,17 +51,17 @@ Each type has a name: "int" would be the name, but float will be the type
 struct TYPE {
     TypeKind kind;
     union {
-        struct { char *attribute; TYPE *type; structVal *next; } structType; // TODO: Figure out best struct for structType after looking at parser
+        struct { char *attribute; TYPE *type; /*structVal *next;*/ } structType; // TODO: Figure out best struct for structType after looking at parser
         struct { int size; TYPE *type; } arrayType;
     } val;
 }; 
 TYPE *makeTYPE(TypeKind kind, char *attributes[], TYPE *types[]);
 
 struct PROG {
-    char *pkgIdent; // A package declaration is the key word package followed by an identifier
-    TOPLEVELDECL *root;
+    char *package; // A package declaration is the key word package followed by an identifier
+    TOPLEVELDECL *rootTopLevelDecl;
 };
-PROG *makePROG(char *package, TOPLEVELDECL *root);
+PROG *makePROG(char *package, TOPLEVELDECL *rootTopLevelDecl);
 
 typedef enum {
     k_topLevelDeclVar,
@@ -80,14 +80,14 @@ struct TOPLEVELDECL {
     TOPLEVELDECL *next;
 };
 TOPLEVELDECL *makeTopLevelDecl_var(char *ident, EXP *rhs, TYPE *type); // may pass in an IDENT, EXP list
-TOPLEVELDECL *makeTopLevelDecl_type(char *typeName; TYPE *type); 
+TOPLEVELDECL *makeTopLevelDecl_type(char *typeName, TYPE *type); 
 TOPLEVELDECL *makeTopLevelDecl_func(FUNC *funcdecl);
 
 struct FUNC {
     int lineno;
     STMT *root;
     union {
-        struct { char *ident; TYPE *type; inputParameter *next; } inputParameter;
+        struct { char *ident; TYPE *type; } inputParameter; // keep track of 'next' input param
         TYPE *returnType;
     } val;
 };
@@ -113,21 +113,21 @@ struct STMT {
     int lineno;
     StatementKind kind;
     union {
-        struct { EXP_LIST *expList;  bool newLine; } printStmt;
-        struct { EXP *exp; int amount } incDecStmt; // If amount == -1, the statement is a decrement; if amount == 1, the statement is an increment
+        struct { EXP_LIST *expList; int newLine; } printStmt;
+        struct { EXP *exp; int amount; } incDecStmt; // If amount == -1, the statement is a decrement; if amount == 1, the statement is an increment
         struct { char *ident; EXP *rhs; TYPE *type; } varDecl;
         struct { char *typeName; TYPE *type; } typeDecl;
         struct { char *ident; EXP *rhs; } shortDecl;
         // TODO: Add structs for each kind of stmt
-        struct { STMT *stmt } blockStmt;
+        struct { STMT *stmt; } blockStmt;
         struct { EXP *condition; STMT *trueBody; STMT *falseBody; } ifStmt;
 		struct { EXP *condition; STMT *body; } whileStmt;
-        struct { char type; EXP *condition; STMT *initStmt; STMT *postStmt} forLoop; // type: 'i' = infinite, 'w' = while, 2 = '3' = 3 part loop
+        struct { char type; EXP *condition; STMT *initStmt; STMT *postStmt; } forLoop; // type: 'i' = infinite, 'w' = while, 2 = '3' = 3 part loop
         EXP_LIST *returnExpList;
     } val;
     STMT *next;
-}
-STMT *makeSTMT_print(EXP_LIST *expList, bool newLine);
+};
+STMT *makeSTMT_print(EXP_LIST *expList, int newLine);
 STMT *makeSTMT_incDec(EXP *exp, int amount);
 STMT *makeSTMT_block(STMT *stmt);
 STMT *makeSTMT_if(EXP *condition, STMT *trueBody, STMT *falseBody);
@@ -180,10 +180,10 @@ struct EXP {
     ExpressionKind kind;
     TYPE *type;
     union {
-        struct { char *ident; SYMBOL *idsym; } identExp;
+        struct { char *ident; } identExp;
 		int intLiteral;
 		float floatLiteral;
-		bool boolLiteral;
+		int boolLiteral;
 		char runeLiteral;
         char *stringLiteral;
 		struct { EXP *lhs; EXP *rhs; } binary;

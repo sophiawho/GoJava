@@ -2,10 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// #include "tree.h"
+#include "tree.h"
 
 extern int yylineno;
-// extern EXP *root;
+
+extern PROG *root;
 
 int g_tokens = 1;
 
@@ -26,8 +27,19 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 	float floatval;
 	char runeval;
 	char *strval;
-	// EXP *exp;
+	struct PROG *prog;
+	struct TOPLEVELDECL *topleveldecl;
+	struct TYPE *type;
+	struct STMT *stmt;
+	struct EXP *exp;
+	struct FUNC *func;
 }
+
+%type <prog> program
+%type <topleveldecl> topLevelDecls topLevelDecl
+%type <stmt> statements statement simpleStmt returnStmt ifStmt switchStmt forStmt
+%type <exp> expressions expression binaryExpr unaryExpr builtinExpr functionCallExpr
+%type <func> functionDecl
 
 // %type <exp> program exp
 
@@ -144,10 +156,9 @@ Unary operators have the highest precedence.
 // TODO are we doing methods?
 
 %% 
-program: 
-	| packageClause topLevelDecls;
-
-packageClause: tPACKAGE tIDENTIFIER tSEMICOLON;
+program: /* empty */ { $$ = NULL; }
+	| tPACKAGE tIDENTIFIER tSEMICOLON topLevelDecls { root = makePROG($2, $4); }
+	;
 
 topLevelDecls:
 	| topLevelDecls topLevelDecl
