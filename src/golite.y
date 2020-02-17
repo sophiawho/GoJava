@@ -38,7 +38,7 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 
 %type <prog> program
 %type <topleveldecl> topLevelDecls topLevelDecl variableDecl
-%type <type> type
+%type <type> type sliceType arrayType
 %type <stmt> statements statement simpleStmt returnStmt ifStmt switchStmt forStmt
 %type <exp> expressions expression binaryExpr unaryExpr builtinExpr functionCallExpr
 %type <func> functionDecl

@@ -97,6 +97,7 @@ TYPE *makeTYPE_ident(char *identifier) {
 	else if (strcmp(identifier, "float64") == 0) {
 		return makeTYPE(k_typeFloat);
 	}
+	return NULL;
 	//  int, float64, bool, rune, string
 }
 

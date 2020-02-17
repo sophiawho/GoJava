@@ -57,6 +57,7 @@ struct TYPE {
     } val;
 }; 
 TYPE *makeTYPE_ident(char *identifier); 
+TYPE *makeTYPE(TypeKind kind);
 
 struct PROG {
     char *package; // A package declaration is the key word package followed by an identifier
