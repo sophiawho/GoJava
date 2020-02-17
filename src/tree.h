@@ -11,6 +11,14 @@ typedef struct FUNC FUNC;
 // Helper structs
 typedef struct IDENT IDENT;
 typedef struct VARSPEC VARSPEC;
+typedef struct STRUCT STRUCT;
+
+struct STRUCT {
+    IDENT *attribute;
+    TYPE *type;
+    STRUCT *next;
+}
+STRUCT *makeSTRUCT(IDENT *attribute, TYPE *type);
 
 struct IDENT {
     char *ident;
@@ -36,6 +44,7 @@ typedef enum {
 Support Types that have structs with multiple fields, ie:
 type point struct {
     x, y float 64
+    a int
 }
 where "float" could be another struct
 
@@ -45,11 +54,11 @@ Each type has a name: "int" would be the name, but float will be the type
 struct TYPE {
     TypeKind kind;
     union {
-        struct { char *attribute; TYPE *type; /*structVal *next;*/ } structType; // TODO: Figure out best struct for structType after looking at parser
+        STRUCT *structType;
         struct { int size; TYPE *type; } arrayType;
     } val;
 }; 
-TYPE *makeTYPE(TypeKind kind, char *attributes[], TYPE *types[]);
+TYPE *makeTYPE(TypeKind kind);
 
 struct PROG {
     char *package; // A package declaration is the key word package followed by an identifier

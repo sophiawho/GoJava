@@ -216,22 +216,22 @@ sliceType: tLBRACKET tRBRACKET type;
 
 arrayType: tLBRACKET tINTVAL tRBRACKET type;
 
-expressions: expression
-	| expressions tCOMMA expression
+expressions: expression { $$ = $1; }
+	| expressions tCOMMA expression { $$ = $3; $$->next=$1; }
 	;
 
 expression: binaryExpr
 	| unaryExpr
 	| builtinExpr
 	| functionCallExpr
-	| tIDENTIFIER tLBRACKET tINTVAL tRBRACKET
-	| tIDENTIFIER tPERIOD tIDENTIFIER
+	| tIDENTIFIER tLBRACKET tINTVAL tRBRACKET { /*array access*/ }
+	| tIDENTIFIER tPERIOD tIDENTIFIER { /*field access*/ }
 	| tLPAR expression tRPAR
-	| tINTVAL
-	| tFLOATVAL
-	| tRUNEVAL
-	| tSTRVAL
-	| tIDENTIFIER
+	| tINTVAL { $$ = makeEXP_intLiteral($1); }
+	| tFLOATVAL { $$ = makeEXP_floatLiteral($1); }
+	| tRUNEVAL { $$ = makeEXP_runeLiteral($1); }
+	| tSTRVAL { $$ = makeEXP_stringLiteral($1); }
+	| tIDENTIFIER { $$ = makeEXP_identifier($1); }
 	;
 
 binaryExpr: expression tOR expression

@@ -27,5 +27,11 @@ int main(int argc, char *argv[])
                 printf("OK\n");
         }
 
+        TOPLEVELDECL *d = root->rootTopLevelDecl;
+        while (d != NULL) {
+                printf("IDENT: %s\n", d->val.varDecl->ident->ident);
+                d = d->next;
+        }
+
         return 0;
 }
