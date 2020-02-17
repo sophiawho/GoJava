@@ -249,7 +249,7 @@ builtinExpr: tAPPEND tLPAR expression tCOMMA expression tRPAR
 	| tCAP tLPAR expression tRPAR
 	;
 
-functionCallExpr: type tLPAR expression tRPAR
+functionCallExpr: type tLPAR expressions tRPAR
 	| type tLPAR tRPAR
 	;
 
