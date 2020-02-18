@@ -277,9 +277,12 @@ functionDecl:  tFUNC tIDENTIFIER tLPAR inputParams tRPAR optType block tSEMICOLO
 	| tFUNC tIDENTIFIER tLPAR inputParams tRPAR optType tLBRACE statements returnStmt tRBRACE tSEMICOLON
 	;
 
-inputParams: /* empty */
-	| inputParams tCOMMA identifiers type 
-	| identifiers type
+inputParams: 
+	| inputParams tCOMMA inputParam
+	| inputParam
+	;
+
+inputParam: identifiers type
 	;
 
 optType: 
