@@ -11,14 +11,8 @@ typedef struct FUNC FUNC;
 // Helper structs
 typedef struct IDENT IDENT;
 typedef struct VARSPEC VARSPEC;
-typedef struct STRUCT STRUCT;
-
-struct STRUCT {
-    IDENT *attribute;
-    TYPE *type;
-    STRUCT *next;
-};
-STRUCT *makeSTRUCT(IDENT *attribute, TYPE *type);
+typedef struct TYPESPEC TYPESPEC;
+typedef struct STRUCTSPEC STRUCTSPEC;
 
 struct IDENT {
     char *ident;
@@ -52,7 +46,7 @@ Each type has a name: "int" would be the name, but float will be the type
 struct TYPE {
     TypeKind kind;
     union {
-        STRUCT *structType;
+        STRUCTSPEC *structType;
         struct { TYPE *type; } sliceType;
         struct { EXP *exp; TYPE *type; } arrayType;
     } val;
@@ -61,6 +55,13 @@ TYPE *makeTYPE_ident(char *identifier);
 TYPE *makeTYPE_array(EXP *exp, TYPE *type); 
 TYPE *makeTYPE_slice(TYPE *type);
 TYPE *makeTYPE(TypeKind kind);
+
+struct STRUCTSPEC {
+    IDENT *attribute; // can have multiple attributes per type
+    TYPE *type;
+    STRUCTSPEC *next;
+};
+STRUCTSPEC *makeStructSpec(IDENT *attribute, TYPE *type);
 
 struct PROG {
     char *package; // A package declaration is the key word package followed by an identifier
@@ -79,14 +80,22 @@ struct TOPLEVELDECL {
     TopLevelDeclKind kind;
     union {
         VARSPEC *varDecl;
-        struct { char *typeName; TYPE *type; } typeDecl;
+        TYPESPEC *typeDecl;
         FUNC *funcDecl;
     } val;
     TOPLEVELDECL *next;
 };
-TOPLEVELDECL *makeTopLevelDecl_var(VARSPEC *varspec); // may pass in an IDENT, EXP list
-TOPLEVELDECL *makeTopLevelDecl_type(char *typeName, TYPE *type); 
+TOPLEVELDECL *makeTopLevelDecl_var(VARSPEC *varspec);
+TOPLEVELDECL *makeTopLevelDecl_type(TYPESPEC *typedecl);
 TOPLEVELDECL *makeTopLevelDecl_func(FUNC *funcdecl);
+
+struct TYPESPEC {
+    IDENT *ident;
+    TYPE *type;
+    TYPESPEC *next;
+};
+TYPESPEC *makeTypeSpec(IDENT *ident, TYPE *type);
+TYPESPEC *makeTypeSpec_struct(IDENT *ident, STRUCTSPEC *ss);
 
 struct VARSPEC {
     IDENT *ident;
@@ -96,6 +105,15 @@ struct VARSPEC {
 };
 VARSPEC *makeVarSpec(IDENT *ident, EXP *rhs, TYPE *type);
 
+/*
+Identifier (Function Name)
+Optional Return Type (Arg. may be null, of type TYPE)
+Optional inputParams
+    inputParams -> identifiers, type -> identifier, type
+    
+body with STMTS
+Optional Return Stmt
+*/
 struct FUNC {
     int lineno;
     STMT *root;

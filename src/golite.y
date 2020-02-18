@@ -33,19 +33,21 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 	struct EXP *exp;
 	struct FUNC *func;
 	struct VARSPEC *varspec;
+	struct TYPESPEC *typespec;
+	struct STRUCTSPEC *structspec;
 	struct IDENT *ident;
 }
 
 %type <prog> program
-%type <topleveldecl> topLevelDecls topLevelDecl variableDecl
+%type <topleveldecl> topLevelDecls topLevelDecl variableDecl typeDecl
 %type <type> type sliceType arrayType
 %type <stmt> statements statement simpleStmt returnStmt ifStmt switchStmt forStmt
 %type <exp> expressions expression binaryExpr unaryExpr builtinExpr functionCallExpr
 %type <func> functionDecl
 %type <varspec> variableSpecs variableSpec
+%type <typespec> typeSpecs typeSpec
+%type <structspec> structSpecs structSpec
 %type <ident> identifiers identifier
-
-// %type <exp> program exp
 
 %token <intval> tINTVAL
 %token <floatval> tFLOATVAL
@@ -164,7 +166,7 @@ topLevelDecls: /* empty */ { $$ = NULL; }
 	;
 
 topLevelDecl: variableDecl { $$ = $1; }
-	| typeDecl 
+	| typeDecl { $$ = $1; }
 	| functionDecl 
 	;
 
@@ -181,24 +183,24 @@ variableSpec: identifiers type tSEMICOLON { $$ = makeVarSpec($1, NULL, $2); }
 	| identifiers type tASSIGN expressions tSEMICOLON { $$ = makeVarSpec($1, $4, $2); }
 	;
 
-typeDecl: tTYPE typeSpec
-	| tTYPE tLPAR typeSpecs tRPAR tSEMICOLON
+typeDecl: tTYPE typeSpec { $$ = makeTopLevelDecl_type($2); }
+	| tTYPE tLPAR typeSpecs tRPAR tSEMICOLON { $$ = makeTopLevelDecl_type($3); }
 	;
 
-typeSpecs:
-	| typeSpecs typeSpec
+typeSpecs: /* empty */ { $$ = NULL; }
+	| typeSpecs typeSpec { $$ = $2; $$->next=$1; }
 	;
 
-typeSpec: tIDENTIFIER type tSEMICOLON
-	| tIDENTIFIER tSTRUCT tLBRACE structSpecs tRBRACE tSEMICOLON
+typeSpec: identifier type tSEMICOLON { $$ = makeTypeSpec($1, $2); }
+	| identifier tSTRUCT tLBRACE structSpecs tRBRACE tSEMICOLON { $$ = makeTypeSpec_struct($1, $4); }
 	;
 
-structSpecs:
-	| structSpecs structSpec
+structSpecs: /* empty */ { $$ = NULL; }
+	| structSpecs structSpec { $$ = $2; $$->next = $1; }
 	;
 
-structSpec: identifiers type tSEMICOLON
-;
+structSpec: identifiers type tSEMICOLON { $$ = makeStructSpec($1, $2); }
+	;
 
 identifiers: identifier { $$ = $1; }
 	| identifiers tCOMMA identifier { $$ = $3; $$->next=$1; }
@@ -223,7 +225,7 @@ expressions: expression { $$ = $1; }
 
 expression: binaryExpr { $$ = $1; }
 	| unaryExpr { $$ = $1; }
-	| builtinExpr
+	| builtinExpr { $$ = $1; }
 	| functionCallExpr
 	| expression tLBRACKET expression tRBRACKET { /*array access */ }
 	| expression tPERIOD tIDENTIFIER { /*field access*/ }
@@ -275,7 +277,7 @@ functionDecl:  tFUNC tIDENTIFIER tLPAR inputParams tRPAR optType block tSEMICOLO
 	| tFUNC tIDENTIFIER tLPAR inputParams tRPAR optType tLBRACE statements returnStmt tRBRACE tSEMICOLON
 	;
 
-inputParams: 
+inputParams: /* empty */
 	| inputParams tCOMMA identifiers type 
 	| identifiers type
 	;

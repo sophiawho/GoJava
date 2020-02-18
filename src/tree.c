@@ -13,8 +13,6 @@ PROG *makePROG(char *package, TOPLEVELDECL *rootTopLevelDecl) {
     return p;
 }
 
-/* The IDENT and EXP fields in varspec may be a list, where the next node will be stored in the `.next` pointer.
-In this case, multiple top level declarations will be initialized. */
 TOPLEVELDECL *makeTopLevelDecl_var(VARSPEC *varspec) {
     TOPLEVELDECL *decl = malloc(sizeof(TOPLEVELDECL));
     decl->lineno = yylineno;
@@ -23,12 +21,42 @@ TOPLEVELDECL *makeTopLevelDecl_var(VARSPEC *varspec) {
     return decl;
 }
 
+TOPLEVELDECL *makeTopLevelDecl_type(TYPESPEC *typespec) {
+	TOPLEVELDECL *decl = malloc(sizeof(TOPLEVELDECL));
+	decl->lineno = yylineno;
+	decl->kind = k_topLevelDeclType;
+	decl->val.typeDecl = typespec;
+	return decl;
+}
+
 VARSPEC *makeVarSpec(IDENT *ident, EXP *rhs, TYPE *type) {
     VARSPEC *vs = malloc(sizeof(VARSPEC));
     vs->ident = ident;
     vs->rhs = rhs;
     vs->type = type;
     return vs;
+}
+
+STRUCTSPEC *makeStructSpec(IDENT *attribute, TYPE *type) {
+	STRUCTSPEC *ss = malloc(sizeof(STRUCTSPEC));
+	ss->attribute = attribute;
+	ss->type = type;
+	return ss;
+}
+
+TYPESPEC *makeTypeSpec(IDENT *ident, TYPE *type) {
+	TYPESPEC *ts = malloc(sizeof(TYPESPEC));
+	ts->ident = ident;
+	ts->type = type;
+	return ts;
+}
+
+TYPESPEC *makeTypeSpec_struct(IDENT *ident, STRUCTSPEC *ss) {
+	TYPESPEC *ts = malloc(sizeof(TYPESPEC));
+	ts->ident = ident;
+	TYPE *t = makeTYPE(k_typeStruct);
+	t->val.structType = ss;
+	return ts;
 }
 
 IDENT *makeIDENT(char *ident) {
