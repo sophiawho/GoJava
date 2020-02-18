@@ -105,7 +105,8 @@ typedef enum {
     k_expKindUBitXOR, // ATTN: This is similarly named to binary op k_expKindBitXOR
     k_expKindParentheses,
     k_expKindFuncCall,
-    k_expKindIndex, // Index into arrays and slices, eg: a := x[0]
+    k_expKindArrayAccess,
+    k_expKindFieldAccess,
     // Builtins
     k_expKindAppend,
     k_expKindLen,
@@ -128,11 +129,13 @@ struct EXP {
         struct { EXP *slice; EXP *addend; } append;
         EXP *lenExp;
         EXP *capExp;
-        struct { char *funcName; IDENT *args; } funcCall;
-        struct { char *ident; int indexNum; } index; // TODO: Fix this, exp and exp
+        struct { TYPE *type; EXP *expList; } funcCall;
+        struct { EXP *arrayReference; EXP *indexExp; } arrayAccess;
+        struct { EXP *object; char *field; } fieldAccess;
     } val;
     EXP *next;
 };
+EXP *getGenericExpr(ExpressionKind kind);
 EXP *makeEXP_identifier(char *id);
 EXP *makeEXP_intLiteral(int intLiteral);
 EXP *makeEXP_floatLiteral(float floatLiteral);
@@ -144,8 +147,9 @@ EXP *makeEXP_unary(ExpressionKind op, EXP *rhs);
 EXP *makeEXP_append(EXP *slice, EXP *addend);
 EXP *makeEXP_len(EXP *lenExp);
 EXP *makeEXP_cap(EXP *capExp);
-EXP *makeEXP_funcCall(char *funcName, IDENT *args);
-EXP *makeEXP_index(char *ident, int index);
+EXP *makeEXP_funcCall(TYPE *type, EXP *expList);
+EXP *makeEXP_arrayAccess(EXP *arrayReference, EXP *indexExp);
+EXP *makeEXP_fieldAccess(EXP *object, char *field);
 
 struct FUNC {
     int lineno;

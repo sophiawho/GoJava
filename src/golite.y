@@ -231,9 +231,9 @@ expressions: expression 			{ $$ = $1; }
 expression: binaryExpr 							{ $$ = $1; }
 	| unaryExpr 								{ $$ = $1; }
 	| builtinExpr 								{ $$ = $1; }
-	| functionCallExpr							{ /*TODO: Function call*/ }
-	| expression tLBRACKET expression tRBRACKET { /*TODO: array access */ }
-	| expression tPERIOD tIDENTIFIER 			{ /*TODO: field access*/ }
+	| functionCallExpr							{ $$ = $1; }
+	| expression tLBRACKET expression tRBRACKET { $$ = makeEXP_arrayAccess($1, $3); }
+	| expression tPERIOD tIDENTIFIER 			{ $$ = makeEXP_fieldAccess($1, $3);  }
 	| tINTVAL 									{ $$ = makeEXP_intLiteral($1); }
 	| tFLOATVAL 								{ $$ = makeEXP_floatLiteral($1); }
 	| tRUNEVAL 									{ $$ = makeEXP_runeLiteral($1); }
@@ -274,8 +274,8 @@ builtinExpr: tAPPEND tLPAR expression tCOMMA expression tRPAR 	{ $$ = makeEXP_ap
 	| tCAP tLPAR expression tRPAR 								{ $$ = makeEXP_cap($3); }
 	;
 
-functionCallExpr: type tLPAR expressions tRPAR
-	| type tLPAR tRPAR
+functionCallExpr: type tLPAR expressions tRPAR		{ $$ = makeEXP_funcCall($1, $3); }
+	| type tLPAR tRPAR								{ $$ = makeEXP_funcCall($1, NULL); }
 	;
 
 functionDecl:  

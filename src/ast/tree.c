@@ -75,54 +75,49 @@ TYPE *makeTYPE(TypeKind kind) {
     return type;
 }
 
-EXP *makeEXP_identifier(char *id) {
+EXP *getGenericExpr(ExpressionKind kind) {
 	EXP *e = malloc(sizeof(EXP));
 	e->lineno = yylineno;
-	e->kind = k_expKindIdentifier;
+	e->kind = kind;
+	return e;
+}
+
+EXP *makeEXP_identifier(char *id) {
+	EXP *e = getGenericExpr(k_expKindIdentifier);
 	e->val.identExp.ident = id;
 	return e;
 }
 
 EXP *makeEXP_intLiteral(int intLiteral) {
-	EXP *e = malloc(sizeof(EXP));
-	e->lineno = yylineno;
-	e->kind = k_expKindIntLiteral;
+	EXP *e = getGenericExpr(k_expKindIntLiteral);
 	e->val.intLiteral = intLiteral;
 	e->type = makeTYPE(k_typeInt);
 	return e;
 }
 
 EXP *makeEXP_floatLiteral(float floatLiteral) {
-	EXP *e = malloc(sizeof(EXP));
-	e->lineno = yylineno;
-	e->kind = k_expKindFloatLiteral;
+	EXP *e = getGenericExpr(k_expKindFloatLiteral);
 	e->val.floatLiteral = floatLiteral;
 	e->type = makeTYPE(k_typeFloat);
 	return e;
 }
 
 EXP *makeEXP_runeLiteral(char runeLiteral) {
-    EXP *e = malloc(sizeof(EXP));
-	e->lineno = yylineno;
-	e->kind = k_expKindRuneLiteral;
+    EXP *e = getGenericExpr(k_expKindRuneLiteral);
 	e->val.runeLiteral = runeLiteral;
 	e->type = makeTYPE(k_typeRune);
 	return e;
 }
 
 EXP *makeEXP_stringLiteral(char *stringLiteral) {
-    EXP *e = malloc(sizeof(EXP));
-	e->lineno = yylineno;
-	e->kind = k_expKindRuneLiteral;
+    EXP *e = getGenericExpr(k_expKindStringLiteral);
 	e->val.stringLiteral = stringLiteral;
 	e->type = makeTYPE(k_typeString);
 	return e;
 }
 
 EXP *makeEXP_binary(ExpressionKind op, EXP *lhs, EXP *rhs) {
-	EXP *e = malloc(sizeof(EXP));
-	e->lineno = yylineno;
-	e->kind = op;
+	EXP *e = getGenericExpr(op);
 	e->val.binary.lhs = lhs;
 	e->val.binary.rhs = rhs;
 	e->type = makeTYPE(k_typeInfer);
@@ -130,18 +125,14 @@ EXP *makeEXP_binary(ExpressionKind op, EXP *lhs, EXP *rhs) {
 }
 
 EXP *makeEXP_unary(ExpressionKind op, EXP *rhs) {
-	EXP *e = malloc(sizeof(EXP));
-	e->lineno = yylineno;
-	e->kind = op;
+	EXP *e = getGenericExpr(op);
 	e->val.unary.rhs = rhs;
 	e->type = makeTYPE(k_typeInfer);
 	return e;
 }
 
 EXP *makeEXP_append(EXP *slice, EXP *addend) {
-	EXP *e = malloc(sizeof(EXP));
-	e->lineno = yylineno;
-	e->kind = k_expKindAppend;
+	EXP *e = getGenericExpr(k_expKindAppend);
 	e->val.append.slice = slice;
 	e->val.append.addend = addend;
 	e->type = makeTYPE(k_typeInfer);
@@ -149,20 +140,37 @@ EXP *makeEXP_append(EXP *slice, EXP *addend) {
 }
 
 EXP *makeEXP_len(EXP *lenExp) {
-	EXP *e = malloc(sizeof(EXP));
-	e->lineno = yylineno;
-	e->kind = k_expKindLen;
+	EXP *e = getGenericExpr(k_expKindLen);
 	e->val.lenExp = lenExp;
 	e->type = makeTYPE(k_typeInfer);
 	return e;
 }
 
 EXP *makeEXP_cap(EXP *capExp) {
-	EXP *e = malloc(sizeof(EXP));
-	e->lineno = yylineno;
-	e->kind = k_expKindCap;
+	EXP *e = getGenericExpr(k_expKindCap);
 	e->val.capExp = capExp;
 	e->type = makeTYPE(k_typeInfer);
+	return e;
+}
+
+EXP *makeEXP_funcCall(TYPE *type, EXP *expList) {
+	EXP *e = getGenericExpr(k_expKindFuncCall);
+	e->val.funcCall.type = type;
+	e->val.funcCall.expList = expList;
+	return e;
+}
+
+EXP *makeEXP_arrayAccess(EXP *arrayReference, EXP *indexExp) {
+	EXP *e = getGenericExpr(k_expKindArrayAccess);
+	e->val.arrayAccess.arrayReference = arrayReference;
+	e->val.arrayAccess.indexExp = indexExp;
+	return e;
+}
+
+EXP *makeEXP_fieldAccess(EXP *object, char *field) {
+	EXP *e = getGenericExpr(k_expKindFieldAccess);
+	e->val.fieldAccess.object = object;
+	e->val.fieldAccess.field = field;
 	return e;
 }
 
