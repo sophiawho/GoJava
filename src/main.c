@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "ast/tree.h"
+
 void yyparse();
 int yylex();
+PROG *root = NULL;
 
 int main(int argc, char *argv[])
 {

@@ -1,5 +1,16 @@
 # Golite
 
+## Group Members
+- Matthew Lesko 260692352
+- Braedon McDonald 260753678
+- Sophia Hu 260705681
+
+## Rebasing on master
+```
+$ git fetch origin
+$ git rebase origin/master
+```
+
 ## Coding convention:
 
 `branching`: Branch naming should follow convention `name`-`feature/bug`-`short_title`, eg: `sophia-feature-scanner` where possible.
