@@ -3,7 +3,6 @@ package main
 func main() {
 	/* simple statements */
 	a // expression statment
-	a <- b // channel statment
 	a++
 	a--
 	a, b, c = 1, 2, 3

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "tree.h"
+#include "ast/tree.h"
 
 void yyparse();
 int yylex();

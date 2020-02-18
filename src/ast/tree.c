@@ -29,40 +29,50 @@ TOPLEVELDECL *makeTopLevelDecl_type(TYPESPEC *typespec) {
 	return decl;
 }
 
-VARSPEC *makeVarSpec(IDENT *ident, EXP *rhs, TYPE *type) {
-    VARSPEC *vs = malloc(sizeof(VARSPEC));
-    vs->ident = ident;
-    vs->rhs = rhs;
-    vs->type = type;
-    return vs;
+TOPLEVELDECL *makeTopLevelDecl_func(FUNC *funcdecl) {
+	TOPLEVELDECL *decl = malloc(sizeof(TOPLEVELDECL));
+	decl->lineno = yylineno;
+	decl->kind = k_topLevelDeclFunc;
+	decl->val.funcDecl = funcdecl;
+	return decl;
 }
 
-STRUCTSPEC *makeStructSpec(IDENT *attribute, TYPE *type) {
-	STRUCTSPEC *ss = malloc(sizeof(STRUCTSPEC));
-	ss->attribute = attribute;
-	ss->type = type;
-	return ss;
+TYPE *makeTYPE_ident(char *identifier) {
+	if (strcmp(identifier, "int") == 0) {
+		return makeTYPE(k_typeInt);
+	}
+	else if (strcmp(identifier, "float64") == 0) {
+		return makeTYPE(k_typeFloat);
+	}
+	else if (strcmp(identifier, "bool") == 0) {
+		return makeTYPE(k_typeBool);
+	}
+	else if (strcmp(identifier, "rune") == 0) {
+		return makeTYPE(k_typeRune);
+	}
+	else if (strcmp(identifier, "string") == 0) {
+		return makeTYPE(k_typeString);
+	}
+	return NULL;
 }
 
-TYPESPEC *makeTypeSpec(IDENT *ident, TYPE *type) {
-	TYPESPEC *ts = malloc(sizeof(TYPESPEC));
-	ts->ident = ident;
-	ts->type = type;
-	return ts;
+TYPE *makeTYPE_array(EXP *exp, TYPE *type) {
+	TYPE *t = makeTYPE(k_typeArray);
+	t->val.arrayType.exp = exp;
+	t->val.arrayType.type = type;
+	return t;
 }
 
-TYPESPEC *makeTypeSpec_struct(IDENT *ident, STRUCTSPEC *ss) {
-	TYPESPEC *ts = malloc(sizeof(TYPESPEC));
-	ts->ident = ident;
-	TYPE *t = makeTYPE(k_typeStruct);
-	t->val.structType = ss;
-	return ts;
+TYPE *makeTYPE_slice(TYPE *type) {
+	TYPE *t = makeTYPE(k_typeSlice);
+	t->val.sliceType.type = type;
+	return t;
 }
 
-IDENT *makeIDENT(char *ident) {
-    IDENT *i = malloc(sizeof(ident));
-    i->ident = ident;
-    return i;
+TYPE *makeTYPE(TypeKind kind) {
+    TYPE *type = malloc(sizeof(TYPE));
+    type->kind = kind;
+    return type;
 }
 
 EXP *makeEXP_identifier(char *id) {
@@ -156,40 +166,49 @@ EXP *makeEXP_cap(EXP *capExp) {
 	return e;
 }
 
-TYPE *makeTYPE_ident(char *identifier) {
-	if (strcmp(identifier, "int") == 0) {
-		return makeTYPE(k_typeInt);
-	}
-	else if (strcmp(identifier, "float64") == 0) {
-		return makeTYPE(k_typeFloat);
-	}
-	else if (strcmp(identifier, "bool") == 0) {
-		return makeTYPE(k_typeBool);
-	}
-	else if (strcmp(identifier, "rune") == 0) {
-		return makeTYPE(k_typeRune);
-	}
-	else if (strcmp(identifier, "string") == 0) {
-		return makeTYPE(k_typeString);
-	}
-	return NULL;
+FUNC *makeFunc(char *name, TYPE *returnType, TYPESPEC *inputParams, STMT *rootStmt, STMT *returnStmt) {
+	FUNC *func = malloc(sizeof(FUNC));
+	func->lineno = yylineno;
+	func->name = name;
+	func->returnType = returnType;
+	func->inputParams = inputParams;
+	func->rootStmt = rootStmt;
+	func->returnStmt = returnStmt;
+	return func;
 }
 
-TYPE *makeTYPE_array(EXP *exp, TYPE *type) {
-	TYPE *t = makeTYPE(k_typeArray);
-	t->val.arrayType.exp = exp;
-	t->val.arrayType.type = type;
-	return t;
+IDENT *makeIDENT(char *ident) {
+    IDENT *i = malloc(sizeof(ident));
+    i->ident = ident;
+    return i;
 }
 
-TYPE *makeTYPE_slice(TYPE *type) {
-	TYPE *t = makeTYPE(k_typeSlice);
-	t->val.sliceType.type = type;
-	return t;
+VARSPEC *makeVarSpec(IDENT *ident, EXP *rhs, TYPE *type) {
+    VARSPEC *vs = malloc(sizeof(VARSPEC));
+    vs->ident = ident;
+    vs->rhs = rhs;
+    vs->type = type;
+    return vs;
 }
 
-TYPE *makeTYPE(TypeKind kind) {
-    TYPE *type = malloc(sizeof(TYPE));
-    type->kind = kind;
-    return type;
+TYPESPEC *makeTypeSpec(IDENT *ident, TYPE *type) {
+	TYPESPEC *ts = malloc(sizeof(TYPESPEC));
+	ts->ident = ident;
+	ts->type = type;
+	return ts;
+}
+
+TYPESPEC *makeTypeSpec_struct(IDENT *ident, STRUCTSPEC *ss) {
+	TYPESPEC *ts = malloc(sizeof(TYPESPEC));
+	ts->ident = ident;
+	TYPE *t = makeTYPE(k_typeStruct);
+	t->val.structType = ss;
+	return ts;
+}
+
+STRUCTSPEC *makeStructSpec(IDENT *attribute, TYPE *type) {
+	STRUCTSPEC *ss = malloc(sizeof(STRUCTSPEC));
+	ss->attribute = attribute;
+	ss->type = type;
+	return ss;
 }
