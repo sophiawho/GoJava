@@ -1,5 +1,10 @@
 # Golite
 
+## Group Members
+- Matthew Lesko 260692352
+- Braedon McDonald 260753678
+- Sophia Hu 260705681
+
 ## Rebasing on master
 ```
 $ git fetch origin
