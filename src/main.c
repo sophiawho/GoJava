@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "ast/tree.h"
+#include "weed.h"
 
 void yyparse();
 int yylex();
@@ -24,6 +25,14 @@ int main(int argc, char *argv[])
         else if (strcmp(argv[1], "parse") == 0) {
                 g_tokens = 0;
                 yyparse();
+                printf("OK\n");
+        }
+        else if (strcmp(argv[1], "typecheck") == 0) {
+                g_tokens = 0;
+                yyparse();
+                weedPROG(root);
+
+                // TODO typecheck
                 printf("OK\n");
         }
 
