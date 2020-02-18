@@ -258,8 +258,11 @@ functionDecl:  tFUNC tIDENTIFIER tLPAR inputParams tRPAR optType block tSEMICOLO
 	;
 
 inputParams: 
-	| inputParams tCOMMA identifiers type 
-	| identifiers type
+	| inputParams tCOMMA inputParam
+	| inputParam
+	;
+
+inputParam: identifiers type
 	;
 
 optType: 
