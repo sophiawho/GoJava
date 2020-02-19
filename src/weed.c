@@ -11,17 +11,23 @@ int countEXP(EXP *e);
 int countIDENT(IDENT *i);
 
 void weedTOPLEVELDECL_varSpec(VARSPEC *vs);
+
 void weedFUNC(FUNC *f);
 void weedFUNC_checkForReturnStmt(FUNC *f);
 void weedFUNC_inputParams(TYPESPEC *ts);
 void weedFUNC_inputParams_id(IDENT *id);
+
 void weedSTMT_assign(STMT *s);
 void weedSTMT_forLoop(STMT *s);
 void weedSTMT_forLoop_postStmt(STMT *s);
+
 void weedEXPRCASECLAUSE(EXPRCASECLAUSE *cc);
 void weedEXPRCASECLAUSE_findDefaultCase(EXPRCASECLAUSE *cc, bool foundPreviousDefaultCase);
+
 void weedEXP_eval(EXP *e);
 void weedEXP_nonEval(EXP *e, bool allowBlankId);
+
+void weedTYPESPEC(TYPESPEC *ts);
 void weedTYPE(TYPE *t);
 
 void weedPROG(PROG *p)
@@ -48,6 +54,7 @@ void weedTOPLEVELDECL(TOPLEVELDECL *d)
             break;
         
         case k_topLevelDeclType:
+            weedTYPESPEC(d->val.typeDecl);
             break;
         
         case k_topLevelDeclFunc:
@@ -109,6 +116,9 @@ void weedFUNC_inputParams_id(IDENT *id)
     return;
 }
 
+bool inForLoop = false;
+bool inSwitch = false;
+
 void weedSTMT(STMT *s)
 {
     int countLhs = 0;
@@ -145,6 +155,7 @@ void weedSTMT(STMT *s)
             break;
 
         case k_stmtKindTypeDecl:
+            weedTYPESPEC(s->val.typeDecl);
             break;
 
         case k_stmtKindBlock:
@@ -159,20 +170,26 @@ void weedSTMT(STMT *s)
             break;
 
         case k_stmtKindSwitch:
+            inSwitch = true;
             weedEXP_eval(s->val.switchStmt.exp);
             weedSTMT(s->val.switchStmt.simpleStmt);
             weedEXPRCASECLAUSE_findDefaultCase(s->val.switchStmt.caseClauses, false);
             weedEXPRCASECLAUSE(s->val.switchStmt.caseClauses);
+            inSwitch = false;
             break;
 
         case k_stmtKindFor:
+            inForLoop = true;
             weedSTMT_forLoop(s);
+            inForLoop = false;
             break;
 
         case k_stmtKindBreak:
+            if (!inForLoop && !inSwitch) throwError("expecting for-loop or switch enclosing around break statement", s->lineno);
             break;
 
         case k_stmtKindContinue:
+            if (!inForLoop) throwError("expecting for-loop enclosing around continue statement", s->lineno);
             break;
 
         case k_stmtKindReturn:
@@ -181,6 +198,17 @@ void weedSTMT(STMT *s)
 
         }
         weedSTMT(s->next);
+    }
+    return;
+}
+
+void weedTYPESPEC(TYPESPEC *tsRoot)
+{
+    TYPESPEC *ts = tsRoot;
+    while (ts != NULL)
+    {
+        weedTYPE(ts->type);
+        ts = ts->next;
     }
     return;
 }
