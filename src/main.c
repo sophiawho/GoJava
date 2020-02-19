@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "ast/tree.h"
+#include "pretty.h"
 
 void yyparse();
 int yylex();
@@ -25,6 +26,11 @@ int main(int argc, char *argv[])
                 g_tokens = 0;
                 yyparse();
                 printf("OK\n");
+        }
+        else if (strcmp(argv[1], "pretty") == 0) {
+                g_tokens = 0;
+                yyparse();
+                pretty_PROG(root);
         }
 
         return 0;
