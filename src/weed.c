@@ -66,8 +66,7 @@ void weedTOPLEVELDECL_varSpec(VARSPEC *vs)
 void weedFUNC(FUNC *f)
 {
     if (f != NULL) {
-        // if (f->returnType != NULL) weedFUNC_checkForReturnStmt(f);
-        // if (f->returnType != NULL && f->returnStmt == NULL) throwError("expected return statement", f->lineno);
+        if (f->returnType != NULL) weedFUNC_checkForReturnStmt(f);
         // weedFUNC_inputParams(f->inputParams);
         weedSTMT(f->rootStmt);
     }
@@ -75,7 +74,7 @@ void weedFUNC(FUNC *f)
 
 void weedFUNC_checkForReturnStmt(FUNC *f)
 {
-    STMT *s = f->rootStmt;
+    STMT *s = f->rootStmt->val.blockStmt;
     while(s != NULL) 
     {
         if (s->kind == k_stmtKindReturn) return;
