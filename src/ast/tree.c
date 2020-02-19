@@ -200,6 +200,7 @@ TYPESPEC *makeTypeSpec_struct(IDENT *ident, STRUCTSPEC *ss) {
 	ts->ident = ident;
 	TYPE *t = makeTYPE(k_typeStruct);
 	t->val.structType = ss;
+	ts->type = t;
 	return ts;
 }
 
