@@ -1,10 +1,19 @@
 # Golite
 
+## Group Members
+- Matthew Lesko 260692352
+- Braedon McDonald 260753678
+- Sophia Hu 260705681
+
 ## Rebasing on master
 ```
 $ git fetch origin
 $ git rebase origin/master
 ```
+
+## Instructions
+The tests that you must evaluate contain the prefix `meaningful*.go`. Please ignore the rest.
+Please evaluate only the `.go` programs that begin with the prefix `meaningful*.go` in `programs/`. The rest are for our tests.
 
 ## Coding convention:
 
