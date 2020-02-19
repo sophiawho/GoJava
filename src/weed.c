@@ -245,11 +245,6 @@ void weedSTMT_forLoop_postStmt(STMT *s)
 {
     switch (s->kind)
     {
-    case k_stmtKindExpStmt:
-    case k_stmtKindIncDec:
-    case k_stmtKindPrint:
-        break;
-
     case k_stmtKindAssign:
         if (s->val.assignStmt.kind == k_stmtColonAssign) throwError("cannot declare in post statement of for loop", s->lineno);
         break;
@@ -265,6 +260,9 @@ void weedSTMT_forLoop_postStmt(STMT *s)
     case k_stmtKindContinue:
     case k_stmtKindReturn:
         throwError("expecting expression in post statement of for loop", s->lineno);
+        break;
+
+    default:
         break;
     }
 }
@@ -310,13 +308,6 @@ void weedEXP_eval(EXP *e)
         {
         case k_expKindIdentifier:
             if (isBlankId(e->val.identExp.ident)) throwError("cannot use _ as a value", e->lineno);
-            break;
-
-        case k_expKindIntLiteral:
-        case k_expKindFloatLiteral:
-        case k_expKindBoolLiteral:
-        case k_expKindRuneLiteral:
-        case k_expKindStringLiteral:
             break;
 
         case k_expKindAnd:
@@ -374,6 +365,9 @@ void weedEXP_eval(EXP *e)
 
         case k_expKindCap:
             weedEXP_eval(e->val.capExp);
+            break;
+
+        default:
             break;
         }
 
