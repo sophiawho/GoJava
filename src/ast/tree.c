@@ -59,6 +59,7 @@ TYPE *makeTYPE_slice(TYPE *type) {
 TYPE *makeTYPE(TypeKind kind) {
     TYPE *type = malloc(sizeof(TYPE));
     type->kind = kind;
+	type->lineno = yylineno;
     return type;
 }
 

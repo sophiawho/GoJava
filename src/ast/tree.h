@@ -51,6 +51,7 @@ typedef enum {
 
 struct TYPE {
     TypeKind kind;
+    int lineno;
     union {
         char *identifier;
         STRUCTSPEC *structType;
