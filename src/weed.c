@@ -18,8 +18,8 @@ void weedFUNC_inputParams_id(IDENT *id);
 void weedSTMT_assign(STMT *s);
 void weedEXPRCASECLAUSE(EXPRCASECLAUSE *cc);
 void weedEXPRCASECLAUSE_findDefaultCase(EXPRCASECLAUSE *cc, bool foundPreviousDefaultCase);
-void weedEXP_nonEval(EXP *e);
 void weedEXP_eval(EXP *e);
+void weedEXP_nonEval(EXP *e, bool allowBlankId);
 void weedTYPE(TYPE *t);
 
 void weedPROG(PROG *p)
@@ -188,14 +188,26 @@ void weedSTMT(STMT *s)
 
 void weedSTMT_assign(STMT *s)
 {
+    bool allowBlankId;
+    int countLhs = 0;
+    int countRhs = 0;
     switch (s->val.assignStmt.kind)
     {
+    // In assignment statements, both the left- and right-hand expression lists must be of 
+    // the same number of tokens
     case k_stmtAssign:
     case k_stmtColonAssign:
-        weedEXP_nonEval(s->val.assignStmt.lhs);
+        allowBlankId = true;
+        weedEXP_nonEval(s->val.assignStmt.lhs, allowBlankId);
         weedEXP_eval(s->val.assignStmt.rhs);
+        countLhs = countEXP(s->val.assignStmt.lhs);
+        countRhs = countEXP(s->val.assignStmt.rhs);
+        if (countLhs != countRhs) throwError("expecting same number of identifiers as expressions", s->lineno);
         break;
 
+    // In assignment operations, both the left- and right-hand expression lists must contain 
+    // exactly one single-valued expression, and the left-hand expression must not be the 
+    // blank identifier. 
     case k_opAssignKindPlusEq:
     case k_opAssignKindMinusEq:
     case k_opAssignKindMultEq:
@@ -207,8 +219,12 @@ void weedSTMT_assign(STMT *s)
     case k_opAssignKindLeftShiftEq:
     case k_opAssignKindRightShiftEq:
     case k_opAssignKindBitClearEq:
-        weedEXP_eval(s->val.assignStmt.lhs);
+        allowBlankId = false;
+        weedEXP_nonEval(s->val.assignStmt.lhs, allowBlankId);
         weedEXP_eval(s->val.assignStmt.rhs);
+        countLhs = countEXP(s->val.assignStmt.lhs);
+        countRhs = countEXP(s->val.assignStmt.rhs);
+        if (countLhs != 1 || countRhs != 1) throwError("expecting exactly one identifier and one expression", s->lineno);
         break;
 
     }
@@ -346,18 +362,22 @@ void weedTYPE(TYPE *t)
     return;
 }
 
-void weedEXP_nonEval(EXP *e)
+void weedEXP_nonEval(EXP *e, bool allowBlankId)
 {
     if (e != NULL)
     {
         switch (e->kind)
         {
         case k_expKindIdentifier:
+            if (!allowBlankId && isBlankId(e->val.identExp.ident)) throwError("cannot use _ as a value", e->lineno);
+            break;
+
         case k_expKindIntLiteral:
         case k_expKindFloatLiteral:
         case k_expKindBoolLiteral:
         case k_expKindRuneLiteral:
         case k_expKindStringLiteral:
+            throwError("cannot use a literal in an expression that doesn't evaluate to a value", e->lineno);
             break;
 
         case k_expKindAnd:
@@ -379,15 +399,14 @@ void weedEXP_nonEval(EXP *e)
         case k_expKindRightShift:
         case k_expKindBitAnd:
         case k_expKindBitClear:
-            weedEXP_nonEval(e->val.binary.lhs);
-            weedEXP_nonEval(e->val.binary.rhs);
+            throwError("cannot perform binary operation in an expression that doesn't evaluate to a value", e->lineno);
             break;
 
         case k_expKindUPlus:
         case k_expKindUMinus:
         case k_expKindBang:
         case k_expKindUBitXOR:
-            weedEXP_nonEval(e->val.unary.rhs);
+            throwError("cannot perform unary operation in an expression that doesn't evaluate to a value", e->lineno);
             break;
 
         case k_expKindFuncCall:
