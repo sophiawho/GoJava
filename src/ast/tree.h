@@ -43,11 +43,6 @@ TOPLEVELDECL *makeTopLevelDecl_type(TYPESPEC *typedecl);
 TOPLEVELDECL *makeTopLevelDecl_func(FUNC *funcdecl);
 
 typedef enum {
-    k_typeInt,
-    k_typeFloat,
-    k_typeBool,
-    k_typeRune,
-    k_typeString,
     k_typeSlice,
     k_typeArray,
     k_typeStruct,
@@ -57,13 +52,14 @@ typedef enum {
 struct TYPE {
     TypeKind kind;
     union {
+        char *identifier;
         STRUCTSPEC *structType;
         struct { TYPE *type; } sliceType;
-        struct { EXP *exp; TYPE *type; } arrayType;
+        struct { int size; TYPE *type; } arrayType;
     } val;
 }; 
 TYPE *makeTYPE_ident(char *identifier); 
-TYPE *makeTYPE_array(EXP *exp, TYPE *type); 
+TYPE *makeTYPE_array(int size, TYPE *type); 
 TYPE *makeTYPE_slice(TYPE *type);
 TYPE *makeTYPE(TypeKind kind);
 
@@ -103,7 +99,6 @@ typedef enum {
     k_expKindUMinus,
     k_expKindBang,
     k_expKindUBitXOR, // ATTN: This is similarly named to binary op k_expKindBitXOR
-    k_expKindParentheses,
     k_expKindFuncCall,
     k_expKindArrayAccess,
     k_expKindFieldAccess,
@@ -168,6 +163,7 @@ struct IDENT {
 IDENT *makeIDENT(char *ident);
 
 struct VARSPEC {
+    int lineno;
     IDENT *ident;
     EXP *rhs;
     TYPE *type;
@@ -176,6 +172,7 @@ struct VARSPEC {
 VARSPEC *makeVarSpec(IDENT *ident, EXP *rhs, TYPE *type);
 
 struct TYPESPEC {
+    int lineno;
     IDENT *ident;
     TYPE *type;
     TYPESPEC *next;
