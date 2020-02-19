@@ -12,6 +12,7 @@ void weedFUNC(FUNC *f);
 void weedFUNC_inputParams(TYPESPEC *ts);
 void weedFUNC_inputParams_id(IDENT *id);
 void weedSTMT_assign(STMT *s);
+void weedEXPRCASECLAUSE(EXPRCASECLAUSE *cc);
 void weedEXPRCASECLAUSE_findDefaultCase(EXPRCASECLAUSE *cc, bool foundPreviousDefaultCase);
 void weedEXP_nonEval(EXP *e);
 void weedEXP_eval(EXP *e);
@@ -112,6 +113,7 @@ void weedSTMT(STMT *s)
             break;
 
         case k_stmtKindVarDecl:
+            if (s->val.varDecl->rhs != NULL) weedEXP_eval(s->val.varDecl->rhs);
             break;
 
         case k_stmtKindTypeDecl:
@@ -129,10 +131,17 @@ void weedSTMT(STMT *s)
             break;
 
         case k_stmtKindSwitch:
+            weedEXP_eval(s->val.switchStmt.exp);
+            weedSTMT(s->val.switchStmt.simpleStmt);
             weedEXPRCASECLAUSE_findDefaultCase(s->val.switchStmt.caseClauses, false);
+            weedEXPRCASECLAUSE(s->val.switchStmt.caseClauses);
             break;
 
         case k_stmtKindFor:
+            weedSTMT(s->val.forLoop.initStmt);
+            weedEXP_eval(s->val.forLoop.condition);
+            weedSTMT(s->val.forLoop.body);
+            weedSTMT(s->val.forLoop.postStmt);
             break;
 
         case k_stmtKindBreak:
@@ -180,6 +189,26 @@ void weedSTMT_assign(STMT *s)
     return;
 }
 
+void weedEXPRCASECLAUSE(EXPRCASECLAUSE *cc)
+{
+    if (cc != NULL)
+    {
+        switch (cc->kind)
+        {
+        case k_caseClause:
+            weedEXP_eval(cc->expList);
+            weedSTMT(cc->stmtList);
+            break;
+        
+        case k_defaultClause:
+            weedSTMT(cc->stmtList);
+            break;
+        }
+        weedEXPRCASECLAUSE(cc->next);
+    }
+    return;
+}
+
 void weedEXPRCASECLAUSE_findDefaultCase(EXPRCASECLAUSE *cc, bool foundPreviousDefaultCase)
 {
     bool foundDefaultCase = false;
@@ -200,7 +229,7 @@ void weedEXP_eval(EXP *e)
         switch (e->kind)
         {
         case k_expKindIdentifier:
-            if (isBlankId(e->val.identExp.ident)) throwError("cannot use _ as value", e->lineno);
+            if (isBlankId(e->val.identExp.ident)) throwError("cannot use _ as a value", e->lineno);
             break;
 
         case k_expKindIntLiteral:
@@ -324,12 +353,12 @@ void weedEXP_nonEval(EXP *e)
             break;
 
         case k_expKindArrayAccess:
-            weedEXP_nonEval(e->val.arrayAccess.arrayReference);
+            weedEXP_eval(e->val.arrayAccess.arrayReference);
             weedEXP_eval(e->val.arrayAccess.indexExp);
             break;
 
         case k_expKindFieldAccess:
-            weedEXP_nonEval(e->val.fieldAccess.object);
+            weedEXP_eval(e->val.fieldAccess.object);
             if (isBlankId(e->val.fieldAccess.field)) throwError("cannot refer to blank field", e->lineno);
             break;
 
