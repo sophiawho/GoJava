@@ -16,6 +16,8 @@ void weedFUNC_checkForReturnStmt(FUNC *f);
 void weedFUNC_inputParams(TYPESPEC *ts);
 void weedFUNC_inputParams_id(IDENT *id);
 void weedSTMT_assign(STMT *s);
+void weedSTMT_forLoop(STMT *s);
+void weedSTMT_forLoop_postStmt(STMT *s);
 void weedEXPRCASECLAUSE(EXPRCASECLAUSE *cc);
 void weedEXPRCASECLAUSE_findDefaultCase(EXPRCASECLAUSE *cc, bool foundPreviousDefaultCase);
 void weedEXP_eval(EXP *e);
@@ -164,10 +166,7 @@ void weedSTMT(STMT *s)
             break;
 
         case k_stmtKindFor:
-            weedSTMT(s->val.forLoop.initStmt);
-            weedEXP_eval(s->val.forLoop.condition);
-            weedSTMT(s->val.forLoop.body);
-            weedSTMT(s->val.forLoop.postStmt);
+            weedSTMT_forLoop(s);
             break;
 
         case k_stmtKindBreak:
@@ -229,6 +228,58 @@ void weedSTMT_assign(STMT *s)
 
     }
     return;
+}
+
+void weedSTMT_forLoop(STMT *s) 
+{
+    switch (s->val.forLoop.kind)
+    {
+    case k_loopKindInfinite:
+        weedSTMT(s->val.forLoop.body);
+        break;
+
+    case k_loopKindWhile:
+        weedSTMT(s->val.forLoop.body);
+        weedEXP_eval(s->val.forLoop.condition);
+        break;
+
+    case k_loopKindThreePart:
+        weedSTMT(s->val.forLoop.initStmt);
+        weedEXP_eval(s->val.forLoop.condition);
+        if (s->val.forLoop.postStmt != NULL) weedSTMT_forLoop_postStmt(s->val.forLoop.postStmt);
+        weedSTMT(s->val.forLoop.postStmt);    
+        weedSTMT(s->val.forLoop.body);
+        break;
+    }
+    return;
+}
+
+void weedSTMT_forLoop_postStmt(STMT *s)
+{
+    switch (s->kind)
+    {
+    case k_stmtKindExpStmt:
+    case k_stmtKindIncDec:
+    case k_stmtKindPrint:
+        break;
+
+    case k_stmtKindAssign:
+        if (s->val.assignStmt.kind == k_stmtColonAssign) throwError("cannot declare in post statement of for loop", s->lineno);
+        break;
+
+    case k_stmtKindVarDecl:
+    case k_stmtKindTypeDecl:
+    case k_stmtKindBlock:
+    case k_stmtKindShortDecl:
+    case k_stmtKindIfStmt:
+    case k_stmtKindSwitch:
+    case k_stmtKindFor:
+    case k_stmtKindBreak:
+    case k_stmtKindContinue:
+    case k_stmtKindReturn:
+        throwError("expecting expression in post statement of for loop", s->lineno);
+        break;
+    }
 }
 
 void weedEXPRCASECLAUSE(EXPRCASECLAUSE *cc)
