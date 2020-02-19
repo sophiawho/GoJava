@@ -11,6 +11,10 @@ $ git fetch origin
 $ git rebase origin/master
 ```
 
+## Instructions
+The tests that you must evaluate contain the prefix `meaningful*.go`. Please ignore the rest.
+Please evaluate only the `.go` programs that begin with the prefix `meaningful*.go` in `programs/`. The rest are for our tests.
+
 ## Coding convention:
 
 `branching`: Branch naming should follow convention `name`-`feature/bug`-`short_title`, eg: `sophia-feature-scanner` where possible.

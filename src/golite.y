@@ -221,7 +221,7 @@ type: sliceType { $$ = $1; }
 sliceType: tLBRACKET tRBRACKET type 			{ $$ = makeTYPE_slice($3); }
 	;
 
-arrayType: tLBRACKET expression tRBRACKET type 	{ $$ = makeTYPE_array($2, $4); }
+arrayType: tLBRACKET tINTVAL tRBRACKET type 	{ $$ = makeTYPE_array($2, $4); }
 	;
 
 expressions: expression 			{ $$ = $1; }
@@ -266,7 +266,7 @@ unaryExpr: tADD expression %prec UPLUS 	{ $$ = makeEXP_unary(k_expKindUPlus, $2)
 	| tMINUS expression %prec UMINUS 	{ $$ = makeEXP_unary(k_expKindUMinus, $2); }
 	| tBANG expression 					{ $$ = makeEXP_unary(k_expKindBang, $2); }
 	| tBITXOR expression %prec UBITXOR 	{ $$ = makeEXP_unary(k_expKindUBitXOR, $2); }
-	| tLPAR expression tRPAR 			{ $$ = makeEXP_unary(k_expKindParentheses, $2); }
+	| tLPAR expression tRPAR 			{ $$ = $2; }
 	;
 
 builtinExpr: tAPPEND tLPAR expression tCOMMA expression tRPAR 	{ $$ = makeEXP_append($3, $5); }
@@ -280,10 +280,7 @@ functionCallExpr: type tLPAR expressions tRPAR		{ $$ = makeEXP_funcCall($1, $3);
 
 functionDecl:  
 	tFUNC tIDENTIFIER tLPAR inputParams tRPAR optType block tSEMICOLON { 
-		$$ = makeFunc($2, $6, $4, $7, NULL); 
-	}
-	| tFUNC tIDENTIFIER tLPAR inputParams tRPAR optType tLBRACE statements returnStmt tRBRACE tSEMICOLON {
-		$$ = makeFunc($2, $6, $4, $8, $9);
+		$$ = makeFunc($2, $6, $4, $7); 
 	}
 	;
 
