@@ -57,7 +57,7 @@ void weedTOPLEVELDECL_varSpec(VARSPEC *vs)
 {
     if (vs != NULL)
     {
-        if (vs->rhs != NULL) throwError("top level variable declarations cannot be assigned an expression", 0); // TODO add lineno in VARSPEC
+        if (vs->rhs != NULL) throwError("top level variable declarations are not assignable", vs->lineno);
         weedTOPLEVELDECL_varSpec(vs->next);
     }
     return;
@@ -111,6 +111,7 @@ void weedSTMT(STMT *s)
         switch (s->kind)
         {
         case k_stmtKindExpStmt:
+            if (!(s->val.expStmt->kind == k_expKindFuncCall)) throwError("expression statements can only be function calls", s->lineno);
             weedEXP_eval(s->val.expStmt);
             break;
             
@@ -316,10 +317,22 @@ void weedEXP_eval(EXP *e)
     return;
 }
 
-// TODO finish
 void weedTYPE(TYPE *t)
 {
-    // t->
+    if (t != NULL)
+    {
+        switch (t->kind)
+        {
+        case k_typeSlice:
+        case k_typeArray:
+        case k_typeStruct:
+            break;
+        case k_typeInfer:
+            if (isBlankId(t->val.identifier)) throwError("cannot use _ as a value", t->lineno);
+            break;
+        }
+    }
+    return;
 }
 
 void weedEXP_nonEval(EXP *e)
@@ -384,6 +397,7 @@ void weedEXP_nonEval(EXP *e)
         case k_expKindLen:
         case k_expKindCap:
             throwError("cannot use a builtin in an expression that doesn't evaluate to a value", e->lineno);
+            break;
         }
     }
     return;
