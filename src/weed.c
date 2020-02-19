@@ -10,26 +10,6 @@ bool isBlankId(char *identifier);
 int countEXP(EXP *e);
 int countIDENT(IDENT *i);
 
-void weedTOPLEVELDECL_varSpec(VARSPEC *vs);
-
-void weedFUNC(FUNC *f);
-void weedFUNC_checkForReturnStmt(FUNC *f);
-void weedFUNC_inputParams(TYPESPEC *ts);
-void weedFUNC_inputParams_id(IDENT *id);
-
-void weedSTMT_assign(STMT *s);
-void weedSTMT_forLoop(STMT *s);
-void weedSTMT_forLoop_postStmt(STMT *s);
-
-void weedEXPRCASECLAUSE(EXPRCASECLAUSE *cc);
-void weedEXPRCASECLAUSE_findDefaultCase(EXPRCASECLAUSE *cc, bool foundPreviousDefaultCase);
-
-void weedEXP_eval(EXP *e);
-void weedEXP_nonEval(EXP *e, bool allowBlankId);
-
-void weedTYPESPEC(TYPESPEC *ts);
-void weedTYPE(TYPE *t);
-
 void weedPROG(PROG *p)
 {
     if (p != NULL)
@@ -79,7 +59,6 @@ void weedFUNC(FUNC *f)
 {
     if (f != NULL) {
         if (f->returnType != NULL) weedFUNC_checkForReturnStmt(f);
-        // weedFUNC_inputParams(f->inputParams);
         weedSTMT(f->rootStmt);
     }
 }
@@ -94,26 +73,6 @@ void weedFUNC_checkForReturnStmt(FUNC *f)
     }
 
     throwError("expected return statement", f->lineno);
-}
-
-void weedFUNC_inputParams(TYPESPEC *ts)
-{
-    if (ts != NULL)
-    {
-        weedFUNC_inputParams_id(ts->ident);
-        weedFUNC_inputParams(ts->next);
-    }
-    return;
-}
-
-void weedFUNC_inputParams_id(IDENT *id)
-{
-    if (id != NULL)
-    {
-        // if (isBlankId(id->ident)) throwError("cannot declare _ as a function parameter", 0); // TODO add lineno to IDENT
-        weedFUNC_inputParams_id(id->next);
-    }
-    return;
 }
 
 int forLoopDepth = 0;
