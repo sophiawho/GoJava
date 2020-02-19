@@ -7,6 +7,9 @@
 #define BLANK_IDENTIFIER "_"
 
 bool isBlankId(char *identifier);
+int countEXP(EXP *e);
+int countIDENT(IDENT *i);
+
 void weedTOPLEVELDECL_varSpec(VARSPEC *vs);
 void weedFUNC(FUNC *f);
 void weedFUNC_checkForReturnStmt(FUNC *f);
@@ -106,6 +109,8 @@ void weedFUNC_inputParams_id(IDENT *id)
 
 void weedSTMT(STMT *s)
 {
+    int countLhs = 0;
+    int countRhs = 0;
     if (s != NULL) 
     {
         switch (s->kind)
@@ -128,7 +133,13 @@ void weedSTMT(STMT *s)
             break;
 
         case k_stmtKindVarDecl:
-            if (s->val.varDecl->rhs != NULL) weedEXP_eval(s->val.varDecl->rhs);
+            if (s->val.varDecl->rhs != NULL) 
+            {
+                countLhs = countIDENT(s->val.varDecl->ident);
+                countRhs = countEXP(s->val.varDecl->rhs);
+                if (countLhs != countRhs) throwError("expecting same number of identifiers as expressions", s->lineno);
+                weedEXP_eval(s->val.varDecl->rhs);
+            }
             break;
 
         case k_stmtKindTypeDecl:
@@ -406,4 +417,26 @@ void weedEXP_nonEval(EXP *e)
 bool isBlankId(char *identifier)
 {
     return strcmp(BLANK_IDENTIFIER, identifier) == 0;
+}
+
+int countEXP(EXP *e)
+{
+    int count = 0;
+    while (e != NULL)
+    {
+        count++;
+        e = e->next;
+    }
+    return count;
+}
+
+int countIDENT(IDENT *i)
+{
+    int count = 0;
+    while (i != NULL)
+    {
+        count++;
+        i = i->next;
+    }
+    return count;
 }
