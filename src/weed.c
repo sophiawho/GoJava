@@ -9,6 +9,7 @@
 bool isBlankId(char *identifier);
 void weedTOPLEVELDECL_varSpec(VARSPEC *vs);
 void weedFUNC(FUNC *f);
+void weedFUNC_checkForReturnStmt(FUNC *f);
 void weedFUNC_inputParams(TYPESPEC *ts);
 void weedFUNC_inputParams_id(IDENT *id);
 void weedSTMT_assign(STMT *s);
@@ -16,6 +17,7 @@ void weedEXPRCASECLAUSE(EXPRCASECLAUSE *cc);
 void weedEXPRCASECLAUSE_findDefaultCase(EXPRCASECLAUSE *cc, bool foundPreviousDefaultCase);
 void weedEXP_nonEval(EXP *e);
 void weedEXP_eval(EXP *e);
+void weedTYPE(TYPE *t);
 
 void weedPROG(PROG *p)
 {
@@ -64,10 +66,26 @@ void weedTOPLEVELDECL_varSpec(VARSPEC *vs)
 void weedFUNC(FUNC *f)
 {
     if (f != NULL) {
-        if (f->returnType != NULL && f->returnStmt == NULL) throwError("expected return statement", f->lineno);
+        // if (f->returnType != NULL) weedFUNC_checkForReturnStmt(f);
+        // if (f->returnType != NULL && f->returnStmt == NULL) throwError("expected return statement", f->lineno);
+        // printf("stmts: %p\n", f->rootStmt);
+        // printf("return: %p\n", f->returnStmt);
         // weedFUNC_inputParams(f->inputParams);
         weedSTMT(f->rootStmt);
     }
+}
+
+void weedFUNC_checkForReturnStmt(FUNC *f)
+{
+    if (f->returnStmt != NULL) return;
+    STMT *s = f->rootStmt;
+    while(s != NULL) 
+    {
+        if (s->kind == k_stmtKindReturn) return;
+        s = s->next;
+    }
+
+    throwError("expected return statement", f->lineno);
 }
 
 void weedFUNC_inputParams(TYPESPEC *ts)
@@ -271,7 +289,7 @@ void weedEXP_eval(EXP *e)
             break;
 
         case k_expKindFuncCall:
-            // weedTYPE(e->val.funcCall.type); // TODO finish
+            weedTYPE(e->val.funcCall.type);
             break;
 
         case k_expKindArrayAccess:
@@ -301,6 +319,12 @@ void weedEXP_eval(EXP *e)
         weedEXP_eval(e->next);
     }
     return;
+}
+
+// TODO finish
+void weedTYPE(TYPE *t)
+{
+    // t->
 }
 
 void weedEXP_nonEval(EXP *e)
