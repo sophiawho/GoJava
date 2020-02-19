@@ -68,8 +68,6 @@ void weedFUNC(FUNC *f)
     if (f != NULL) {
         // if (f->returnType != NULL) weedFUNC_checkForReturnStmt(f);
         // if (f->returnType != NULL && f->returnStmt == NULL) throwError("expected return statement", f->lineno);
-        // printf("stmts: %p\n", f->rootStmt);
-        // printf("return: %p\n", f->returnStmt);
         // weedFUNC_inputParams(f->inputParams);
         weedSTMT(f->rootStmt);
     }
@@ -77,7 +75,6 @@ void weedFUNC(FUNC *f)
 
 void weedFUNC_checkForReturnStmt(FUNC *f)
 {
-    if (f->returnStmt != NULL) return;
     STMT *s = f->rootStmt;
     while(s != NULL) 
     {
@@ -284,7 +281,6 @@ void weedEXP_eval(EXP *e)
         case k_expKindUMinus:
         case k_expKindBang:
         case k_expKindUBitXOR:
-        case k_expKindParentheses:
             weedEXP_eval(e->val.unary.rhs);
             break;
 
@@ -368,7 +364,6 @@ void weedEXP_nonEval(EXP *e)
         case k_expKindUMinus:
         case k_expKindBang:
         case k_expKindUBitXOR:
-        case k_expKindParentheses:
             weedEXP_nonEval(e->val.unary.rhs);
             break;
 
