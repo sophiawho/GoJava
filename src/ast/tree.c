@@ -38,27 +38,14 @@ TOPLEVELDECL *makeTopLevelDecl_func(FUNC *funcdecl) {
 }
 
 TYPE *makeTYPE_ident(char *identifier) {
-	if (strcmp(identifier, "int") == 0) {
-		return makeTYPE(k_typeInt);
-	}
-	else if (strcmp(identifier, "float64") == 0) {
-		return makeTYPE(k_typeFloat);
-	}
-	else if (strcmp(identifier, "bool") == 0) {
-		return makeTYPE(k_typeBool);
-	}
-	else if (strcmp(identifier, "rune") == 0) {
-		return makeTYPE(k_typeRune);
-	}
-	else if (strcmp(identifier, "string") == 0) {
-		return makeTYPE(k_typeString);
-	}
-	return NULL;
+	TYPE *t = makeTYPE(k_typeInfer);
+	t->val.identifier = identifier;
+	return t;
 }
 
-TYPE *makeTYPE_array(EXP *exp, TYPE *type) {
+TYPE *makeTYPE_array(int size, TYPE *type) {
 	TYPE *t = makeTYPE(k_typeArray);
-	t->val.arrayType.exp = exp;
+	t->val.arrayType.size = size;
 	t->val.arrayType.type = type;
 	return t;
 }
@@ -91,28 +78,28 @@ EXP *makeEXP_identifier(char *id) {
 EXP *makeEXP_intLiteral(int intLiteral) {
 	EXP *e = getGenericExpr(k_expKindIntLiteral);
 	e->val.intLiteral = intLiteral;
-	e->type = makeTYPE(k_typeInt);
+	e->type = makeTYPE(k_typeInfer);
 	return e;
 }
 
 EXP *makeEXP_floatLiteral(float floatLiteral) {
 	EXP *e = getGenericExpr(k_expKindFloatLiteral);
 	e->val.floatLiteral = floatLiteral;
-	e->type = makeTYPE(k_typeFloat);
+	e->type = makeTYPE(k_typeInfer);
 	return e;
 }
 
 EXP *makeEXP_runeLiteral(char runeLiteral) {
     EXP *e = getGenericExpr(k_expKindRuneLiteral);
 	e->val.runeLiteral = runeLiteral;
-	e->type = makeTYPE(k_typeRune);
+	e->type = makeTYPE(k_typeInfer);
 	return e;
 }
 
 EXP *makeEXP_stringLiteral(char *stringLiteral) {
     EXP *e = getGenericExpr(k_expKindStringLiteral);
 	e->val.stringLiteral = stringLiteral;
-	e->type = makeTYPE(k_typeString);
+	e->type = makeTYPE(k_typeInfer);
 	return e;
 }
 
@@ -193,6 +180,7 @@ IDENT *makeIDENT(char *ident) {
 
 VARSPEC *makeVarSpec(IDENT *ident, EXP *rhs, TYPE *type) {
     VARSPEC *vs = malloc(sizeof(VARSPEC));
+	vs->lineno = yylineno;
     vs->ident = ident;
     vs->rhs = rhs;
     vs->type = type;
@@ -201,6 +189,7 @@ VARSPEC *makeVarSpec(IDENT *ident, EXP *rhs, TYPE *type) {
 
 TYPESPEC *makeTypeSpec(IDENT *ident, TYPE *type) {
 	TYPESPEC *ts = malloc(sizeof(TYPESPEC));
+	ts->lineno = yylineno;
 	ts->ident = ident;
 	ts->type = type;
 	return ts;
@@ -208,6 +197,7 @@ TYPESPEC *makeTypeSpec(IDENT *ident, TYPE *type) {
 
 TYPESPEC *makeTypeSpec_struct(IDENT *ident, STRUCTSPEC *ss) {
 	TYPESPEC *ts = malloc(sizeof(TYPESPEC));
+	ts->lineno = yylineno;
 	ts->ident = ident;
 	TYPE *t = makeTYPE(k_typeStruct);
 	t->val.structType = ss;
