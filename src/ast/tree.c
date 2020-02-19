@@ -161,14 +161,13 @@ EXP *makeEXP_fieldAccess(EXP *object, char *field) {
 	return e;
 }
 
-FUNC *makeFunc(char *name, TYPE *returnType, TYPESPEC *inputParams, STMT *rootStmt, STMT *returnStmt) {
+FUNC *makeFunc(char *name, TYPE *returnType, TYPESPEC *inputParams, STMT *rootStmt) {
 	FUNC *func = malloc(sizeof(FUNC));
 	func->lineno = yylineno;
 	func->name = name;
 	func->returnType = returnType;
 	func->inputParams = inputParams;
 	func->rootStmt = rootStmt;
-	func->returnStmt = returnStmt;
 	return func;
 }
 

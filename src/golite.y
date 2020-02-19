@@ -280,10 +280,7 @@ functionCallExpr: type tLPAR expressions tRPAR		{ $$ = makeEXP_funcCall($1, $3);
 
 functionDecl:  
 	tFUNC tIDENTIFIER tLPAR inputParams tRPAR optType block tSEMICOLON { 
-		$$ = makeFunc($2, $6, $4, $7, NULL); 
-	}
-	| tFUNC tIDENTIFIER tLPAR inputParams tRPAR optType tLBRACE statements returnStmt tRBRACE tSEMICOLON {
-		$$ = makeFunc($2, $6, $4, $8, $9);
+		$$ = makeFunc($2, $6, $4, $7); 
 	}
 	;
 

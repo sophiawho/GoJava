@@ -152,9 +152,8 @@ struct FUNC {
     TYPE *returnType; // optional
     TYPESPEC *inputParams; // optional
     STMT *rootStmt;
-    STMT *returnStmt; // optional
 };
-FUNC *makeFunc(char *name, TYPE *returnType, TYPESPEC *inputParams, STMT *rootStmt, STMT *returnStmt);
+FUNC *makeFunc(char *name, TYPE *returnType, TYPESPEC *inputParams, STMT *rootStmt);
 
 struct IDENT {
     char *ident;
