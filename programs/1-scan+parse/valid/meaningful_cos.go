@@ -16,16 +16,16 @@ func computeCos(angle float64) float64 {
 		var numerator = power(numerator, iterationNumber*2);
 		var denominator = factorial(iterationNumber*2);
 		var addend = numerator/float64(denominator);
-		if (addend < 0.00005) {
-			return sum;
-		}
 		if (iterationNumber % 2 == 0) { // Even iteration
 			sum += addend;
-		} else { // Odd iteration
-			sum -= addend;
+			} else { // Odd iteration
+				sum -= addend;
+			}
+			iterationNumber++;
+			if (addend < 0.00005) { // Stopping condition
+				return sum;
+			}
 		}
-		iterationNumber++;
-	}
 
 }
 
