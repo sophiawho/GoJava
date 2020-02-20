@@ -12,7 +12,7 @@ $ git rebase origin/master
 ```
 
 ## Instructions
-The written programs for evaluation contain the prefix `meaningful*.go`. Please ignore the rest of the programs, they are for our tests.
+The **Syntactically-Correct Example Programs** are found in `programs/1-scan+parse/valid/` and contian the prefix `meaningful*.go`. Please ignore the rest of the programs, they are for our tests.
 
 ## Coding convention:
 
