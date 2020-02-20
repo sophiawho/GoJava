@@ -1,4 +1,4 @@
-// Apprxomiate value of sin(angle) by Maclaurin series expansion
+// Approximate value of sin(angle) by Maclaurin series expansion
 package main
 
 func main() {
