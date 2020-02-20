@@ -5,14 +5,14 @@
 - Braedon McDonald 260753678
 - Sophia Hu 260705681
 
+## Grading Instructions
+The **Syntactically-Correct Example Programs** are found in `programs/1-scan+parse/valid/` and contian the prefix `meaningful*.go`. Please ignore the rest of the programs, they are for our tests.
+
 ## Rebasing on master
 ```
 $ git fetch origin
 $ git rebase origin/master
 ```
-
-## Instructions
-The written programs for evaluation contain the prefix `meaningful*.go`. Please ignore the rest of the programs, they are for our tests.
 
 ## Coding convention:
 
@@ -20,10 +20,10 @@ The written programs for evaluation contain the prefix `meaningful*.go`. Please 
 
 ## Report:
 
-[Report Link.](https://docs.google.com/document/d/1H60gGayERn9IGiQ-lXdMc65WfG8EbcELD4KvlptWegU/edit?usp=sharing)
+[Report Link.](https://paper.dropbox.com/doc/GoLite-Deliverable-1-Report--AurU1nCuNuN3fKv1OgcMTFcHAg-18wB5Wgr4INOjytUhIiwh)
 
 ## Resources Consulted:
-[Optional Semi-colons.](https://github.com/comp520/Examples/blob/master/flex%2Bbison/optional-semicolon/tiny.l)
+We worked alone.
 
 # Assignment Template
 
