@@ -26,13 +26,13 @@ func computeCos(angle float64) float64 {
 				return sum;
 			}
 		}
-
+	
+	return sum;
 }
 
 func power(base float64, exp float64) float64 {
 	var result = base
-	i := 0
-	for i; i < exp - 1; i++ {
+	for i := 0; i < exp - 1; i++ {
 		result *= base
 	}
 	return result
@@ -40,8 +40,7 @@ func power(base float64, exp float64) float64 {
 
 func factorial(x int) int {
 	var result = 1
-	i := 1
-	for i; i <= x; i++ {
+	for i := 1; i <= x; i++ {
 		result *= i 
 	}
 

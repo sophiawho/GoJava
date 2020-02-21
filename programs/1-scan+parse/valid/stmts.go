@@ -2,7 +2,6 @@ package main
 
 func main() {
 	/* simple statements */
-	a // expression statment
 	a++
 	a--
 	a, b, c = 1, 2, 3
@@ -17,7 +16,6 @@ func main() {
 
 	// block
 	{
-		a
 		a++
 		return 0
 	}
@@ -36,13 +34,13 @@ func main() {
 	}
 
 	if a++; 0 {
-		yoyoma
+		yoyoma()
 	} else if b {
-
+		yoyoma()
 	} else if c {
-
+		yoyoma()
 	} else {
-
+		yoyoma()
 	}
 
 	switch a, b := 1, 2; a {

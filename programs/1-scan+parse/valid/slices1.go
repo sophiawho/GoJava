@@ -2,5 +2,5 @@ package main
 var x []int
 
 func main() {
-	append(x, 1)
+	x = append(x, 1)
 }
