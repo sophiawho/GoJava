@@ -26,6 +26,7 @@ int main(int argc, char *argv[])
         else if (strcmp(argv[1], "parse") == 0) {
                 g_tokens = 0;
                 yyparse();
+                weedPROG(root);
                 printf("OK\n");
         }
         else if (strcmp(argv[1], "pretty") == 0) {
@@ -37,8 +38,6 @@ int main(int argc, char *argv[])
                 g_tokens = 0;
                 yyparse();
                 weedPROG(root);
-
-                // TODO typecheck
                 printf("OK\n");
         }
 

@@ -8,7 +8,6 @@
 
 void weedPROG(PROG *p);
 void weedTOPLEVELDECL(TOPLEVELDECL *d);
-void weedTOPLEVELDECL_varSpec(VARSPEC *vs);
 
 void weedFUNC(FUNC *f);
 void weedFUNC_checkForReturnStmt(FUNC *f);

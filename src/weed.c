@@ -30,7 +30,6 @@ void weedTOPLEVELDECL(TOPLEVELDECL *d)
         switch (d->kind)
         {
         case k_topLevelDeclVar:
-            weedTOPLEVELDECL_varSpec(d->val.varDecl);
             break;
         
         case k_topLevelDeclType:
@@ -41,16 +40,6 @@ void weedTOPLEVELDECL(TOPLEVELDECL *d)
             weedFUNC(d->val.funcDecl);
             break;
         }
-    }
-    return;
-}
-
-void weedTOPLEVELDECL_varSpec(VARSPEC *vs)
-{
-    if (vs != NULL)
-    {
-        if (vs->rhs != NULL) throwError("top level variable declarations are not assignable", vs->lineno);
-        weedTOPLEVELDECL_varSpec(vs->next);
     }
     return;
 }

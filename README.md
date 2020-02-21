@@ -6,7 +6,11 @@
 - Sophia Hu 260705681
 
 ## Grading Instructions
-The **Syntactically-Correct Example Programs** are found in `programs/1-scan+parse/valid/` and contian the prefix `meaningful*.go`. Please ignore the rest of the programs, they are for our tests.
+**Syntactically-Correct Example Programs**:
+Our correct programs are found in `programs/1-scan+parse/valid/` and contian the prefix `meaningful*.go`. Please ignore the rest of the programs, they are for our tests.
+
+**Syntactically-Incorrect Example Programs**:
+Please ignore all the programs in `programs/1-scan+parse/invalid/` that contain the prefix `weed*.go`. The rest of the programs are the programs that are minimally correct and are for marking, eg: `assign1.go`.
 
 ## Rebasing on master
 ```
