@@ -1,3 +1,4 @@
+// unexpected else at end of statement
 package main
 
 func main() {
