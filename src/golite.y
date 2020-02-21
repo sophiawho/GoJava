@@ -196,8 +196,10 @@ typeSpecs: /* empty */ 		{ $$ = NULL; }
 	| typeSpecs typeSpec 	{ $$ = $2; $$->next=$1; }
 	;
 
-typeSpec: identifier type tSEMICOLON							{ $$ = makeTypeSpec($1, $2); }
-	| identifier tSTRUCT tLBRACE structSpecs tRBRACE tSEMICOLON { $$ = makeTypeSpec_struct($1, $4); }
+typeSpec: identifier type tSEMICOLON							
+		{ $$ = makeTypeSpec(k_typeSpecKindTypeDeclaration, $1, $2); }
+	| identifier tSTRUCT tLBRACE structSpecs tRBRACE tSEMICOLON 
+		{ $$ = makeTypeSpec_struct(k_typeSpecKindTypeDeclaration, $1, $4); }
 	;
 
 structSpecs: /* empty */ 		{ $$ = NULL; }
@@ -289,7 +291,7 @@ inputParams: /* empty */ 			{ $$ = NULL; }
 	| inputParam 					{ $$ = $1; }
 	;
 
-inputParam: identifiers type 		{ $$ = makeTypeSpec($1, $2); }
+inputParam: identifiers type 		{ $$ = makeTypeSpec(k_typeSpecKindParameterList, $1, $2); }
 	;
 
 optType: /* empty */ 				{ $$ = NULL; }

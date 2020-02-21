@@ -186,17 +186,19 @@ VARSPEC *makeVarSpec(IDENT *ident, EXP *rhs, TYPE *type) {
     return vs;
 }
 
-TYPESPEC *makeTypeSpec(IDENT *ident, TYPE *type) {
+TYPESPEC *makeTypeSpec(TypeSpecKind kind, IDENT *ident, TYPE *type) {
 	TYPESPEC *ts = malloc(sizeof(TYPESPEC));
 	ts->lineno = yylineno;
+	ts->kind = kind;
 	ts->ident = ident;
 	ts->type = type;
 	return ts;
 }
 
-TYPESPEC *makeTypeSpec_struct(IDENT *ident, STRUCTSPEC *ss) {
+TYPESPEC *makeTypeSpec_struct(TypeSpecKind kind, IDENT *ident, STRUCTSPEC *ss) {
 	TYPESPEC *ts = malloc(sizeof(TYPESPEC));
 	ts->lineno = yylineno;
+	ts->kind = kind;
 	ts->ident = ident;
 	TYPE *t = makeTYPE(k_typeStruct);
 	t->val.structType = ss;

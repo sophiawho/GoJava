@@ -170,14 +170,20 @@ struct VARSPEC {
 };
 VARSPEC *makeVarSpec(IDENT *ident, EXP *rhs, TYPE *type);
 
+typedef enum {
+    k_typeSpecKindTypeDeclaration,
+    k_typeSpecKindParameterList
+} TypeSpecKind;
+
 struct TYPESPEC {
     int lineno;
+    TypeSpecKind kind;
     IDENT *ident;
     TYPE *type;
     TYPESPEC *next;
 };
-TYPESPEC *makeTypeSpec(IDENT *ident, TYPE *type);
-TYPESPEC *makeTypeSpec_struct(IDENT *ident, STRUCTSPEC *ss);
+TYPESPEC *makeTypeSpec(TypeSpecKind kind, IDENT *ident, TYPE *type);
+TYPESPEC *makeTypeSpec_struct(TypeSpecKind kind, IDENT *ident, STRUCTSPEC *ss);
 
 struct STRUCTSPEC {
     IDENT *attribute; // can have multiple attributes per type
