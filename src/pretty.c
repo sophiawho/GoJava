@@ -267,8 +267,6 @@ void pretty_EXP(EXP *e, int cur_i)
             printf("^");
             pretty_EXP(e->val.unary.rhs, 0);
             break;
-        case k_expKindFuncCall:
-            // TODO
         case k_expKindArrayAccess:
             pretty_EXP(e->val.arrayAccess.arrayReference, 0);
             printf("[");
@@ -296,6 +294,12 @@ void pretty_EXP(EXP *e, int cur_i)
             printf("cap(");
             pretty_EXP(e->val.capExp, 0);
             printf(")");
+        case k_expKindFuncCall:
+            pretty_TYPE(e->val.funcCall.type);
+            printf("(");
+            pretty_EXP(e->val.funcCall.expList, 0);
+            printf(")");
+            break;
         default:
             printf("Error: invalid expression kind\n");
             exit(1);
