@@ -215,6 +215,9 @@ cap 		{ if (g_tokens) printf("tCAP\n"); RETURN(tCAP); }
 				yylval.runeval = '\\'; RETURN(tRUNEVAL);
 			case '\'':
 				yylval.runeval = '\''; RETURN(tRUNEVAL);
+			default: 
+				fprintf(stderr, "Error: (line %d) invalid rune literal escaped character '%s'\n", yylineno, yytext); exit(1);
+				break;
 		}
 	}
 	yylval.runeval = yytext[1];
