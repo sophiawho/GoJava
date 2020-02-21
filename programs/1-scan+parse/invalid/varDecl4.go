@@ -1,5 +1,6 @@
+// int is not a valid expression
 package main
 
 func main() {
-    var a int int
+    var a float int
 }
