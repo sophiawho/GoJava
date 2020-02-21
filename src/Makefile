@@ -18,4 +18,4 @@ weed.o: weed.c weed.h error.o
 	$(CC) -c weed.c weed.h
 	
 clean:
-	rm parser.tab.* lex.yy.*; rm *.o
+	rm parser.tab.* lex.yy.*; rm *.o; rm ast/*.o; rm *.h.gch; rm parser.output;
