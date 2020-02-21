@@ -26,9 +26,6 @@ $ git rebase origin/master
 
 [Report Link.](https://paper.dropbox.com/doc/GoLite-Deliverable-1-Report--AurU1nCuNuN3fKv1OgcMTFcHAg-18wB5Wgr4INOjytUhIiwh)
 
-## Resources Consulted:
-We worked alone.
-
 # Assignment Template
 
 To organize your assignments and project for class, please follow the skeleton provided in this repository
