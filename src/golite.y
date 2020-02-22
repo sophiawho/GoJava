@@ -44,7 +44,7 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 
 %type <prog> program
 %type <topleveldecl> topLevelDecls topLevelDecl 
-%type <type> type sliceType arrayType optType
+%type <type> type sliceType arrayType optType structType
 %type <stmt> statements statement simpleStmt block returnStmt ifStmt switchStmt forStmt
 %type <exp> expressions expression binaryExpr unaryExpr builtinExpr functionCallExpr
 %type <func> functionDecl
@@ -198,8 +198,6 @@ typeSpecs: /* empty */ 		{ $$ = NULL; }
 
 typeSpec: identifier type tSEMICOLON							
 		{ $$ = makeTypeSpec(k_typeSpecKindTypeDeclaration, $1, $2); }
-	| identifier tSTRUCT tLBRACE structSpecs tRBRACE tSEMICOLON 
-		{ $$ = makeTypeSpec_struct(k_typeSpecKindTypeDeclaration, $1, $4); }
 	;
 
 structSpecs: /* empty */ 		{ $$ = NULL; }
@@ -217,6 +215,7 @@ identifier: tIDENTIFIER { $$ = makeIDENT($1); }
 
 type: sliceType { $$ = $1; }
 	| arrayType { $$ = $1; }
+	| structType { $$ = $1; }
 	| tIDENTIFIER { $$ = makeTYPE_ident($1); } 
 	;
 
@@ -225,6 +224,8 @@ sliceType: tLBRACKET tRBRACKET type 			{ $$ = makeTYPE_slice($3); }
 
 arrayType: tLBRACKET tINTVAL tRBRACKET type 	{ $$ = makeTYPE_array($2, $4); }
 	;
+
+structType : tSTRUCT tLBRACE structSpecs tRBRACE { $$ = makeTYPE_struct($3); }
 
 expressions: expression 			{ $$ = $1; }
 	| expressions tCOMMA expression { $$ = $3; $$->next=$1; }

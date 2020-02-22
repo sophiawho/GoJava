@@ -62,6 +62,7 @@ struct TYPE {
 TYPE *makeTYPE_ident(char *identifier); 
 TYPE *makeTYPE_array(int size, TYPE *type); 
 TYPE *makeTYPE_slice(TYPE *type);
+TYPE *makeTYPE_struct(STRUCTSPEC *ss);
 TYPE *makeTYPE(TypeKind kind);
 
 typedef enum {
@@ -184,7 +185,7 @@ struct TYPESPEC {
     TYPESPEC *next;
 };
 TYPESPEC *makeTypeSpec(TypeSpecKind kind, IDENT *ident, TYPE *type);
-TYPESPEC *makeTypeSpec_struct(TypeSpecKind kind, IDENT *ident, STRUCTSPEC *ss);
+//TYPESPEC *makeTypeSpec_struct(TypeSpecKind kind, IDENT *ident, STRUCTSPEC *ss);
 
 struct STRUCTSPEC {
     IDENT *attribute; // can have multiple attributes per type

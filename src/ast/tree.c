@@ -56,6 +56,13 @@ TYPE *makeTYPE_slice(TYPE *type) {
 	return t;
 }
 
+TYPE *makeTYPE_struct(STRUCTSPEC *ss)
+{
+	TYPE *t = makeTYPE(k_typeStruct);
+	t->val.structType = ss;
+	return t;
+}
+
 TYPE *makeTYPE(TypeKind kind) {
     TYPE *type = malloc(sizeof(TYPE));
     type->kind = kind;

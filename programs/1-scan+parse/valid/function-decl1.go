@@ -10,7 +10,7 @@ func f() []t_type {return a;}
 func f() [3]t_type {return a;}
 
 //// Without returns
-func f() {}
+func f(a struct {a int;}) {}
 
 
 // With params
