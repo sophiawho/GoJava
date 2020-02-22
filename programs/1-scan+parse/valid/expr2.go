@@ -17,4 +17,6 @@ func main() {
 
 	print(x_);
 	println(x);
+	print();
+	println();
 }
