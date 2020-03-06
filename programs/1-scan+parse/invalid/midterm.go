@@ -5,5 +5,5 @@ var a int = 3
 func main() {
 	var a, b int
 	var int float64
-	a = 0xff
+	a = 0xxff
 }
