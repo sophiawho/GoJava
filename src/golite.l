@@ -66,7 +66,13 @@ ESCAPE [atbvfnr\\']
 <MULTILINE_COMMENT>"*/"     { BEGIN(INITIAL); }
 <MULTILINE_COMMENT><<EOF>>  { fprintf(stderr, "Error: (line %d) Unclosed multi-line comment.\n", yylineno); exit(1); }
 <MULTILINE_COMMENT>.		{ }
-<MULTILINE_COMMENT>\n 	    { yylineno++; }
+<MULTILINE_COMMENT>\n 	    { 
+	yylineno++; 
+	if (needsSemiColon()) {
+        if (g_tokens) printf("tSEMICOLON\n");
+        RETURN(tSEMICOLON);
+    }
+	}
 
 [ \t\r]+
 \n {
