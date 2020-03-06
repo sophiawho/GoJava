@@ -50,8 +50,9 @@ char *get_raw_string(char *str) {
 /* Helper definitions */
 DIGIT [0-9]
 LETTER [a-zA-Z_]
-SYMBOL []!#$%&()*+,-./:;<=>?@[]\^_`{}|~
-ESCAPE [atbvfnr\\']
+SYMBOL []_~@#$%&+/‘'<>=|’.;:!?[{}(),^*'`-]
+WS [ \t]
+ESCAPE [atbvfnr\\'"]
 
 %option yylineno
 %option noinput
@@ -66,7 +67,13 @@ ESCAPE [atbvfnr\\']
 <MULTILINE_COMMENT>"*/"     { BEGIN(INITIAL); }
 <MULTILINE_COMMENT><<EOF>>  { fprintf(stderr, "Error: (line %d) Unclosed multi-line comment.\n", yylineno); exit(1); }
 <MULTILINE_COMMENT>.		{ }
-<MULTILINE_COMMENT>\n 	    { yylineno++; }
+<MULTILINE_COMMENT>\n 	    { 
+	yylineno++; 
+	if (needsSemiColon()) {
+        if (g_tokens) printf("tSEMICOLON\n");
+        RETURN(tSEMICOLON);
+    }
+}
 
 [ \t\r]+
 \n {
@@ -219,12 +226,21 @@ cap 		{ if (g_tokens) printf("tCAP\n"); RETURN(tCAP); }
 				fprintf(stderr, "Error: (line %d) invalid rune literal escaped character '%s'\n", yylineno, yytext); exit(1);
 				break;
 		}
+	} else if (yyleng == 3) {
+		switch(yytext[1]) {
+			case '\\':
+				fprintf(stderr, "Error: (line %d) unexpected character '%s'\n", yylineno, yytext); exit(1);
+				break;
+			default: 
+				yylval.runeval = yytext[1];
+				RETURN(tRUNEVAL);
+		}
 	}
 	yylval.runeval = yytext[1];
 	RETURN(tRUNEVAL);
 }
 
-\"(\\.|[^\\"])*\" { // Interpreted string literal
+\"({DIGIT}|{LETTER}|{SYMBOL}|{WS}|\\{ESCAPE})*\" { // Interpreted string literal
     if (g_tokens) printf("tSTRVAL(%s)\n", yytext);
     yylval.strval = strdup(yytext);
     RETURN(tSTRVAL);
