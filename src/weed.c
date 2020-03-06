@@ -23,6 +23,8 @@ void weedPROG(PROG *p)
 
 void weedTOPLEVELDECL(TOPLEVELDECL *d)
 {
+    int countLhs = 0;
+    int countRhs = 0;
     if (d != NULL)
     {
         weedTOPLEVELDECL(d->next);
@@ -30,6 +32,13 @@ void weedTOPLEVELDECL(TOPLEVELDECL *d)
         switch (d->kind)
         {
         case k_topLevelDeclVar:
+            if (d->val.varDecl->rhs != NULL) 
+            {
+                countLhs = countIDENT(d->val.varDecl->ident);
+                countRhs = countEXP(d->val.varDecl->rhs);
+                if (countLhs != countRhs) throwError("expecting same number of identifiers as expressions", d->lineno);
+                weedEXP_eval(d->val.varDecl->rhs);
+            }
             break;
         
         case k_topLevelDeclType:

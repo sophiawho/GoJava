@@ -162,8 +162,7 @@ Unary operators have the highest precedence.
 %start program
 
 %% 
-program: /* empty */ 								{ $$ = NULL; }
-	| tPACKAGE tIDENTIFIER tSEMICOLON topLevelDecls { root = makePROG($2, $4); }
+program: tPACKAGE tIDENTIFIER tSEMICOLON topLevelDecls { root = makePROG($2, $4); }
 	;
 
 topLevelDecls: /* empty */ 				{ $$ = NULL; }
