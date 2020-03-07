@@ -268,7 +268,7 @@ unaryExpr: tADD expression %prec UPLUS 	{ $$ = makeEXP_unary(k_expKindUPlus, $2)
 	| tMINUS expression %prec UMINUS 	{ $$ = makeEXP_unary(k_expKindUMinus, $2); }
 	| tBANG expression 					{ $$ = makeEXP_unary(k_expKindBang, $2); }
 	| tBITXOR expression %prec UBITXOR 	{ $$ = makeEXP_unary(k_expKindUBitXOR, $2); }
-	| tLPAR expression tRPAR 			{ $$ = $2; }
+	| tLPAR expression tRPAR 			{ $$ = makeEXP_unary(k_expKindUParenthesized, $2); }
 	;
 
 builtinExpr: tAPPEND tLPAR expression tCOMMA expression tRPAR 	{ $$ = makeEXP_append($3, $5); }

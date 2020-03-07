@@ -170,6 +170,20 @@ void weedTYPESPEC(TYPESPEC *tsRoot)
     return;
 }
 
+void weedEXP_colonAssign(EXP *e)
+{
+    switch (e->kind)
+    {
+    case k_expKindUParenthesized:
+    case k_expKindArrayAccess:
+    case k_expKindFieldAccess:
+        throwError("non-name on left side of :=", e->lineno);
+        break;
+    default:
+        break;
+    }
+}
+
 void weedSTMT_assign(STMT *s)
 {
     bool allowBlankId;
@@ -182,6 +196,7 @@ void weedSTMT_assign(STMT *s)
     case k_stmtAssign:
     case k_stmtColonAssign:
         allowBlankId = true;
+        weedEXP_colonAssign(s->val.assignStmt.lhs);
         weedEXP_nonEval(s->val.assignStmt.lhs, allowBlankId);
         weedEXP_eval(s->val.assignStmt.rhs);
         countLhs = countEXP(s->val.assignStmt.lhs);
