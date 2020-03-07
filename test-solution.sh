@@ -49,7 +49,7 @@ fi
 
 RESULTS=()
 
-for DIR_PHASE in programs-solution/*/
+for DIR_PHASE in solutions/*/
 do
 	PHASE=$(basename $DIR_PHASE)
 	PHASE_NAME=${PHASE#*-}
