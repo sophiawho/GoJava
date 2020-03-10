@@ -3,6 +3,7 @@
 LOG=0
 VERBOSE=0
 VERIFY=1
+FINAL_EXIT_CODE=0
 
 while getopts ":lvc" opt; do
 	case $opt in
@@ -170,6 +171,7 @@ do
 					else
 						STATUS_TEXT="fail"
 						STATUS_COLOUR="31"
+						FINAL_EXIT_CODE=1
 					fi
 
 				else
@@ -233,3 +235,4 @@ echo -e "\033[0m"
 for i in ${!RESULTS[*]}; do
 	echo -e ${RESULTS[$i]}
 done
+exit $FINAL_EXIT_CODE
