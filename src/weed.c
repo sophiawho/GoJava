@@ -170,6 +170,20 @@ void weedTYPESPEC(TYPESPEC *tsRoot)
     return;
 }
 
+void weedEXP_colonAssign(EXP *e)
+{
+    switch (e->kind)
+    {
+    case k_expKindUParenthesized:
+    case k_expKindArrayAccess:
+    case k_expKindFieldAccess:
+        throwError("non-name on left side of :=", e->lineno);
+        break;
+    default:
+        break;
+    }
+}
+
 void weedSTMT_assign(STMT *s)
 {
     bool allowBlankId;
@@ -179,8 +193,16 @@ void weedSTMT_assign(STMT *s)
     {
     // In assignment statements, both the left- and right-hand expression lists must be of 
     // the same number of tokens
-    case k_stmtAssign:
     case k_stmtColonAssign:
+        allowBlankId = true;
+        weedEXP_colonAssign(s->val.assignStmt.lhs);
+        weedEXP_nonEval(s->val.assignStmt.lhs, allowBlankId);
+        weedEXP_eval(s->val.assignStmt.rhs);
+        countLhs = countEXP(s->val.assignStmt.lhs);
+        countRhs = countEXP(s->val.assignStmt.rhs);
+        if (countLhs != countRhs) throwError("expecting same number of identifiers as expressions", s->lineno);
+        break;
+    case k_stmtAssign:
         allowBlankId = true;
         weedEXP_nonEval(s->val.assignStmt.lhs, allowBlankId);
         weedEXP_eval(s->val.assignStmt.rhs);
@@ -458,6 +480,10 @@ void weedEXP_nonEval(EXP *e, bool allowBlankId)
         case k_expKindCap:
             throwError("cannot use a builtin in an expression that doesn't evaluate to a value", e->lineno);
             break;
+
+        // case k_expKindUParenthesized:
+        //     throwError("non-name on left side of :=", e->lineno);
+        //     break;
         }
     }
     return;

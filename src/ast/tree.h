@@ -108,6 +108,8 @@ typedef enum {
     k_expKindAppend,
     k_expKindLen,
     k_expKindCap,
+    // Parenthesized expressions
+    k_expKindUParenthesized
 } ExpressionKind;
 
 struct EXP {

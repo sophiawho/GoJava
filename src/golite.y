@@ -183,8 +183,10 @@ variableSpecs: /* empty */ 			{ $$ = NULL; }
 	;
 
 variableSpec: identifiers type tSEMICOLON 			{ $$ = makeVarSpec($1, NULL, $2); }
+	| identifiers tLPAR type tRPAR tSEMICOLON 		{ $$ = makeVarSpec($1, NULL, $3); }
 	| identifiers tASSIGN expressions tSEMICOLON 	{ $$ = makeVarSpec($1, $3, NULL); }
 	| identifiers type tASSIGN expressions tSEMICOLON { $$ = makeVarSpec($1, $4, $2); }
+	| identifiers tLPAR type tRPAR tASSIGN expressions tSEMICOLON { $$ = makeVarSpec($1, $6, $3); }
 	;
 
 typeDecl: tTYPE typeSpec 						{ $$ = $2; }
@@ -195,8 +197,8 @@ typeSpecs: /* empty */ 		{ $$ = NULL; }
 	| typeSpecs typeSpec 	{ $$ = $2; $$->next=$1; }
 	;
 
-typeSpec: identifier type tSEMICOLON							
-		{ $$ = makeTypeSpec(k_typeSpecKindTypeDeclaration, $1, $2); }
+typeSpec: identifier type tSEMICOLON			{ $$ = makeTypeSpec(k_typeSpecKindTypeDeclaration, $1, $2); }
+	| identifier tLPAR type tRPAR tSEMICOLON	{ $$ = makeTypeSpec(k_typeSpecKindTypeDeclaration, $1, $3); }
 	;
 
 structSpecs: /* empty */ 		{ $$ = NULL; }
@@ -268,7 +270,7 @@ unaryExpr: tADD expression %prec UPLUS 	{ $$ = makeEXP_unary(k_expKindUPlus, $2)
 	| tMINUS expression %prec UMINUS 	{ $$ = makeEXP_unary(k_expKindUMinus, $2); }
 	| tBANG expression 					{ $$ = makeEXP_unary(k_expKindBang, $2); }
 	| tBITXOR expression %prec UBITXOR 	{ $$ = makeEXP_unary(k_expKindUBitXOR, $2); }
-	| tLPAR expression tRPAR 			{ $$ = $2; }
+	| tLPAR expression tRPAR 			{ $$ = makeEXP_unary(k_expKindUParenthesized, $2); }
 	;
 
 builtinExpr: tAPPEND tLPAR expression tCOMMA expression tRPAR 	{ $$ = makeEXP_append($3, $5); }
@@ -292,6 +294,7 @@ inputParams: /* empty */ 			{ $$ = NULL; }
 	;
 
 inputParam: identifiers type 		{ $$ = makeTypeSpec(k_typeSpecKindParameterList, $1, $2); }
+	| identifiers tLPAR type tRPAR 	{ $$ = makeTypeSpec(k_typeSpecKindParameterList, $1, $3); }
 	;
 
 optType: /* empty */ 				{ $$ = NULL; }
@@ -354,6 +357,8 @@ ifStmt: tIF simpleStmt tSEMICOLON expression block 				{ $$ = makeSTMT_if($2, $4
 
 switchStmt: tSWITCH simpleStmt tSEMICOLON expression tLBRACE exprCaseClauses tRBRACE	{ $$ = makeSTMT_switch($2, $4, $6); }
 	| tSWITCH expression tLBRACE exprCaseClauses tRBRACE								{ $$ = makeSTMT_switch(NULL, $2, $4); }
+	| tSWITCH expression tSEMICOLON tLBRACE exprCaseClauses tRBRACE						{ $$ = makeSTMT_switch(NULL, $2, $5); }
+	| tSWITCH tLBRACE exprCaseClauses tRBRACE											{ $$ = makeSTMT_switch(NULL, NULL, $3); }
 	;
 
 exprCaseClauses: /* empty */ 			{ $$ = NULL; }
