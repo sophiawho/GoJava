@@ -12,12 +12,8 @@ jobs:
     - uses: actions/checkout@v1
     - name: Install flex and bison
       run: sudo apt-get install flex -y && sudo apt-get install bison -y
-    - name: Build
-      run: ./build.sh
     - name: Test
       run: ./test.sh
-    - name: Test Solutions
-      run: ./test-solution.sh
   
   run_golite_solutions:
 
@@ -27,7 +23,5 @@ jobs:
     - uses: actions/checkout@v1
     - name: Install flex and bison
       run: sudo apt-get install flex -y && sudo apt-get install bison -y
-    - name: Build
-      run: ./build.sh
     - name: Test Solutions
       run: ./test-solution.sh
