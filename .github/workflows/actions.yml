@@ -4,7 +4,7 @@ on: [pull_request]
 
 jobs:
 
-  run_local_tests:
+  local:
 
     runs-on: ubuntu-latest
 
@@ -15,7 +15,7 @@ jobs:
     - name: Test
       run: ./test.sh
   
-  run_golite_solutions:
+  golite-solutions:
 
     runs-on: ubuntu-latest
 
