@@ -356,8 +356,8 @@ ifStmt: tIF simpleStmt tSEMICOLON expression block 				{ $$ = makeSTMT_if($2, $4
 	;
 
 switchStmt: tSWITCH simpleStmt tSEMICOLON expression tLBRACE exprCaseClauses tRBRACE	{ $$ = makeSTMT_switch($2, $4, $6); }
+	| tSWITCH simpleStmt tSEMICOLON tLBRACE exprCaseClauses tRBRACE						{ $$ = makeSTMT_switch($2, NULL, $5); }
 	| tSWITCH expression tLBRACE exprCaseClauses tRBRACE								{ $$ = makeSTMT_switch(NULL, $2, $4); }
-	| tSWITCH expression tSEMICOLON tLBRACE exprCaseClauses tRBRACE						{ $$ = makeSTMT_switch(NULL, $2, $5); }
 	| tSWITCH tLBRACE exprCaseClauses tRBRACE											{ $$ = makeSTMT_switch(NULL, NULL, $3); }
 	;
 
