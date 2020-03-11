@@ -46,7 +46,7 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 %type <topleveldecl> topLevelDecls topLevelDecl 
 %type <type> type sliceType arrayType optType structType
 %type <stmt> statements statement simpleStmt block returnStmt ifStmt switchStmt forStmt
-%type <exp> expressions expression binaryExpr unaryExpr builtinExpr functionCallExpr
+%type <exp> expressions expression binaryExpr unaryExpr builtinExpr functionCallExpr condition
 %type <func> functionDecl
 %type <varspec> variableSpecs variableSpec variableDecl
 %type <typespec> typeSpecs typeSpec inputParams inputParam typeDecl
@@ -371,7 +371,11 @@ exprCaseClause: tCASE expressions tCOLON statements				{ $$ = makeExprCaseClause
 
 forStmt: tFOR block 													{ $$ = makeSTMT_for(k_loopKindInfinite, $2, NULL, NULL, NULL); }
 	| tFOR expression block												{ $$ = makeSTMT_for(k_loopKindWhile, $3, $2, NULL, NULL); }
-	| tFOR simpleStmt tSEMICOLON expression tSEMICOLON simpleStmt block	{ $$ = makeSTMT_for(k_loopKindThreePart, $7, $4, $2, $6); }
+	| tFOR simpleStmt tSEMICOLON condition tSEMICOLON simpleStmt block	{ $$ = makeSTMT_for(k_loopKindThreePart, $7, $4, $2, $6); }
+	;
+
+condition: /* empty */ { $$ = NULL; } 
+	| expression { $$ = $1; } 
 	;
 
 %%
