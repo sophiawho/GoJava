@@ -32,7 +32,7 @@ void weedTOPLEVELDECL(TOPLEVELDECL *d)
         switch (d->kind)
         {
         case k_topLevelDeclVar:
-            if (d->val.varDecl->rhs != NULL) 
+            if (d->val.varDecl != NULL && d->val.varDecl->rhs != NULL) 
             {
                 countLhs = countIDENT(d->val.varDecl->ident);
                 countRhs = countEXP(d->val.varDecl->rhs);
@@ -102,7 +102,7 @@ void weedSTMT(STMT *s)
             break;
 
         case k_stmtKindVarDecl:
-            if (s->val.varDecl->rhs != NULL) 
+            if (s->val.varDecl != NULL && s->val.varDecl->rhs != NULL) 
             {
                 countLhs = countIDENT(s->val.varDecl->ident);
                 countRhs = countEXP(s->val.varDecl->rhs);
@@ -151,6 +151,9 @@ void weedSTMT(STMT *s)
 
         case k_stmtKindReturn:
             weedEXP_eval(s->val.returnExp);
+            break;
+
+        case k_stmtKindEmpty:
             break;
 
         }
@@ -281,6 +284,7 @@ void weedSTMT_forLoop_postStmt(STMT *s)
     case k_stmtKindFor:
     case k_stmtKindBreak:
     case k_stmtKindContinue:
+    case k_stmtKindEmpty:
     case k_stmtKindReturn:
         throwError("expecting expression in post statement of for loop", s->lineno);
         break;
