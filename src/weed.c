@@ -179,7 +179,10 @@ void weedEXP_colonAssign(EXP *e)
     case k_expKindFieldAccess:
         throwError("non-name on left side of :=", e->lineno);
         break;
+    case k_expKindIdentifier:
+        break;
     default:
+        throwError("only identifiers allowed on left side of :=", e->lineno);
         break;
     }
 }
@@ -361,7 +364,7 @@ void weedEXP_eval(EXP *e)
             break;
 
         case k_expKindFuncCall:
-            weedTYPE(e->val.funcCall.type);
+            weedEXP_eval(e->val.funcCall.primaryExpr);
             break;
 
         case k_expKindArrayAccess:

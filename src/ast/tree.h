@@ -128,7 +128,7 @@ struct EXP {
         struct { EXP *slice; EXP *addend; } append;
         EXP *lenExp;
         EXP *capExp;
-        struct { TYPE *type; EXP *expList; } funcCall;
+        struct { EXP *primaryExpr; EXP *expList; } funcCall;
         struct { EXP *arrayReference; EXP *indexExp; } arrayAccess;
         struct { EXP *object; char *field; } fieldAccess;
     } val;
@@ -146,7 +146,7 @@ EXP *makeEXP_unary(ExpressionKind op, EXP *rhs);
 EXP *makeEXP_append(EXP *slice, EXP *addend);
 EXP *makeEXP_len(EXP *lenExp);
 EXP *makeEXP_cap(EXP *capExp);
-EXP *makeEXP_funcCall(TYPE *type, EXP *expList);
+EXP *makeEXP_funcCall(EXP *primaryExpr, EXP *expList);
 EXP *makeEXP_arrayAccess(EXP *arrayReference, EXP *indexExp);
 EXP *makeEXP_fieldAccess(EXP *object, char *field);
 
