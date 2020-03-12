@@ -2,6 +2,7 @@
 #define STMT_H
 
 typedef enum {
+    k_stmtKindEmpty,
     k_stmtKindExpStmt,
     k_stmtKindIncDec,
     k_stmtKindAssign,

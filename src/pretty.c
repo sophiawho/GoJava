@@ -472,6 +472,8 @@ void pretty_STMT(STMT *s, STMT *parent)
             printf("return ");
             pretty_EXP(s->val.returnExp, 0);
             break;
+        case k_stmtKindEmpty:
+            break;
         default:
             printf("Error: invalid statement kind\n");
             exit(1);

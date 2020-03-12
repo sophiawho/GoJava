@@ -307,7 +307,8 @@ statements: /* empty */ 			{ $$ = NULL; }
 	| statements statement 			{ $$ = $2; $$->next = $1; }
 	;
 
-statement: simpleStmt tSEMICOLON 	{ $$ = $1; }
+statement: tSEMICOLON			{ $$ = getGenericStmt(k_stmtKindEmpty); }
+	| simpleStmt tSEMICOLON 	{ $$ = $1; }
 	| returnStmt tSEMICOLON 		{ $$ = $1; }
 	| block tSEMICOLON 				{ $$ = $1; }
 	| variableDecl 					{ $$ = makeSTMT_varDecl($1); }
