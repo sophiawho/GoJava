@@ -295,7 +295,7 @@ void pretty_EXP(EXP *e, int cur_i)
             pretty_EXP(e->val.capExp, 0);
             printf(")");
         case k_expKindFuncCall:
-            pretty_TYPE(e->val.funcCall.type);
+            pretty_EXP(e->val.funcCall.primaryExpr, 0);
             printf("(");
             pretty_EXP(e->val.funcCall.expList, 0);
             printf(")");

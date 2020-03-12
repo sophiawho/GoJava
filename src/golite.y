@@ -46,7 +46,7 @@ void yyerror(const char *s) { fprintf(stderr, "Error: (line %d) %s\n", yylineno,
 %type <topleveldecl> topLevelDecls topLevelDecl 
 %type <type> type sliceType arrayType optType structType
 %type <stmt> statements statement simpleStmt block returnStmt ifStmt switchStmt forStmt
-%type <exp> expressions expression binaryExpr unaryExpr builtinExpr functionCallExpr condition
+%type <exp> expressions expression binaryExpr unaryExpr builtinExpr functionCallExpr condition primaryExpr
 %type <func> functionDecl
 %type <varspec> variableSpecs variableSpec variableDecl
 %type <typespec> typeSpecs typeSpec inputParams inputParam typeDecl
@@ -183,10 +183,8 @@ variableSpecs: /* empty */ 			{ $$ = NULL; }
 	;
 
 variableSpec: identifiers type tSEMICOLON 			{ $$ = makeVarSpec($1, NULL, $2); }
-	| identifiers tLPAR type tRPAR tSEMICOLON 		{ $$ = makeVarSpec($1, NULL, $3); }
 	| identifiers tASSIGN expressions tSEMICOLON 	{ $$ = makeVarSpec($1, $3, NULL); }
 	| identifiers type tASSIGN expressions tSEMICOLON { $$ = makeVarSpec($1, $4, $2); }
-	| identifiers tLPAR type tRPAR tASSIGN expressions tSEMICOLON { $$ = makeVarSpec($1, $6, $3); }
 	;
 
 typeDecl: tTYPE typeSpec 						{ $$ = $2; }
@@ -198,7 +196,6 @@ typeSpecs: /* empty */ 		{ $$ = NULL; }
 	;
 
 typeSpec: identifier type tSEMICOLON			{ $$ = makeTypeSpec(k_typeSpecKindTypeDeclaration, $1, $2); }
-	| identifier tLPAR type tRPAR tSEMICOLON	{ $$ = makeTypeSpec(k_typeSpecKindTypeDeclaration, $1, $3); }
 	;
 
 structSpecs: /* empty */ 		{ $$ = NULL; }
@@ -218,6 +215,7 @@ type: sliceType { $$ = $1; }
 	| arrayType { $$ = $1; }
 	| structType { $$ = $1; }
 	| tIDENTIFIER { $$ = makeTYPE_ident($1); } 
+	| tLPAR type tRPAR { $$ = $2; }
 	;
 
 sliceType: tLBRACKET tRBRACKET type 			{ $$ = makeTYPE_slice($3); }
@@ -234,15 +232,6 @@ expressions: expression 			{ $$ = $1; }
 
 expression: binaryExpr 							{ $$ = $1; }
 	| unaryExpr 								{ $$ = $1; }
-	| builtinExpr 								{ $$ = $1; }
-	| functionCallExpr							{ $$ = $1; }
-	| expression tLBRACKET expression tRBRACKET { $$ = makeEXP_arrayAccess($1, $3); }
-	| expression tPERIOD tIDENTIFIER 			{ $$ = makeEXP_fieldAccess($1, $3);  }
-	| tINTVAL 									{ $$ = makeEXP_intLiteral($1); }
-	| tFLOATVAL 								{ $$ = makeEXP_floatLiteral($1); }
-	| tRUNEVAL 									{ $$ = makeEXP_runeLiteral($1); }
-	| tSTRVAL 									{ $$ = makeEXP_stringLiteral($1); }
-	| tIDENTIFIER 								{ $$ = makeEXP_identifier($1); }
 	;
 
 binaryExpr: expression tOR expression 	{ $$ = makeEXP_binary(k_expKindOr, $1, $3); }
@@ -266,20 +255,31 @@ binaryExpr: expression tOR expression 	{ $$ = makeEXP_binary(k_expKindOr, $1, $3
 	| expression tBITCLEAR expression 	{ $$ = makeEXP_binary(k_expKindBitClear, $1, $3); }
 	;
  
-unaryExpr: tADD expression %prec UPLUS 	{ $$ = makeEXP_unary(k_expKindUPlus, $2); }
-	| tMINUS expression %prec UMINUS 	{ $$ = makeEXP_unary(k_expKindUMinus, $2); }
-	| tBANG expression 					{ $$ = makeEXP_unary(k_expKindBang, $2); }
-	| tBITXOR expression %prec UBITXOR 	{ $$ = makeEXP_unary(k_expKindUBitXOR, $2); }
-	| tLPAR expression tRPAR 			{ $$ = makeEXP_unary(k_expKindUParenthesized, $2); }
+unaryExpr: primaryExpr					{ $$ = $1; }
+	| tADD unaryExpr %prec UPLUS 		{ $$ = makeEXP_unary(k_expKindUPlus, $2); }
+	| tMINUS unaryExpr %prec UMINUS 	{ $$ = makeEXP_unary(k_expKindUMinus, $2); }
+	| tBANG unaryExpr %prec tBANG		{ $$ = makeEXP_unary(k_expKindBang, $2); }
+	| tBITXOR unaryExpr %prec UBITXOR 	{ $$ = makeEXP_unary(k_expKindUBitXOR, $2); }
 	;
+
+primaryExpr: tINTVAL 							{ $$ = makeEXP_intLiteral($1); }
+	| tFLOATVAL 								{ $$ = makeEXP_floatLiteral($1); }
+	| tRUNEVAL 									{ $$ = makeEXP_runeLiteral($1); }
+	| tSTRVAL 									{ $$ = makeEXP_stringLiteral($1); }
+	| tIDENTIFIER 								{ $$ = makeEXP_identifier($1); }
+	| tLPAR expression tRPAR					{ $$ = makeEXP_unary(k_expKindUParenthesized, $2); }
+	| builtinExpr 								{ $$ = $1; }
+	| functionCallExpr							{ $$ = $1; }
+	| primaryExpr tLBRACKET expression tRBRACKET { $$ = makeEXP_arrayAccess($1, $3); }
+	| primaryExpr tPERIOD tIDENTIFIER 			{ $$ = makeEXP_fieldAccess($1, $3);  }
 
 builtinExpr: tAPPEND tLPAR expression tCOMMA expression tRPAR 	{ $$ = makeEXP_append($3, $5); }
 	| tLEN tLPAR expression tRPAR 								{ $$ = makeEXP_len($3); }
 	| tCAP tLPAR expression tRPAR 								{ $$ = makeEXP_cap($3); }
 	;
 
-functionCallExpr: type tLPAR expressions tRPAR		{ $$ = makeEXP_funcCall($1, $3); }
-	| type tLPAR tRPAR								{ $$ = makeEXP_funcCall($1, NULL); }
+functionCallExpr: primaryExpr tLPAR expressions tRPAR		{ $$ = makeEXP_funcCall($1, $3); }
+	| primaryExpr tLPAR tRPAR								{ $$ = makeEXP_funcCall($1, NULL); }
 	;
 
 functionDecl:  
@@ -294,7 +294,6 @@ inputParams: /* empty */ 			{ $$ = NULL; }
 	;
 
 inputParam: identifiers type 		{ $$ = makeTypeSpec(k_typeSpecKindParameterList, $1, $2); }
-	| identifiers tLPAR type tRPAR 	{ $$ = makeTypeSpec(k_typeSpecKindParameterList, $1, $3); }
 	;
 
 optType: /* empty */ 				{ $$ = NULL; }

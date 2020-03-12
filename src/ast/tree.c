@@ -148,9 +148,9 @@ EXP *makeEXP_cap(EXP *capExp) {
 	return e;
 }
 
-EXP *makeEXP_funcCall(TYPE *type, EXP *expList) {
+EXP *makeEXP_funcCall(EXP *primaryExpr, EXP *expList) {
 	EXP *e = getGenericExpr(k_expKindFuncCall);
-	e->val.funcCall.type = type;
+	e->val.funcCall.primaryExpr = primaryExpr;
 	e->val.funcCall.expList = expList;
 	return e;
 }
