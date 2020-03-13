@@ -34,6 +34,11 @@ int main(int argc, char *argv[])
                 yyparse();
                 pretty_PROG(root);
         }
+        else if (strcmp(argv[1], "symbol") == 0) {
+                g_tokens = 0;
+                yyparse();
+                weedPROG(root);
+        }
         else if (strcmp(argv[1], "typecheck") == 0) {
                 g_tokens = 0;
                 yyparse();

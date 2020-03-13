@@ -2,10 +2,14 @@
 
 ## Group Members
 - Matthew Lesko 260692352
-- Braedon McDonald 260753678
 - Sophia Hu 260705681
 
-## Grading Instructions
+[Milestone 2 Dropbox Paper](https://paper.dropbox.com/doc/Golite-Milestone-2--AwDbpX81PV0nzKifOwLyDc~xAQ-nTimwbzrqj6beL9ysXVZA)
+
+## Grading Instructions: Milestone 2
+Our incorrect programs for submission are found in `programs/2-typecheck/invalid/example/`. Please ignore the rest of the programs, they are for our tests.
+
+## Grading Instructions: Milestone 1
 **Syntactically-Correct Example Programs**:
 Our correct programs are found in `programs/1-scan+parse/valid/` and contian the prefix `meaningful*.go`. Please ignore the rest of the programs, they are for our tests.
 
