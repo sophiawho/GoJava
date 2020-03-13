@@ -165,8 +165,8 @@ Unary operators have the highest precedence.
 program: tPACKAGE tIDENTIFIER tSEMICOLON topLevelDecls { root = makePROG($2, $4); }
 	;
 
-topLevelDecls: /* empty */ 				{ $$ = NULL; }
-	| topLevelDecls topLevelDecl 		{ $$ = $2; $$->next=$1; }
+topLevelDecls: /* empty */ 						{ $$ = NULL; }
+	| topLevelDecls topLevelDecl tSEMICOLON		{ $$ = $2; $$->next=$1; }
 	;
 
 topLevelDecl: variableDecl 	{ $$ = makeTopLevelDecl_var($1); }
@@ -175,37 +175,37 @@ topLevelDecl: variableDecl 	{ $$ = makeTopLevelDecl_var($1); }
 	;
 
 variableDecl: tVAR variableSpec 				{ $$ = $2; }
-	| tVAR tLPAR variableSpecs tRPAR tSEMICOLON { $$ = $3; }
+	| tVAR tLPAR variableSpecs tRPAR 			{ $$ = $3; }
 	;
 
-variableSpecs: /* empty */ 			{ $$ = NULL; }
-	| variableSpecs variableSpec 	{ $$ = $2; $$->next=$1; } 
+variableSpecs: /* empty */ 						{ $$ = NULL; }
+	| variableSpecs variableSpec tSEMICOLON 	{ $$ = $2; $$->next=$1; } 
 	;
 
-variableSpec: identifiers type tSEMICOLON 			{ $$ = makeVarSpec($1, NULL, $2); }
-	| identifiers tASSIGN expressions tSEMICOLON 	{ $$ = makeVarSpec($1, $3, NULL); }
-	| identifiers type tASSIGN expressions tSEMICOLON { $$ = makeVarSpec($1, $4, $2); }
+variableSpec: identifiers type  				{ $$ = makeVarSpec($1, NULL, $2); }
+	| identifiers tASSIGN expressions  			{ $$ = makeVarSpec($1, $3, NULL); }
+	| identifiers type tASSIGN expressions  	{ $$ = makeVarSpec($1, $4, $2); }
 	;
 
 typeDecl: tTYPE typeSpec 						{ $$ = $2; }
-	| tTYPE tLPAR typeSpecs tRPAR tSEMICOLON 	{ $$ = $3; }
+	| tTYPE tLPAR typeSpecs tRPAR 			 	{ $$ = $3; }
 	;
 
-typeSpecs: /* empty */ 		{ $$ = NULL; }
-	| typeSpecs typeSpec 	{ $$ = $2; $$->next=$1; }
+typeSpecs: /* empty */ 				{ $$ = NULL; }
+	| typeSpecs typeSpec tSEMICOLON	{ $$ = $2; $$->next=$1; }
 	;
 
-typeSpec: identifier type tSEMICOLON			{ $$ = makeTypeSpec(k_typeSpecKindTypeDeclaration, $1, $2); }
+typeSpec: identifier type 			{ $$ = makeTypeSpec(k_typeSpecKindTypeDeclaration, $1, $2); }
 	;
 
-structSpecs: /* empty */ 		{ $$ = NULL; }
-	| structSpecs structSpec 	{ $$ = $2; $$->next = $1; }
+structSpecs: /* empty */ 				{ $$ = NULL; }
+	| structSpecs structSpec tSEMICOLON	{ $$ = $2; $$->next = $1; }
 	;
 
-structSpec: identifiers type tSEMICOLON { $$ = makeStructSpec($1, $2); }
+structSpec: identifiers type 		 	{ $$ = makeStructSpec($1, $2); }
 	;
 
-identifiers: identifier { $$ = $1; }
+identifiers: identifier 			{ $$ = $1; }
 	| identifiers tCOMMA identifier { $$ = $3; $$->next=$1; }
 	;
 
@@ -283,7 +283,7 @@ functionCallExpr: primaryExpr tLPAR expressions tRPAR		{ $$ = makeEXP_funcCall($
 	;
 
 functionDecl:  
-	tFUNC tIDENTIFIER tLPAR inputParams tRPAR optType block tSEMICOLON { 
+	tFUNC tIDENTIFIER tLPAR inputParams tRPAR optType block { 
 		$$ = makeFunc($2, $6, $4, $7); 
 	}
 	;
@@ -303,28 +303,27 @@ optType: /* empty */ 				{ $$ = NULL; }
 block: tLBRACE statements tRBRACE 	{ $$ = makeSTMT_blockStmt($2); }
 	;
 
-statements: /* empty */ 			{ $$ = NULL; }
-	| statements statement 			{ $$ = $2; $$->next = $1; }
+statements: /* empty */ 					{ $$ = NULL; }
+	| statements statement tSEMICOLON		{ $$ = $2; $$->next = $1; }
 	;
 
-statement: tSEMICOLON			{ $$ = getGenericStmt(k_stmtKindEmpty); }
-	| simpleStmt tSEMICOLON 	{ $$ = $1; }
-	| returnStmt tSEMICOLON 		{ $$ = $1; }
-	| block tSEMICOLON 				{ $$ = $1; }
-	| variableDecl 					{ $$ = makeSTMT_varDecl($1); }
-	| typeDecl 						{ $$ = makeSTMT_typeDecl($1); }
-	| tPRINT tLPAR expressions tRPAR tSEMICOLON 	{ $$ = makeSTMT_print($3, 0); }
-	| tPRINTLN tLPAR expressions tRPAR tSEMICOLON 	{ $$ = makeSTMT_print($3, 1); }
-	| tPRINT tLPAR tRPAR tSEMICOLON 	{ $$ = makeSTMT_print(NULL, 0); }
-	| tPRINTLN tLPAR tRPAR tSEMICOLON 	{ $$ = makeSTMT_print(NULL, 1); }
-	| ifStmt tSEMICOLON				{ $$ = $1; }
-	| switchStmt tSEMICOLON			{ $$ = $1; }
-	| forStmt tSEMICOLON			{ $$ = $1; }
-	| tBREAK tSEMICOLON 			{ $$ = getGenericStmt(k_stmtKindBreak); }
-	| tCONTINUE tSEMICOLON 			{ $$ = getGenericStmt(k_stmtKindContinue); }
+statement: simpleStmt 			 		{ $$ = $1; }
+	| returnStmt 		 				{ $$ = $1; }
+	| block  							{ $$ = $1; }
+	| variableDecl 						{ $$ = makeSTMT_varDecl($1); }
+	| typeDecl 							{ $$ = makeSTMT_typeDecl($1); }
+	| tPRINT tLPAR expressions tRPAR  	{ $$ = makeSTMT_print($3, 0); }
+	| tPRINTLN tLPAR expressions tRPAR  { $$ = makeSTMT_print($3, 1); }
+	| tPRINT tLPAR tRPAR  			{ $$ = makeSTMT_print(NULL, 0); }
+	| tPRINTLN tLPAR tRPAR  		{ $$ = makeSTMT_print(NULL, 1); }
+	| ifStmt 						{ $$ = $1; }
+	| switchStmt 					{ $$ = $1; }
+	| forStmt 						{ $$ = $1; }
+	| tBREAK  						{ $$ = getGenericStmt(k_stmtKindBreak); }
+	| tCONTINUE  					{ $$ = getGenericStmt(k_stmtKindContinue); }
 	;
 
-simpleStmt: /* empty */ 					{ $$ = NULL; }
+simpleStmt: /* empty */ 					{ $$ = getGenericStmt(k_stmtKindEmpty); }
 	| expression 							{ $$ = makeSTMT_expStmt($1); }
 	| expression tINCREMENT 				{ $$ = makeSTMT_incDec($1, 1); }
 	| expression tDECREMENT 				{ $$ = makeSTMT_incDec($1, -1); }

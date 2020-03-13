@@ -284,7 +284,6 @@ void weedSTMT_forLoop_postStmt(STMT *s)
     case k_stmtKindFor:
     case k_stmtKindBreak:
     case k_stmtKindContinue:
-    case k_stmtKindEmpty:
     case k_stmtKindReturn:
         throwError("expecting expression in post statement of for loop", s->lineno);
         break;
