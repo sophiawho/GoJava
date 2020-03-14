@@ -103,13 +103,16 @@ void symFUNC(FUNC *f, SymbolTable *scope)
     if (f->returnType != NULL) {
         findParentType(scope, f->returnType);
     }
-    openScope();
+    putSymbol_Func(scope, f->name, f, f->lineno);
+
     SymbolTable *innerScope = scopeSymbolTable(scope);
+    openScope();
+
     if (f->inputParams != NULL) {
         TYPESPEC *ts = f->inputParams;
         symFUNC_inputParams(ts, innerScope);
     }
-    putSymbol_Func(scope, f->name, f, f->lineno);
+    
     symSTMT(f->rootStmt, innerScope);
     closeScope();
 }
@@ -337,7 +340,7 @@ TYPE *findParentType(SymbolTable *symTable, TYPE *t) {
         }
         return NULL; // a struct has no parent type
     }
-    SYMBOL *s = getSymbol(symTable, t->val.identifier);
+    SYMBOL *s = getSymbol(symTable, t->val.identifier, t->lineno);
     if (s == NULL ) {
         fprintf(stderr, "Error: (line %d) Illegal use of variable '%s'.  It has not been declared.\n", t->lineno, t->val.identifier);
         exit(1);
@@ -373,7 +376,7 @@ void symEXP(EXP *exp, SymbolTable *scope)
     switch (exp->kind)
     {
     case k_expKindIdentifier:
-        getSymbol(scope, exp->val.identExp.ident);
+        getSymbol(scope, exp->val.identExp.ident, exp->lineno);
         break;
 
     case k_expKindAnd:
@@ -473,9 +476,9 @@ int Hash(char *str)
     return hash % HASH_SIZE;
 }
 
-SYMBOL *getSymbol(SymbolTable *t, char *name)
+SYMBOL *getSymbol(SymbolTable *t, char *name, int lineno)
 {    
-    if (name == NULL) throwInternalError("In 'getSymbol' null identifier");
+    if (name == NULL) throwInternalError("null identifier in 'getSymbol'");
     int hash = Hash(name);
 
     for (SYMBOL *s = t->table[hash]; s; s = s->next) 
@@ -483,8 +486,8 @@ SYMBOL *getSymbol(SymbolTable *t, char *name)
         if (strcmp(s->name, name) == 0) return s;
     }
 
-    if (t->parent == NULL) return NULL;
-    return getSymbol(t->parent, name);
+    if (t->parent == NULL) throwErrorUndefinedId(lineno, name);
+    return getSymbol(t->parent, name, lineno);
 }
 
 SYMBOL *getSymbolOnlyFromScope(SymbolTable *t, char *name)
