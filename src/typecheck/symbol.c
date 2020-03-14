@@ -589,6 +589,14 @@ void printSymbol(SYMBOL *s) {
     printf("\n"); 
 }
 
+void printStructSpec(STRUCTSPEC *ss) {
+    if (ss == NULL) return;
+    printStructSpec(ss->next);
+    printf(" %s ", ss->attribute->ident);
+    printType(ss->type);
+    printf(";");
+}
+
 void printType(TYPE *t) {
     switch (t->kind) {
         case k_typeInfer:
@@ -614,15 +622,7 @@ void printType(TYPE *t) {
             break;
         case k_typeStruct:
             printf("struct { ");
-            STRUCTSPEC *ss = t->val.structType;
-            while (ss != NULL) {
-                // TODO (Sophia) print identifiers list
-                printf("%s", ss->attribute->ident);
-                // TODO print types
-                printType(ss->type);
-                printf(";");
-                ss = ss->next;
-            }
+            printStructSpec(t->val.structType);
             printf(" } ");
             break;
         case k_typeInt:
