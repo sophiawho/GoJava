@@ -78,24 +78,19 @@ void symTOPLEVELDECL(TOPLEVELDECL *tld, SymbolTable *symTable)
 
     symTOPLEVELDECL(tld->next, symTable);
 
-    SymbolTable *innerScope = scopeSymbolTable(symTable);
-
-    openScope();
-
     switch (tld->kind)
     {
     case k_topLevelDeclFunc:
-        symFUNC(tld->val.funcDecl, innerScope);
+        symFUNC(tld->val.funcDecl, symTable);
         break;
     case k_topLevelDeclType:
-        symTYPESPEC(tld->val.typeDecl, innerScope);
+        symTYPESPEC(tld->val.typeDecl, symTable);
         break;
     case k_topLevelDeclVar:
-        symVARSPEC(tld->val.varDecl, innerScope);
+        symVARSPEC(tld->val.varDecl, symTable);
         break;
     }
 
-    closeScope();
 }
 
 void symFUNC(FUNC *f, SymbolTable *symTable)
@@ -557,10 +552,8 @@ void closeScope() {
 // sym_name [sym_kind] = [type -> parenttype]
 void printSymbol(SYMBOL *s) {
     if (!print_sym_table) return;
-    // print symbol name
     printIndent();
     printf("%s", s->name);
-    // print symbol kind
     switch (s->kind) {
         case k_symbolKindConstant:
             printf(" [constant] = bool");
@@ -574,18 +567,26 @@ void printSymbol(SYMBOL *s) {
             printType(s->val.type);
             break;
         case k_symbolKindFunc:
-            // TODO (Sophia)
-            printf(" [function] = ");
-            // print param list
-            // print void if no return type
-            // else print return type
-
-            // main [function] = () -> void
-            // main [function] = (param_list) -> void
+            printf(" [function] = (");
+            TYPESPEC *cur_ts = s->val.funcSpec->inputParams;
+            // print input params
+            while (cur_ts != NULL) {
+                printType(cur_ts->type);
+                if (cur_ts->next != NULL) {
+                    printf(", ");
+                }
+                cur_ts = cur_ts->next;
+            }
+            printf(") -> ");
+            // print return type
+            if (s->val.funcSpec->returnType == NULL) {
+                printf("void");
+            } else {
+                printType(s->val.funcSpec->returnType);
+            }
             break;
     }
-    // print type
-    printf("\n"); // new line
+    printf("\n"); 
 }
 
 void printType(TYPE *t) {
