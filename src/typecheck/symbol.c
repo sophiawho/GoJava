@@ -40,7 +40,6 @@ void makeSymbolTable(PROG *root)
  */
 void putBaseTypeSymbols(SymbolTable *symTable) 
 {
-    // TODO print symbols if print flag enabled
     putBaseTypeSpec(symTable, (char *) "int", k_typeInt);
     putBaseTypeSpec(symTable, (char *) "rune", k_typeRune);
     putBaseTypeSpec(symTable, (char *) "bool", k_typeBool);
@@ -60,8 +59,8 @@ void putBaseConstants(SymbolTable *symTable, char *ident, int boolValue)
     IDENT *i = makeIDENT(ident);
     TYPE *t = makeTYPE(k_typeBool);
     VARSPEC *vs = makeVarSpec(i, e, t);
-    SYMBOL *s = putSymbol_Var(symTable, ident, vs, 0);
-    s->kind = k_symbolKindConstant;
+    SYMBOL *s = putSymbol(symTable, ident, k_symbolKindConstant, 0);
+    s->val.varSpec = vs;
     printSymbol(s);
 }
 
@@ -307,24 +306,37 @@ void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
     symTYPESPEC(ts->next, symTable);
 
     IDENT *ident = ts->ident;
-    TYPE *newType;
+    TYPE *t;
+    TYPE *parentType;
     switch (ts->kind)
     {
         case k_typeSpecKindTypeDeclaration:
-            // TYPE t = ts->type
-            /*
-            type a int  -> makeTypeSpec(kind, a, int)
-            // TODO make sure that type int is in the symbol table
-            (TYPE int)
-            (TYPE a) -> (TYPE int)
-            */
-            newType = makeTYPE(ts->type->kind);
-            newType->parent = ts->type;
-            putSymbol_Type(symTable, ident->ident, newType, ts->lineno);
+            t = ts->type;
+            // TODO something for struct
+            if (ts->type->kind == k_typeSlice) {
+                parentType = findParentType(symTable, ts->type->val.sliceType.type);
+            } else if (ts->type->kind == k_typeArray) {
+                parentType = findParentType(symTable, ts->type->val.arrayType.type);
+            } else if (ts->type->kind == k_typeInfer) {
+                parentType = findParentType(symTable, ts->type);
+                t->parent = parentType;
+            }
+            t->typeName = ident->ident;
+            putSymbol_Type(symTable, ident->ident, t, ts->lineno);
             break;
         default:
             break;
     }
+}
+
+// TODO make this recursive
+TYPE *findParentType(SymbolTable *symTable, TYPE *t) {
+    SYMBOL *s = getSymbol(symTable, t->val.identifier);
+    if (s == NULL ) {
+        fprintf(stderr, "Error: (line %d) Illegal use of variable '%s'.  It has not been declared.\n", t->lineno, t->val.identifier);
+        exit(1);
+    }
+    return s->val.type;
 }
 
 void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
@@ -562,6 +574,7 @@ void printSymbol(SYMBOL *s) {
             printType(s->val.type);
             break;
         case k_symbolKindFunc:
+            // TODO (Sophia)
             printf(" [function] = ");
             // print param list
             // print void if no return type
@@ -577,21 +590,32 @@ void printSymbol(SYMBOL *s) {
 
 void printType(TYPE *t) {
     switch (t->kind) {
+        case k_typeInfer:
+            if (t->typeName != NULL) {
+                printf("%s", t->typeName);
+            } else {
+                printf("%s", t->val.identifier);
+            }
+            break;
         case k_typeSlice:
-            printf("[]%s", t->val.identifier);
-            // printf("[]%s"); 
-            // printType(t->val.sliceType->type);
+            if (t->typeName != NULL) {
+                printf("%s -> ", t->typeName);
+            } 
+            printf("[]"); 
+            printType(t->val.sliceType.type);
             break;
         case k_typeArray:
-            printf("[%d]%s", t->val.arrayType.size, t->val.identifier);
-            // printf("[%d]", t->val.arrayType.size)
-            // printType(t->val.arrayType->type);
+            if (t->typeName != NULL) {
+                printf("%s -> ", t->typeName);
+            } 
+            printf("[%d]", t->val.arrayType.size);
+            printType(t->val.arrayType.type);
             break;
         case k_typeStruct:
             printf("struct { ");
             STRUCTSPEC *ss = t->val.structType;
             while (ss != NULL) {
-                // TODO print identifiers list
+                // TODO (Sophia) print identifiers list
                 printf("%s", ss->attribute->ident);
                 // TODO print types
                 printType(ss->type);
@@ -599,9 +623,6 @@ void printType(TYPE *t) {
                 ss = ss->next;
             }
             printf(" } ");
-            break;
-        case k_typeInfer:
-            printf("%s", t->val.identifier);
             break;
         case k_typeInt:
             printf("int");
@@ -617,6 +638,8 @@ void printType(TYPE *t) {
             break;
         case k_typeString:
             printf("string");
+            break;
+        default:
             break;
     }
     if (t->parent != NULL) {

@@ -123,6 +123,7 @@ struct TYPE {
         struct { TYPE *type; } sliceType;
         struct { int size; TYPE *type; } arrayType;
     } val;
+    char *typeName; // for symbol table
     TYPE *parent;
 }; 
 TYPE *makeTYPE_ident(char *identifier); 
