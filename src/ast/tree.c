@@ -68,6 +68,7 @@ TYPE *makeTYPE(TypeKind kind) {
     type->kind = kind;
 	type->lineno = yylineno;
 	type->parent = NULL;
+	type->typeName = NULL;
     return type;
 }
 
