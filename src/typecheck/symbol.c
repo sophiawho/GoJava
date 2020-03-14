@@ -460,6 +460,7 @@ int Hash(char *str)
 
 SYMBOL *getSymbol(SymbolTable *t, char *name)
 {    
+    if (name == NULL) throwInternalError("In 'getSymbol' null identifier");
     int hash = Hash(name);
 
     for (SYMBOL *s = t->table[hash]; s; s = s->next) 
