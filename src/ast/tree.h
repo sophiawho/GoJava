@@ -143,6 +143,7 @@ struct EXP {
         struct { EXP *object; char *field; } fieldAccess;
     } val;
     EXP *next;
+    SYMBOL *expS;
 };
 EXP *getGenericExpr(ExpressionKind kind);
 EXP *makeEXP_identifier(char *id);

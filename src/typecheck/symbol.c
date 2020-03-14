@@ -231,6 +231,7 @@ void symSTMT_assign(STMT *s, SymbolTable *scope)
     IDENT *i;
     TYPE *t;
     VARSPEC *vs;
+    SYMBOL *sym;
 
     switch (s->val.assignStmt.kind)
     {
@@ -241,6 +242,9 @@ void symSTMT_assign(STMT *s, SymbolTable *scope)
         t = makeTYPE(k_typeInfer);
         vs = makeVarSpec(i, s->val.assignStmt.rhs, t);
         putSymbol_Var(scope, s->val.assignStmt.lhs->val.identExp.ident, vs, s->lineno);
+        
+        symEXP(s->val.assignStmt.lhs, scope);
+        break;
 
     default:
         symEXP(s->val.assignStmt.lhs, scope);
@@ -373,10 +377,12 @@ void symEXP(EXP *exp, SymbolTable *scope)
     if (exp == NULL) return;
     symEXP(exp->next, scope);
 
+    SYMBOL *s;
     switch (exp->kind)
     {
     case k_expKindIdentifier:
-        getSymbol(scope, exp->val.identExp.ident, exp->lineno);
+        s = getSymbol(scope, exp->val.identExp.ident, exp->lineno);
+        exp->expS = s;
         break;
 
     case k_expKindAnd:
