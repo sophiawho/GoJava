@@ -3,6 +3,7 @@
 
 #include "../ast/tree.h"
 #include "../ast/stmt.h"
+#include <stdbool.h>
 
 #define HASH_SIZE 317
 

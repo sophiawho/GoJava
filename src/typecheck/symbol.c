@@ -3,10 +3,14 @@
 #include "../ast/tree.h"
 #include "../ast/stmt.h"
 #include "../error.h"
+#include "../weed.h"
 
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+
+// #define BLANK_IDENTIFIER "_"
 
 extern int print_sym_table;
 int indent_level = 0;
@@ -93,17 +97,27 @@ void symTOPLEVELDECL(TOPLEVELDECL *tld, SymbolTable *symTable)
 
 }
 
-void symFUNC(FUNC *f, SymbolTable *symTable)
+void symFUNC_inputParams(TYPESPEC *ts, SymbolTable *scope) {
+    if (ts == NULL) return;
+    symFUNC_inputParams(ts->next, scope);
+    VARSPEC *vs = makeVarSpec(ts->ident, NULL, ts->type);
+    symVARSPEC(vs, scope);
+}
+
+void symFUNC(FUNC *f, SymbolTable *scope)
 {
-    // TODO finish
     if (f->returnType != NULL) {
-        // TODO typecheck the return type exists in the given scope
+        findParentType(scope, f->returnType);
     }
+    openScope();
+    SymbolTable *innerScope = scopeSymbolTable(scope);
     if (f->inputParams != NULL) {
-        // TODO typecheck the types for each param exists in the given scope
+        TYPESPEC *ts = f->inputParams;
+        symFUNC_inputParams(ts, innerScope);
     }
-    putSymbol_Func(symTable, f->name, f, f->lineno);
-    symSTMT(f->rootStmt, symTable);
+    putSymbol_Func(scope, f->name, f, f->lineno);
+    symSTMT(f->rootStmt, innerScope);
+    closeScope();
 }
 
 void symSTMT(STMT *s, SymbolTable *scope)
@@ -122,19 +136,20 @@ void symSTMT(STMT *s, SymbolTable *scope)
         break;
 
     case k_stmtKindExpStmt:
-        // TODO typecheck expression
+        symEXP(s->val.expStmt, scope);
         break;
 
     case k_stmtKindIncDec:
-        // TODO typecheck expression == int | float64 | rune
+        symEXP(s->val.incDecStmt.exp, scope);
         break;
 
     case k_stmtKindAssign:
-        symSTMT_assign(s, scope);
+        symEXP(s->val.assignStmt.lhs, scope);
+        symEXP(s->val.assignStmt.rhs, scope);
         break;
 
     case k_stmtKindPrint:
-        // TODO typecheck all types are well typed
+        symEXP(s->val.printStmt.expList, scope);
         break;
 
     case k_stmtKindVarDecl:
@@ -241,32 +256,6 @@ void symEXPRCASECLAUSE(EXPRCASECLAUSE *cc, SymbolTable *scope)
 
 }
 
-void symSTMT_assign(STMT *s, SymbolTable *scope)
-{
-    switch (s->val.assignStmt.kind)
-    {
-    case k_stmtAssign:
-    case k_stmtColonAssign:
-        // TODO typecheck type(LHS) >= type(RHS)
-        break;
-    case k_opAssignKindPlusEq:
-    case k_opAssignKindMinusEq:
-    case k_opAssignKindMultEq:
-    case k_opAssignKindDivEq:
-    case k_opAssignKindModEq:
-        // TODO check if numerical on LHS ? I'm not sure since golite specs don't detail
-        break;
-    case k_opAssignKindBitAndEq:
-    case k_opAssignKindBitOrEq:
-    case k_opAssignKindBitXorEq:
-    case k_opAssignKindLeftShiftEq:
-    case k_opAssignKindRightShiftEq:
-    case k_opAssignKindBitClearEq:
-        // TODO typecheck 
-        break;
-    }
-}
-
 void symSTMT_forLoop(STMT *s, SymbolTable *scope)
 {
     SymbolTable *innerScope = scopeSymbolTable(scope);
@@ -307,13 +296,8 @@ void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
     {
         case k_typeSpecKindTypeDeclaration:
             t = ts->type;
-            // TODO something for struct
-            if (ts->type->kind == k_typeSlice) {
-                parentType = findParentType(symTable, ts->type->val.sliceType.type);
-            } else if (ts->type->kind == k_typeArray) {
-                parentType = findParentType(symTable, ts->type->val.arrayType.type);
-            } else if (ts->type->kind == k_typeInfer) {
-                parentType = findParentType(symTable, ts->type);
+            parentType = findParentType(symTable, t);
+            if (t->kind == k_typeInfer) {
                 t->parent = parentType;
             }
             t->typeName = ident->ident;
@@ -326,6 +310,18 @@ void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
 
 // TODO make this recursive
 TYPE *findParentType(SymbolTable *symTable, TYPE *t) {
+    if (t->kind == k_typeSlice) {
+        return findParentType(symTable, t->val.sliceType.type);
+    } else if (t->kind == k_typeArray) {
+        return findParentType(symTable, t->val.arrayType.type);
+    } else if (t->kind == k_typeStruct) {
+        STRUCTSPEC *cur = t->val.structType;
+        while (cur != NULL) {
+            findParentType(symTable, cur->type);
+            cur = cur->next;
+        }
+        return NULL; // a struct has no parent type
+    }
     SYMBOL *s = getSymbol(symTable, t->val.identifier);
     if (s == NULL ) {
         fprintf(stderr, "Error: (line %d) Illegal use of variable '%s'.  It has not been declared.\n", t->lineno, t->val.identifier);
@@ -339,12 +335,11 @@ void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
     if (vs == NULL) return;
     symVARSPEC(vs->next, scope);
 
-    TYPE *type = vs->type;
-    if (type != NULL) {
-        // TODO check that type exists
+    if (vs->type != NULL) {
+        findParentType(scope, vs->type);
     }
-    if (type != NULL && vs->rhs != NULL) {
-        // TODO check type(expressions) == type(type)
+    if (vs->rhs != NULL) {
+        symEXP(vs->rhs, scope);
     }
 
     IDENT *ident = vs->ident;
@@ -464,7 +459,7 @@ int Hash(char *str)
 }
 
 SYMBOL *getSymbol(SymbolTable *t, char *name)
-{
+{    
     int hash = Hash(name);
 
     for (SYMBOL *s = t->table[hash]; s; s = s->next) 
@@ -488,7 +483,7 @@ SYMBOL *getSymbolOnlyFromScope(SymbolTable *t, char *name)
 }
 
 SYMBOL *putSymbol(SymbolTable *t, char *name, SymbolKind kind, int lineno)
-{
+{    
     int hash = Hash(name);
     for (SYMBOL *s = t->table[hash]; s; s = s->next)
     {   
@@ -505,6 +500,7 @@ SYMBOL *putSymbol(SymbolTable *t, char *name, SymbolKind kind, int lineno)
 
 SYMBOL *putSymbol_Func(SymbolTable *t, char *name, FUNC *funcSpec, int lineno)
 {
+    if (isBlankId(name)) return NULL;
     SYMBOL *s = putSymbol(t, name, k_symbolKindFunc, lineno);
     s->val.funcSpec = funcSpec;
     printSymbol(s);
@@ -513,6 +509,7 @@ SYMBOL *putSymbol_Func(SymbolTable *t, char *name, FUNC *funcSpec, int lineno)
 
 SYMBOL *putSymbol_Type(SymbolTable *t, char *name, TYPE *type, int lineno) 
 {
+    if (isBlankId(name)) return NULL;
     SYMBOL *s = putSymbol(t, name, k_symbolKindType, lineno);
     s->val.type = type;
     printSymbol(s);
@@ -521,6 +518,7 @@ SYMBOL *putSymbol_Type(SymbolTable *t, char *name, TYPE *type, int lineno)
 
 SYMBOL *putSymbol_Var(SymbolTable *t, char *name, VARSPEC *varSpec, int lineno) 
 {
+    if (isBlankId(name)) return NULL;
     SYMBOL *s = putSymbol(t, name, k_symbolKindVar, lineno);
     s->val.varSpec = varSpec;
     printSymbol(s);

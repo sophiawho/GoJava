@@ -57,63 +57,6 @@ typedef enum {
     k_typeString
 } TypeKind;
 
-// type a []int
-// type b []int
-// type c []int
-// type d c
-
-// var _a c
-// var _b d
-
-// var x_1 a
-//     kind -> k_typeLiteral
-//     a -> identifier
-
-// var x_2 b
-//     kind -> k_typeLiteral
-//     b -> identifier
-
-// var x_3 []a
-
-// var x_4 []a
-
-// TYPE *t_x_1 
-// TYPE *t_x_2
-//     t_x_1.kind == t_x_2.kind && strmcp(t_x_1.identifier, t_x_2.identifier) == 0
-
-
-// var x1 []int
-//     [] -> k_typeSlice
-//     int -> identifier
-
-// var x2 []int
-//     [] -> k_typeSlice
-//     int -> identifier
-
-
-
-// var x3 a
-// x3 != x1
-
-// k_typeSlice
-
-// compare(vs1->type, vs2->type)
-// {
-//     strcmp(type1, type2) == 0
-// }
-
-// type b a
-// var x a
-// var y b
-
-// SYMBOL TABLE
-// SYMBOL   TYPE 
-// x        *some_pointer1
-// y        *some_pointer2
-
-// while b.parent != null, b==a, b=b.parent
-
-
 struct TYPE {
     TypeKind kind;
     int lineno;
