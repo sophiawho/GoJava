@@ -3,6 +3,7 @@
 
 #include "../ast/tree.h"
 #include "../ast/stmt.h"
+#include <stdbool.h>
 
 #define HASH_SIZE 317
 
@@ -20,7 +21,7 @@ SYMBOL *putSymbol(SymbolTable *t, char *name, SymbolKind kind, int lineno);
 SYMBOL *putSymbol_Func(SymbolTable *t, char *name, FUNC *funcSpec, int lineno);
 SYMBOL *putSymbol_Type(SymbolTable *t, char *name, TYPE *type, int lineno);
 SYMBOL *putSymbol_Var(SymbolTable *t, char *name, VARSPEC *varSpec, int lineno);
-SYMBOL *getSymbol(SymbolTable *t, char *name);
+SYMBOL *getSymbol(SymbolTable *t, char *name, int lineno);
 
 SymbolTable *initSymbolTable();
 SymbolTable *scopeSymbolTable(SymbolTable *parent);

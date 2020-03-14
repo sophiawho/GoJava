@@ -28,4 +28,6 @@ void weedEXP_nonEval(EXP *e, bool allowBlankId);
 void weedTYPESPEC(TYPESPEC *ts);
 void weedTYPE(TYPE *t);
 
+bool isBlankId(char *name);
+
 #endif

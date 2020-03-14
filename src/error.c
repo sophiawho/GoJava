@@ -14,11 +14,17 @@ void throwError(char *description, int lineno)
 void throwErrorUndefinedId(int lineno, char *id)
 {
     fprintf(stderr, "Error: (line %d) \"%s\" is not declared\n", lineno, id);
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 void throwErrorRedeclaredId(int lineno, char *id)
 {
     fprintf(stderr, "Error: (line %d) \"%s\" is already declared\n", lineno, id);
-    exit(1);
+    exit(EXIT_FAILURE);
+}
+
+void throwInternalError(char *description)
+{
+    fprintf(stderr, "Internal Error: %s\n", description);
+    exit(EXIT_FAILURE);
 }

@@ -46,6 +46,7 @@ int main(int argc, char *argv[])
                 g_tokens = 0;
                 yyparse();
                 weedPROG(root);
+                makeSymbolTable(root);
                 printf("OK\n");
         }
 
