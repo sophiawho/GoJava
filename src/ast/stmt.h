@@ -10,7 +10,6 @@ typedef enum {
     k_stmtKindVarDecl, 
     k_stmtKindTypeDecl, 
     k_stmtKindBlock,
-    k_stmtKindShortDecl, 
     k_stmtKindIfStmt,
     k_stmtKindSwitch,
     k_stmtKindFor, 

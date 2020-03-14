@@ -16,6 +16,9 @@ typedef struct TYPESPEC TYPESPEC;
 typedef struct STRUCTSPEC STRUCTSPEC;
 typedef struct EXPRCASECLAUSE EXPRCASECLAUSE; // Refer to stmt.c stmt.h
 
+// Symbol
+typedef struct SYMBOL SYMBOL;
+
 struct PROG {
     char *package; // A package declaration is the key word package followed by an identifier
     TOPLEVELDECL *rootTopLevelDecl;
@@ -47,7 +50,69 @@ typedef enum {
     k_typeArray,
     k_typeStruct,
     k_typeInfer,
+    k_typeInt,
+    k_typeFloat,
+    k_typeBool,
+    k_typeRune,
+    k_typeString
 } TypeKind;
+
+// type a []int
+// type b []int
+// type c []int
+// type d c
+
+// var _a c
+// var _b d
+
+// var x_1 a
+//     kind -> k_typeLiteral
+//     a -> identifier
+
+// var x_2 b
+//     kind -> k_typeLiteral
+//     b -> identifier
+
+// var x_3 []a
+
+// var x_4 []a
+
+// TYPE *t_x_1 
+// TYPE *t_x_2
+//     t_x_1.kind == t_x_2.kind && strmcp(t_x_1.identifier, t_x_2.identifier) == 0
+
+
+// var x1 []int
+//     [] -> k_typeSlice
+//     int -> identifier
+
+// var x2 []int
+//     [] -> k_typeSlice
+//     int -> identifier
+
+
+
+// var x3 a
+// x3 != x1
+
+// k_typeSlice
+
+// compare(vs1->type, vs2->type)
+// {
+//     strcmp(type1, type2) == 0
+// }
+
+// type b a
+// var x a
+// var y b
+
+// SYMBOL TABLE
+// SYMBOL   TYPE 
+// x        *some_pointer1
+// y        *some_pointer2
+
+// while b.parent != null, b==a, b=b.parent
+
 
 struct TYPE {
     TypeKind kind;
@@ -58,6 +123,8 @@ struct TYPE {
         struct { TYPE *type; } sliceType;
         struct { int size; TYPE *type; } arrayType;
     } val;
+    char *typeName; // for symbol table
+    TYPE *parent;
 }; 
 TYPE *makeTYPE_ident(char *identifier); 
 TYPE *makeTYPE_array(int size, TYPE *type); 
@@ -195,5 +262,24 @@ struct STRUCTSPEC {
     STRUCTSPEC *next;
 };
 STRUCTSPEC *makeStructSpec(IDENT *attribute, TYPE *type);
+
+typedef enum {
+  k_symbolKindVar,
+  k_symbolKindType,
+  k_symbolKindFunc,
+  k_symbolKindConstant
+} SymbolKind;
+
+struct SYMBOL {
+    char *name;
+    SymbolKind kind;
+    int shadowNum;
+    union {
+        TYPE* type;
+        VARSPEC* varSpec; // var decl and shortvardecl
+        FUNC* funcSpec;
+    } val;
+    struct SYMBOL *next;
+};
 
 #endif /* !TREE_H */
