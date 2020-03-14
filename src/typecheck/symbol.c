@@ -144,8 +144,7 @@ void symSTMT(STMT *s, SymbolTable *scope)
         break;
 
     case k_stmtKindAssign:
-        symEXP(s->val.assignStmt.lhs, scope);
-        symEXP(s->val.assignStmt.rhs, scope);
+        symSTMT_assign(s, scope);
         break;
 
     case k_stmtKindPrint:
@@ -227,6 +226,28 @@ void symSTMT(STMT *s, SymbolTable *scope)
         symEXP(s->val.returnExp, scope);
         break;
 
+    }
+}
+
+void symSTMT_assign(STMT *s, SymbolTable *scope)
+{
+    IDENT *i;
+    TYPE *t;
+    VARSPEC *vs;
+
+    switch (s->val.assignStmt.kind)
+    {
+    case k_stmtColonAssign:
+        symEXP(s->val.assignStmt.rhs, scope);
+
+        i = makeIDENT(s->val.assignStmt.lhs->val.identExp.ident);
+        t = makeTYPE(k_typeInfer);
+        vs = makeVarSpec(i, s->val.assignStmt.rhs, t);
+        putSymbol_Var(scope, s->val.assignStmt.lhs->val.identExp.ident, vs, s->lineno);
+
+    default:
+        symEXP(s->val.assignStmt.rhs, scope);
+        break;
     }
 }
 
