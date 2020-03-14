@@ -243,6 +243,7 @@ void symSTMT_assign(STMT *s, SymbolTable *scope)
         putSymbol_Var(scope, s->val.assignStmt.lhs->val.identExp.ident, vs, s->lineno);
 
     default:
+        symEXP(s->val.assignStmt.lhs, scope);
         symEXP(s->val.assignStmt.rhs, scope);
         break;
     }
@@ -478,6 +479,7 @@ int Hash(char *str)
 SYMBOL *getSymbol(SymbolTable *t, char *name, int lineno)
 {    
     if (name == NULL) throwInternalError("null identifier in 'getSymbol'");
+    if (isBlankId(name)) return NULL;
     int hash = Hash(name);
 
     for (SYMBOL *s = t->table[hash]; s; s = s->next) 
