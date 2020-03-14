@@ -278,7 +278,6 @@ void weedSTMT_forLoop_postStmt(STMT *s)
     case k_stmtKindVarDecl:
     case k_stmtKindTypeDecl:
     case k_stmtKindBlock:
-    case k_stmtKindShortDecl:
     case k_stmtKindIfStmt:
     case k_stmtKindSwitch:
     case k_stmtKindFor:

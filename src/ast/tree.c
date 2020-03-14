@@ -67,6 +67,7 @@ TYPE *makeTYPE(TypeKind kind) {
     TYPE *type = malloc(sizeof(TYPE));
     type->kind = kind;
 	type->lineno = yylineno;
+	type->parent = NULL;
     return type;
 }
 
@@ -203,6 +204,7 @@ TYPESPEC *makeTypeSpec(TypeSpecKind kind, IDENT *ident, TYPE *type) {
 	return ts;
 }
 
+// TODO never used, remove?
 TYPESPEC *makeTypeSpec_struct(TypeSpecKind kind, IDENT *ident, STRUCTSPEC *ss) {
 	TYPESPEC *ts = malloc(sizeof(TYPESPEC));
 	ts->lineno = yylineno;

@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "ast/tree.h"
+#include "typecheck/symbol.h"
 #include "pretty.h"
 #include "weed.h"
 
@@ -12,7 +13,6 @@ PROG *root = NULL;
 int main(int argc, char *argv[])
 {
         extern int g_tokens;
-        extern int print_sym_table;
         
         if(strcmp(argv[1], "scan") == 0){
                 g_tokens = 0;
@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
                 yyparse();
                 weedPROG(root);
                 print_sym_table = 1;
+                makeSymbolTable(root);
         }
         else if (strcmp(argv[1], "typecheck") == 0) {
                 g_tokens = 0;
