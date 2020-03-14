@@ -623,7 +623,7 @@ void printType(TYPE *t) {
             if (t->typeName != NULL) {
                 printf("%s", t->typeName);
             } else {
-                printf("%s", t->val.identifier);
+                printf("%s", "<infer>");
             }
             break;
         case k_typeSlice:
