@@ -15,12 +15,6 @@
 extern int print_sym_table;
 int indent_level = 0;
 
-SYMBOL *putSymbol(SymbolTable *t, char *name, SymbolKind kind, int lineno);
-SYMBOL *getSymbol(SymbolTable *t, char *name);
-SYMBOL *getSymbolOnlyFromScope(SymbolTable *t, char *name);
-SymbolTable *initSymbolTable();
-SymbolTable *scopeSymbolTable(SymbolTable *parent);
-
 void makeSymbolTable(PROG *root)
 {
     SymbolTable *global_scope = initSymbolTable();
