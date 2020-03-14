@@ -77,6 +77,8 @@ void symTOPLEVELDECL(TOPLEVELDECL *tld, SymbolTable *symTable)
 {
     if (tld == NULL) return;
 
+    symTOPLEVELDECL(tld->next, symTable);
+
     SymbolTable *innerScope = scopeSymbolTable(symTable);
 
     openScope();
@@ -95,9 +97,6 @@ void symTOPLEVELDECL(TOPLEVELDECL *tld, SymbolTable *symTable)
     }
 
     closeScope();
-
-    if (tld->next != NULL) symTOPLEVELDECL(tld->next, symTable);
-    return;
 }
 
 void symFUNC(FUNC *f, SymbolTable *symTable)
@@ -116,6 +115,8 @@ void symFUNC(FUNC *f, SymbolTable *symTable)
 void symSTMT(STMT *s, SymbolTable *scope)
 {
     if (s == NULL) return;
+
+    symSTMT(s->next, scope);
 
     SymbolTable *innerScope;
     SymbolTable *trueBodyScope;
@@ -218,13 +219,12 @@ void symSTMT(STMT *s, SymbolTable *scope)
         break;
 
     }
-
-    if (s->next != NULL) symSTMT(s->next, scope);
 }
 
 void symEXPRCASECLAUSE(EXPRCASECLAUSE *cc, SymbolTable *scope)
 {
     if (cc == NULL) return;
+    symEXPRCASECLAUSE(cc->next, scope);
     
     openScope();
     SymbolTable *innerScope = scopeSymbolTable(scope);
@@ -245,7 +245,6 @@ void symEXPRCASECLAUSE(EXPRCASECLAUSE *cc, SymbolTable *scope)
         break;
     }
 
-    if (cc->next != NULL) symEXPRCASECLAUSE(cc->next, scope);
 }
 
 void symSTMT_assign(STMT *s, SymbolTable *scope)
@@ -305,6 +304,7 @@ void symSTMT_forLoop(STMT *s, SymbolTable *scope)
 void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
 {
     if (ts == NULL) return;
+    symTYPESPEC(ts->next, symTable);
 
     IDENT *ident = ts->ident;
     TYPE *newType;
@@ -325,14 +325,12 @@ void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
         default:
             break;
     }
-    
-    if (ts->next != NULL) symTYPESPEC(ts->next, symTable);
-    return;
 }
 
 void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
 {
     if (vs == NULL) return;
+    symVARSPEC(vs->next, scope);
 
     TYPE *type = vs->type;
     if (type != NULL) {
@@ -348,14 +346,12 @@ void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
         putSymbol_Var(scope, ident->ident, vs, vs->lineno);
         ident = ident->next;
     }
-    
-    if (vs->next != NULL) symVARSPEC(vs->next, scope);
-    return;
 }
 
 void symEXP(EXP *exp, SymbolTable *scope)
 {
     if (exp == NULL) return;
+    symEXP(exp->next, scope);
 
     switch (exp->kind)
     {
@@ -432,9 +428,6 @@ void symEXP(EXP *exp, SymbolTable *scope)
     default:
         break;
     }
-
-    if (exp->next != NULL) symEXP(exp->next, scope);
-    return;
 }
 
 SymbolTable *initSymbolTable()
@@ -586,9 +579,13 @@ void printType(TYPE *t) {
     switch (t->kind) {
         case k_typeSlice:
             printf("[]%s", t->val.identifier);
+            // printf("[]%s"); 
+            // printType(t->val.sliceType->type);
             break;
         case k_typeArray:
             printf("[%d]%s", t->val.arrayType.size, t->val.identifier);
+            // printf("[%d]", t->val.arrayType.size)
+            // printType(t->val.arrayType->type);
             break;
         case k_typeStruct:
             printf("struct { ");
