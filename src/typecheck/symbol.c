@@ -342,8 +342,7 @@ TYPE *findParentType(SymbolTable *symTable, TYPE *t) {
     }
     SYMBOL *s = getSymbol(symTable, t->val.identifier, t->lineno);
     if (s == NULL ) {
-        fprintf(stderr, "Error: (line %d) Illegal use of variable '%s'.  It has not been declared.\n", t->lineno, t->val.identifier);
-        exit(1);
+        throwErrorUndefinedId(t->lineno, t->val.identifier);
     }
     return s->val.type;
 }
