@@ -169,6 +169,7 @@ char *typeToString(TYPE *t)
     case k_typeString:
         return "string";
     }
+    exit(EXIT_FAILURE);
 }
 
 // =============================== TYPECHECK ===================================
@@ -302,6 +303,8 @@ void typeEXPRCASECLAUSE(EXPRCASECLAUSE *caseClause) {
 void typeEXP(EXP *e) {
     if (e == NULL) return;
     typeEXP(e->next);
+
+    TYPE *t;
     switch (e->kind) {
 
         // ============= LITERAL EXPRESSIONS ================
@@ -390,7 +393,6 @@ void typeEXP(EXP *e) {
             }
 
             // Must be equal types
-            fprintf(stdout, "%s %s", typeToString(e->val.binary.lhs->type), typeToString(e->val.binary.rhs->type));
             if (!isEqualType(e->val.binary.lhs->type, e->val.binary.rhs->type)) {
                 throwError("Illegal binary comparison. Operands must resolve to same type.\n",
                 e->lineno);
@@ -409,8 +411,8 @@ void typeEXP(EXP *e) {
                 (!resolveToNumbericBaseType(e->val.binary.lhs->type) && 
                 !resolveToNumbericBaseType(e->val.binary.rhs->type)) ||
 
-                !resolveToStringBaseType(e->val.binary.lhs->type) && 
-                !resolveToStringBaseType(e->val.binary.rhs->type)) {
+                (!resolveToStringBaseType(e->val.binary.lhs->type) && 
+                !resolveToStringBaseType(e->val.binary.rhs->type))) {
                     throwError("Illegal addition. Operands must both either resolve to numeric or string types", e->lineno);
                 }
 
@@ -419,8 +421,8 @@ void typeEXP(EXP *e) {
                 throwError("Illegal addition. Operands must resolve to same type.\n",
                 e->lineno);
             }
-
-            e->type = makeTYPE(resolveType(e->val.binary.lhs->type->kind));
+            t = resolveType(e->val.binary.lhs->type);
+            e->type = makeTYPE(t->kind);
             break;
 
         case k_expKindMinus:    // -
