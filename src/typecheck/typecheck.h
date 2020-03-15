@@ -16,7 +16,6 @@ void typeTYPE(TYPE *t);
 void typeFUNC(FUNC *f);
 void typeSTMT(STMT *s, TYPE *returnType);
 void typeEXPRCASECLAUSE(EXPRCASECLAUSE *caseClause);
-
 TYPE *resolveType(TYPE *t);
 
 #endif /* !TYPECHECK_H */

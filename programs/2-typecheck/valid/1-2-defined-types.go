@@ -20,11 +20,3 @@ func main() {
 	var b naturals
 	b = append(b, natural(8))
 }
-
-type foo int
-type num foo
-
-func bar() num {
-	var x foo
-	return x
-}

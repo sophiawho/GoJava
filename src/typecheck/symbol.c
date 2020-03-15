@@ -105,6 +105,10 @@ void symFUNC(FUNC *f, SymbolTable *scope)
 {
     if (f->returnType != NULL) {
         findParentType(scope, f->returnType);
+        if (f->returnType->kind == k_typeInfer) {
+            SYMBOL *s = getSymbol(scope, f->returnType->val.identifier, f->lineno);
+            f->returnType = s->val.type;
+        } 
     }
     putSymbol_Func(scope, f->name, f, f->lineno);
 
@@ -367,8 +371,8 @@ void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
         if (vs->type->kind == k_typeInfer) {
             SYMBOL *s = getSymbol(scope, vs->type->val.identifier, vs->lineno);
             vs->type = s->val.type;
+            // TODO (Sophia) Cases for slices and arrays
         } 
-        // Cases for slices and arrays
     }
     if (vs->rhs != NULL) {
         symEXP(vs->rhs, scope);

@@ -24,6 +24,8 @@ TYPE *resolveType(TYPE *t) {
 bool isEqualType(TYPE *t1, TYPE *t2) {
     if (t1 == NULL || t2 == NULL) return false;
     if (t1->kind != t2->kind) return false;
+    STRUCTSPEC *ss1;
+    STRUCTSPEC *ss2;
     switch(t1->kind) {
         case k_typeSlice:
             return isEqualType(t1->val.sliceType.type, t2->val.sliceType.type);
@@ -31,12 +33,18 @@ bool isEqualType(TYPE *t1, TYPE *t2) {
             if (t1->val.arrayType.size != t2->val.arrayType.size) return false;
             return isEqualType(t1->val.arrayType.type, t2->val.arrayType.type);
         case k_typeStruct:
-            // check all fields for equality
-            break;
+            ss1 = t1->val.structType;
+            ss2 = t2->val.structType;
+            while (ss1 != NULL && ss2 != NULL) {
+                if (strcmp(ss1->attribute->ident, ss2->attribute->ident) != 0) return false;
+                if (!isEqualType(ss1->type, ss2->type)) return false;
+                ss1 = ss1->next;
+                ss2 = ss2->next;
+            }
+            if (ss1 != NULL || ss2 != NULL) return false;
+            return true;
         case k_typeInfer:
-            // do something
-            return strcmp(t1->typeName, t2->typeName) == 0;
-            break;
+            return strcmp(t1->val.identifier, t2->val.identifier) == 0;
         default:
             return true;
     }

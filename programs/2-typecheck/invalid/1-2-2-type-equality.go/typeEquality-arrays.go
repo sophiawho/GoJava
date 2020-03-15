@@ -1,9 +1,9 @@
 package test 
 
-type a [12]int
-type b [11]int
+type a int
+type b a
 
-func foo() a {
-	var bar a
-	return bar
+func bar() a {
+	var bb b
+	return bb
 }
