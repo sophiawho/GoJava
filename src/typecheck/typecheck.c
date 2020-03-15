@@ -1,6 +1,7 @@
 #include "typecheck.h"
 #include "../ast/tree.h"
 #include "../ast/stmt.h"
+#include "../error.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -79,11 +80,9 @@ void typeTOPLEVELDECL(TOPLEVELDECL *tld) {
 }
 
 /* 2.3 A function declaration typechecks if the statements of its body type check
-2.4 Special functions `init` and `main` must have no parameters or return type
-They may only be declared as functions in the top-level scope
-`init` does not introduce a binding and thus may be declared multiple times.
 */
 void typeFUNC(FUNC *f) {
+    typeSTMT(f->rootStmt);
 }
 
 /* 2.1
@@ -96,5 +95,57 @@ If expr is well-typed and its type is T, the mapping x:T is added to the
 symbol table.
 */
 void typeVARSPEC(VARSPEC *varspec) {
+    return;
+}
+
+// =============================== 3. STATEMENTS ===================================
+void typeSTMT(STMT *s) {
+    if (s == NULL) return;
+    typeSTMT(s->next);
+    switch (s->kind) {
+        // Trivially well-typed statements
+        case k_stmtKindEmpty:
+            break;
+        case k_stmtKindBreak:
+            break;
+        case k_stmtKindContinue:
+            break;
+        // 3.3 Expression statement is well-typed if its expression child is well-typed
+        // In GoLite, only function call expressions are allowed to be used as statements
+        // ie: foo(x,y) but not x-1
+        case k_stmtKindExpStmt:
+            typeEXP(s->val.expStmt);
+            break;
+        // 3.4 return is well typed if the enclosing function has no return type
+        // return expr is well-typed if its expression is well-typed
+        // and the type of this expression is the same as the return type of the enclosing function
+        case k_stmtKindReturn:
+            break;
+        // An inc/dec statement type checks if its expression is well-typed
+        // and resolves to a numeric base type (int, float64, rune)
+        case k_stmtKindIncDec:
+            break;
+        case k_stmtKindAssign:
+            break;
+        case k_stmtKindPrint:
+            break;
+        case k_stmtKindVarDecl:
+            typeVARSPEC(s->val.varDecl);
+            break;
+        case k_stmtKindTypeDecl:
+            break;
+        case k_stmtKindBlock:
+            typeSTMT(s->val.blockStmt);
+            break;
+        case k_stmtKindIfStmt:
+            break;
+        case k_stmtKindSwitch:
+            break;
+        case k_stmtKindFor:
+            break;
+    }
+}
+
+void typeEXP(EXP *e) {
     return;
 }

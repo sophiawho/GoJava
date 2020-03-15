@@ -9,7 +9,6 @@
 void typePROG(PROG *root);
 void typeTOPLEVELDECL(TOPLEVELDECL *tld);
 void typeVARSPEC(VARSPEC *varspec);
-void typeTYPESPEC(TYPESPEC *ts);
 void typeSTRUCTSPEC(STRUCTSPEC *ss);
 void typeIDENT(IDENT *ident);
 void typeEXP(EXP *e);
