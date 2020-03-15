@@ -51,6 +51,38 @@ bool isEqualType(TYPE *t1, TYPE *t2) {
     return false;
 }
 
+/*
+* Function: Determines whether a type is comparable
+* 
+* Args: 
+*   TYPE *t: The type to determine whether it's comparable
+*
+* Returns: bool
+*/
+bool isComparable(TYPE *t) {
+    if (t->kind == k_typeInt ||
+        t->kind == k_typeBool ||
+        t->kind == k_typeFloat ||
+        t->kind == k_typeRune || 
+        t->kind == k_typeString ) return true;
+
+    // Array type is comparable if values of array element are comparable
+    if (t->kind == k_typeArray) {
+        return isComparable(t->val.arrayType.type);
+    }
+
+    // Struct values are comparable if all their fields are comparable
+    if (t->kind == k_typeStruct) {
+
+        bool isComp = isComparable(t->val.structType->type);
+        if (t->val.structType->next != NULL) {
+            isComp = isComp && isComparable(t->val.structType->next->type);
+        }
+        return isComp;
+    }
+    return false;
+}
+
 bool isOrdered(TYPE *t) {
     if (t->kind == k_typeInt ||
         t->kind == k_typeBool ||
@@ -256,8 +288,47 @@ void typeEXP(EXP *e) {
             }
             e->type = makeTYPE(k_typeBool);
         // TODO: As per 4.4, what do expressions being "comparable/ordered" mean?
-        case k_expKindEq: // ==
-        case k_expKindNotEq: // !=
+
+        case k_expKindEq:       // ==
+        case k_expKindNotEq:    // !=
+            typeEXP(e->val.binary.lhs);
+            typeEXP(e->val.binary.rhs);
+
+            // Must be comparable
+            if (!isComparable(e->val.binary.lhs->type) && !isComparable(e->val.binary.rhs->type)) {
+                throwError("Illegal binary comparions. Operans must be comparable.\n", 
+                e->lineno);
+            }
+
+            // Must be equal types
+            if (!isEqualType(e->val.binary.lhs->type, e->val.binary.rhs->type)) {
+                throwError("Illegal binary comparison. Operands must be same type to compare.\n",
+                e->lineno);
+            }
+
+            e->type = makeTYPE(k_typeBool);
+            break;
+
+        case k_expKindLess:     // <
+        case k_expKindLessEq:   // <=    
+        case k_expKindGrtr:     // >
+        case k_expKindGrtrEq:   // >=
+
+        case k_expKindAdd:      // +
+        case k_expKindMinus:    // -
+        case k_expKindMult:     // *
+        case k_expKindDiv:      // /
+        case k_expKindMod:      // %
+
+        case k_expKindBitOr:    // |
+        case k_expKindBitAnd:   // &
+
+        case k_expKindLeftShift:    // <<
+        case k_expKindRightShift:   // >>
+
+        case k_expKindBitClear:     // &^
+        case k_expKindBitXOR:       // ^
+
         default:
             break;
     }
