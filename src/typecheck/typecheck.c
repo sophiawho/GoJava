@@ -326,23 +326,26 @@ void typeEXP(EXP *e) {
         case k_expKindUPlus:
         case k_expKindUMinus:
             typeEXP(e->val.unary.rhs);
-            if (!resolveToNumbericBaseType(e->type)) {
+            if (!resolveToNumbericBaseType(e->val.unary.rhs->type)) {
                 throwError("Illegal unary plus or negation expression. Operand must resolve to a numeric type.\n", e->lineno);
             }
+            e->type = e->val.unary.rhs->type;
             break;
 
         case k_expKindBang:
             typeEXP(e->val.unary.rhs);
-            if (!resolveToBoolBaseType(e->type)) {
+            if (!resolveToBoolBaseType(e->val.unary.rhs->type)) {
                 throwError("Illegal logical negation expression. Operand must resolve to a bool type.\n", e->lineno);
             }
+            e->type = e->val.unary.rhs->type;
             break;
 
         case k_expKindUBitXOR:
             typeEXP(e->val.unary.rhs);
-            if (!resolveToIntegerBaseType(e->type)) {
+            if (!resolveToIntegerBaseType(e->val.unary.rhs->type)) {
                 throwError("Illegal bitwise negation expression. Operand must resolve to an integer type.\n", e->lineno);
             }
+            e->type = e->val.unary.rhs->type;
             break;
 
         // ============= BINARY EXPRESSIONS ================

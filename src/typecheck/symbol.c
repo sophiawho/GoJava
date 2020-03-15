@@ -372,7 +372,6 @@ void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
         if (vs->type->kind == k_typeInfer) {
             SYMBOL *s = getSymbol(scope, vs->type->val.identifier, vs->lineno);
             vs->type = s->val.type;
-            // TODO (Sophia) Cases for slices and arrays
         } 
     }
     if (vs->rhs != NULL) {
