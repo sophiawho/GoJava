@@ -8,7 +8,15 @@
 #include <stdlib.h>
 
 // ====================== HELPER FUNCTIONS =====================================
-// 1.2.1 Resolve Type: Find the underlying type a defined type T given the set of types in scope T
+
+/*
+* Function: Find the underlying type a defined type T given the set of types in scope T
+* 
+* Args: 
+*   TYPE *t: The type to find the underlying type of
+*
+* Returns: bool
+*/
 TYPE *resolveType(TYPE *t) {
     if (t->kind == k_typeInt ||
         t->kind == k_typeBool ||
@@ -21,6 +29,17 @@ TYPE *resolveType(TYPE *t) {
     return resolveType(t->parent);
 }
 
+/*
+* Function: Determines whether two types are equal. Two types can only be equal if 
+* they are exactly the same. If two separate types have the same parent base type, 
+* they will still evaluate to different types.
+* 
+* Args: 
+*   TYPE *t1: First type to compare with the second
+*   TYPE *t2: Second type to compare with the first
+*
+* Returns: bool
+*/
 bool isEqualType(TYPE *t1, TYPE *t2) {
     if (t1 == NULL || t2 == NULL) return false;
     if (t1->kind != t2->kind) return false;
@@ -52,7 +71,8 @@ bool isEqualType(TYPE *t1, TYPE *t2) {
 }
 
 /*
-* Function: Determines whether a type is comparable
+* Function: Determines whether a type is comparable. Comparable means it can be
+* compared with the '==' and '!=' operators
 * 
 * Args: 
 *   TYPE *t: The type to determine whether it's comparable
@@ -83,6 +103,15 @@ bool isComparable(TYPE *t) {
     return false;
 }
 
+/*
+* Function: Determines whether a type is ordered. Ordered means it can be
+* compared with the '> ,'>=', '<' and '<=' operators
+* 
+* Args: 
+*   TYPE *t: The type to determine whether it's ordered
+*
+* Returns: bool
+*/
 bool isOrdered(TYPE *t) {
     if (t->kind == k_typeInt ||
         t->kind == k_typeBool ||
@@ -92,6 +121,15 @@ bool isOrdered(TYPE *t) {
     return false;
 }
 
+/*
+* Function: Determines whether a type resolves to a base type. A type can resolve 
+* to a base type of either int, float64, rune, string, or bool
+* 
+* Args: 
+*   TYPE *t: The type to determine whether it resolves to a base type
+*
+* Returns: bool
+*/
 bool resolveToBaseType(TYPE *t){
     TYPE* rt = resolveType(t);
     if (rt->kind == k_typeInt ||
@@ -102,6 +140,15 @@ bool resolveToBaseType(TYPE *t){
     return false;
 }
 
+/*
+* Function: Determines whether a type resolves to a numeric type. A numeric type
+* can resolve to a base type of either int, float64, or rune
+* 
+* Args: 
+*   TYPE *t: The type to determine whether it resolves to a numeric type
+*
+* Returns: bool
+*/
 bool resolveToNumbericBaseType(TYPE *t){
     TYPE* rt = resolveType(t);
     if (rt->kind == k_typeInt ||
@@ -110,12 +157,28 @@ bool resolveToNumbericBaseType(TYPE *t){
     return false;
 }
 
+/*
+* Function: Determines whether a type resolves to bool
+* 
+* Args: 
+*   TYPE *t: The type to determine whether it resolves to bool
+*
+* Returns: bool
+*/
 bool resolveToBoolBaseType(TYPE *t){
     TYPE* rt = resolveType(t);
     if (rt->kind == k_typeBool) return true;
     return false;
 }
 
+/*
+* Function: Determines whether a type resolves to int
+* 
+* Args: 
+*   TYPE *t: The type to determine whether it resolves to int
+*
+* Returns: bool
+*/
 bool resolveToIntegerBaseType(TYPE* t){
     TYPE* rt = resolveType(t);
     if (rt->kind == k_typeInt ||
