@@ -13,6 +13,11 @@
 extern int print_sym_table;
 int indent_level = 0;
 
+bool isSpecialFunction(char *identifier)
+{
+    return strcmp((char *) "init", identifier) == 0 || strcmp((char*) "main", identifier) == 0;
+}
+
 void makeSymbolTable(PROG *root)
 {
     SymbolTable *global_scope = initSymbolTable();
@@ -527,6 +532,15 @@ SYMBOL *putSymbol(SymbolTable *t, char *name, SymbolKind kind, int lineno)
 SYMBOL *putSymbol_Func(SymbolTable *t, char *name, FUNC *funcSpec, int lineno)
 {
     if (isBlankId(name)) return NULL;
+    if (isSpecialFunction(name)) {
+        if (funcSpec->returnType != NULL || funcSpec->inputParams != NULL) {
+            throwSpecialFunctionParameterError(name, lineno);
+        } 
+        if (strcmp(name, (char *) "init") == 0) {
+            if (print_sym_table) printf("init [function] = <unmapped>\n");
+            return NULL;
+        }
+    }
     SYMBOL *s = putSymbol(t, name, k_symbolKindFunc, lineno);
     s->val.funcSpec = funcSpec;
     printSymbol(s);
@@ -535,6 +549,7 @@ SYMBOL *putSymbol_Func(SymbolTable *t, char *name, FUNC *funcSpec, int lineno)
 
 SYMBOL *putSymbol_Type(SymbolTable *t, char *name, TYPE *type, int lineno) 
 {
+    if (isSpecialFunction(name)) throwSpecialFunctionDeclarationError(name, lineno);
     if (isBlankId(name)) return NULL;
     SYMBOL *s = putSymbol(t, name, k_symbolKindType, lineno);
     s->val.type = type;
@@ -544,6 +559,7 @@ SYMBOL *putSymbol_Type(SymbolTable *t, char *name, TYPE *type, int lineno)
 
 SYMBOL *putSymbol_Var(SymbolTable *t, char *name, VARSPEC *varSpec, int lineno) 
 {
+    if (isSpecialFunction(name)) throwSpecialFunctionDeclarationError(name, lineno);
     if (isBlankId(name)) return NULL;
     SYMBOL *s = putSymbol(t, name, k_symbolKindVar, lineno);
     s->val.varSpec = varSpec;
