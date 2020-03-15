@@ -18,4 +18,7 @@ void typeSTMT(STMT *s, TYPE *returnType);
 void typeEXPRCASECLAUSE(EXPRCASECLAUSE *caseClause);
 TYPE *resolveType(TYPE *t);
 
+// Helper functions
+char *typeToString(TYPE *t);
+
 #endif /* !TYPECHECK_H */
