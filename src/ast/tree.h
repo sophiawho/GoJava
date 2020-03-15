@@ -16,6 +16,9 @@ typedef struct TYPESPEC TYPESPEC;
 typedef struct STRUCTSPEC STRUCTSPEC;
 typedef struct EXPRCASECLAUSE EXPRCASECLAUSE; // Refer to stmt.c stmt.h
 
+// Symbol
+typedef struct SYMBOL SYMBOL;
+
 struct PROG {
     char *package; // A package declaration is the key word package followed by an identifier
     TOPLEVELDECL *rootTopLevelDecl;
@@ -47,6 +50,11 @@ typedef enum {
     k_typeArray,
     k_typeStruct,
     k_typeInfer,
+    k_typeInt,
+    k_typeFloat,
+    k_typeBool,
+    k_typeRune,
+    k_typeString
 } TypeKind;
 
 struct TYPE {
@@ -58,6 +66,8 @@ struct TYPE {
         struct { TYPE *type; } sliceType;
         struct { int size; TYPE *type; } arrayType;
     } val;
+    char *typeName; // for symbol table
+    TYPE *parent;
 }; 
 TYPE *makeTYPE_ident(char *identifier); 
 TYPE *makeTYPE_array(int size, TYPE *type); 
@@ -117,7 +127,7 @@ struct EXP {
     ExpressionKind kind;
     TYPE *type;
     union {
-        struct { char *ident; } identExp;
+        struct { char *ident; SYMBOL *symbol; } identExp;
 		int intLiteral;
 		float floatLiteral;
 		int boolLiteral;
@@ -195,5 +205,24 @@ struct STRUCTSPEC {
     STRUCTSPEC *next;
 };
 STRUCTSPEC *makeStructSpec(IDENT *attribute, TYPE *type);
+
+typedef enum {
+  k_symbolKindVar,
+  k_symbolKindType,
+  k_symbolKindFunc,
+  k_symbolKindConstant
+} SymbolKind;
+
+struct SYMBOL {
+    char *name;
+    SymbolKind kind;
+    int shadowNum;
+    union {
+        TYPE* type;
+        VARSPEC* varSpec; // var decl and shortvardecl
+        FUNC* funcSpec;
+    } val;
+    struct SYMBOL *next;
+};
 
 #endif /* !TREE_H */

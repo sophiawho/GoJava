@@ -9,3 +9,4 @@ src/*.output
 .vscode
 *.bak
 *.h.gch
+.idea

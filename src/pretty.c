@@ -412,10 +412,6 @@ void pretty_STMT(STMT *s, STMT *parent)
         case k_stmtKindTypeDecl:
             pretty_TYPESPEC(s->val.typeDecl, 0);
             break;
-        case k_stmtKindShortDecl:
-            // not used but probably should be instead of having it
-            // be an assign
-            break;
         case k_stmtKindIfStmt:
             printf("if ");
             if (s->val.ifStmt.simpleStmt)
