@@ -10,8 +10,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-// #define BLANK_IDENTIFIER "_"
-
 extern int print_sym_table;
 int indent_level = 0;
 
