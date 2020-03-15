@@ -123,6 +123,54 @@ bool resolveToIntegerBaseType(TYPE* t){
     return false;
 }
 
+/*
+* Function: Determines whether a type resolves to string
+* 
+* Args: 
+*   TYPE *t: The type to determine whether it resolves to string
+*
+* Returns: bool
+*/
+bool resolveToStringBaseType(TYPE *t) {
+    TYPE *rt = resolveType(t);
+    if (rt->kind == k_typeString) return true;
+    return false;
+}
+
+/*
+* Function: Get string representation of a type
+* 
+* Args: 
+*   TYPE *t: The type to get a string representation of
+*
+* Returns: char *
+*/
+char *typeToString(TYPE *t)
+{
+    if (t == NULL) throwInternalError("Null type in 'typeToString'");
+    switch (t->kind)
+    {
+    case k_typeSlice:
+        return "slice";
+    case k_typeArray:
+        return "array";
+    case k_typeStruct:
+        return "struct";
+    case k_typeInfer:
+        return "<infer>";
+    case k_typeInt:
+        return "int";
+    case k_typeFloat:
+        return "float64";
+    case k_typeBool:
+        return "bool";
+    case k_typeRune:
+        return "rune";
+    case k_typeString:
+        return "string";
+    }
+}
+
 // =============================== TYPECHECK ===================================
 
 void typePROG(PROG *root) {
