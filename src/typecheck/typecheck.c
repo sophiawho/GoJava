@@ -362,13 +362,13 @@ void typeEXP(EXP *e) {
 
             // Must be comparable
             if (!isComparable(e->val.binary.lhs->type) && !isComparable(e->val.binary.rhs->type)) {
-                throwError("Illegal binary comparions. Operans must be comparable.\n", 
+                throwError("Illegal binary comparison. Operands must resolve to comparable types.\n", 
                 e->lineno);
             }
 
             // Must be equal types
             if (!isEqualType(e->val.binary.lhs->type, e->val.binary.rhs->type)) {
-                throwError("Illegal binary comparison. Operands must be same type to compare.\n",
+                throwError("Illegal binary comparison. Operands must resolve to same type.\n",
                 e->lineno);
             }
 
@@ -379,11 +379,60 @@ void typeEXP(EXP *e) {
         case k_expKindLessEq:   // <=    
         case k_expKindGrtr:     // >
         case k_expKindGrtrEq:   // >=
+            // ordered op ordered -> bool
+            typeEXP(e->val.binary.lhs);
+            typeEXP(e->val.binary.rhs);
+
+            // Must be ordered
+            if (!isOrdered(e->val.binary.lhs->type) && !isOrdered(e->val.binary.rhs->type)) {
+                throwError("Illegal binary comparison. Operands must resolve to ordered types.\n",
+                e->lineno);
+            }
+
+            // Must be equal types
+            fprintf(stdout, "%s %s", typeToString(e->val.binary.lhs->type), typeToString(e->val.binary.rhs->type));
+            if (!isEqualType(e->val.binary.lhs->type, e->val.binary.rhs->type)) {
+                throwError("Illegal binary comparison. Operands must resolve to same type.\n",
+                e->lineno);
+            }
+
+            e->type = makeTYPE(k_typeBool);
+            break;
 
         case k_expKindAdd:      // +
+            // (numeric or string + numeric or string) -> (numeric or string)
+            typeEXP(e->val.binary.lhs);
+            typeEXP(e->val.binary.rhs);
+
+            // Both types must both either be numeric or string
+            if (
+                (!resolveToNumbericBaseType(e->val.binary.lhs->type) && 
+                !resolveToNumbericBaseType(e->val.binary.rhs->type)) ||
+
+                !resolveToStringBaseType(e->val.binary.lhs->type) && 
+                !resolveToStringBaseType(e->val.binary.rhs->type)) {
+                    throwError("Illegal addition. Operands must both either resolve to numeric or string types", e->lineno);
+                }
+
+            // Both types must be the same
+            if (!isEqualType(e->val.binary.lhs->type, e->val.binary.rhs->type)) {
+                throwError("Illegal addition. Operands must resolve to same type.\n",
+                e->lineno);
+            }
+
+            e->type = makeTYPE(resolveType(e->val.binary.lhs->type->kind));
+            break;
+
         case k_expKindMinus:    // -
         case k_expKindMult:     // *
         case k_expKindDiv:      // /
+            // numeric op numeric -> numeric
+            typeEXP(e->val.binary.lhs);
+            typeEXP(e->val.binary.rhs);
+
+            // TODO finish
+            break;
+
         case k_expKindMod:      // %
 
         case k_expKindBitOr:    // |
