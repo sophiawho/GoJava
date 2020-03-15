@@ -31,9 +31,12 @@ bool isEqualType(TYPE *t1, TYPE *t2) {
             if (t1->val.arrayType.size != t2->val.arrayType.size) return false;
             return isEqualType(t1->val.arrayType.type, t2->val.arrayType.type);
         case k_typeStruct:
+            // check all fields for equality
             break;
         case k_typeInfer:
+            // do something
             return strcmp(t1->typeName, t2->typeName) == 0;
+            break;
         default:
             return true;
     }
@@ -150,10 +153,14 @@ void typeSTMT(STMT *s, TYPE *returnType) {
         // An inc/dec statement type checks if its expression is well-typed
         // and resolves to a numeric base type (int, float64, rune)
         case k_stmtKindIncDec:
+            typeEXP(s->val.incDecStmt.exp);
             break;
         case k_stmtKindAssign:
+            typeEXP(s->val.assignStmt.lhs);
+            typeEXP(s->val.assignStmt.rhs);
             break;
         case k_stmtKindPrint:
+            typeEXP(s->val.printStmt.expList);
             break;
         case k_stmtKindVarDecl:
             typeVARSPEC(s->val.varDecl);
@@ -164,12 +171,26 @@ void typeSTMT(STMT *s, TYPE *returnType) {
             typeSTMT(s->val.blockStmt, returnType);
             break;
         case k_stmtKindIfStmt:
+            typeSTMT(s->val.ifStmt.simpleStmt, returnType);
+            typeEXP(s->val.ifStmt.condition);
+            typeSTMT(s->val.ifStmt.trueBody, returnType);
+            typeSTMT(s->val.ifStmt.falseBody, returnType);
             break;
         case k_stmtKindSwitch:
+            typeSTMT(s->val.switchStmt.simpleStmt, returnType);
+            typeEXPRCASECLAUSE(s->val.switchStmt.caseClauses);
             break;
         case k_stmtKindFor:
+            typeSTMT(s->val.forLoop.body, returnType);
+            typeEXP(s->val.forLoop.condition);
+            typeSTMT(s->val.forLoop.initStmt, returnType);
+            typeSTMT(s->val.forLoop.postStmt, returnType);
             break;
     }
+}
+
+void typeEXPRCASECLAUSE(EXPRCASECLAUSE *caseClause) {
+    return;
 }
 
 void typeEXP(EXP *e) {
@@ -178,6 +199,9 @@ void typeEXP(EXP *e) {
     switch (e->kind) {
         case k_expKindIdentifier:
             // Associate identifier with TYPE using SYMBOL
+            if (e->val.identExp.symbol != NULL && e->val.identExp.symbol->val.varSpec->type != NULL) {
+                e->type = e->val.identExp.symbol->val.varSpec->type;
+            }
             break;
         default:
             break;

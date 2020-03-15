@@ -336,7 +336,6 @@ void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
     }
 }
 
-// TODO make this recursive
 TYPE *findParentType(SymbolTable *symTable, TYPE *t) {
     if (t->kind == k_typeSlice) {
         return findParentType(symTable, t->val.sliceType.type);
@@ -364,7 +363,12 @@ void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
 
     if (vs->type != NULL) {
         findParentType(scope, vs->type);
-        // TODO: Associate VARSPEC with TYPE found in Symbol?
+        // Associate varspec with type put in symbol table
+        if (vs->type->kind == k_typeInfer) {
+            SYMBOL *s = getSymbol(scope, vs->type->val.identifier, vs->lineno);
+            vs->type = s->val.type;
+        } 
+        // Cases for slices and arrays
     }
     if (vs->rhs != NULL) {
         symEXP(vs->rhs, scope);
