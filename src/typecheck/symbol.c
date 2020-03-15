@@ -56,6 +56,7 @@ void putBaseConstants(SymbolTable *symTable, char *ident, int boolValue)
     e->lineno = 0;
     e->kind = k_expKindBoolLiteral;
     e->val.boolLiteral = boolValue;
+    e->type = makeTYPE(k_typeBool);
 
     IDENT *i = makeIDENT(ident);
     TYPE *t = makeTYPE(k_typeBool);

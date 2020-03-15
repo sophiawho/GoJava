@@ -78,6 +78,12 @@ bool resolveToNumbericBaseType(TYPE *t){
     return false;
 }
 
+bool resolveToBoolBaseType(TYPE *t){
+    TYPE* rt = resolveType(t);
+    if (rt->kind == k_typeBool) return true;
+    return false;
+}
+
 bool resolveToIntegerBaseType(TYPE* t){
     TYPE* rt = resolveType(t);
     if (rt->kind == k_typeInt ||
@@ -162,8 +168,12 @@ void typeSTMT(STMT *s, TYPE *returnType) {
         // and resolves to a numeric base type (int, float64, rune)
         case k_stmtKindIncDec:
             typeEXP(s->val.incDecStmt.exp);
+            if (!resolveToNumbericBaseType(s->val.incDecStmt.exp->type)) {
+                throwError("Illegal increment/decerement statement. Operand must resolve to a numeric type.\n", s->lineno);
+            }
             break;
         case k_stmtKindAssign:
+            // TODO 3.5 Short declaration
             typeEXP(s->val.assignStmt.lhs);
             typeEXP(s->val.assignStmt.rhs);
             break;
@@ -201,16 +211,53 @@ void typeEXPRCASECLAUSE(EXPRCASECLAUSE *caseClause) {
     return;
 }
 
+// ============================== 4. EXPRESSIONS ================================
 void typeEXP(EXP *e) {
     if (e == NULL) return;
     typeEXP(e->next);
     switch (e->kind) {
+        // ============= LITERAL EXPRESSIONS ================
+        case k_expKindIntLiteral:
+        case k_expKindFloatLiteral:
+        case k_expKindRuneLiteral:
+        case k_expKindStringLiteral:
+            break;
+        // ============= IDENTIFIER EXPRESSION ================
         case k_expKindIdentifier:
             // Associate identifier with TYPE using SYMBOL
             if (e->val.identExp.symbol != NULL && e->val.identExp.symbol->val.varSpec->type != NULL) {
                 e->type = e->val.identExp.symbol->val.varSpec->type;
             }
             break;
+        // ============= UNARY EXPRESSIONS ================
+        case k_expKindUPlus:
+        case k_expKindUMinus:
+            typeEXP(e->val.unary.rhs);
+            if (!resolveToNumbericBaseType(e->type)) {
+                throwError("Illegal unary plus or negation expression. Operand must resolve to a numeric type.\n", e->lineno);
+            }
+        case k_expKindBang:
+            typeEXP(e->val.unary.rhs);
+            if (!resolveToBoolBaseType(e->type)) {
+                throwError("Illegal logical negation expression. Operand must resolve to a bool type.\n", e->lineno);
+            }
+        case k_expKindUBitXOR:
+            typeEXP(e->val.unary.rhs);
+            if (!resolveToIntegerBaseType(e->type)) {
+                throwError("Illegal bitwise negation expression. Operand must resolve to an integer type.\n", e->lineno);
+            }
+        // ============= BINARY EXPRESSIONS ================
+        case k_expKindAnd: // &&
+        case k_expKindOr: // ||
+            typeEXP(e->val.binary.lhs);
+            typeEXP(e->val.binary.rhs);
+            if (!resolveToBoolBaseType(e->val.binary.lhs->type) || !resolveToBoolBaseType(e->val.binary.rhs->type)) {
+                throwError("Illegal binary expression. Operands must resolve to a bool type.\n", e->lineno);
+            }
+            e->type = makeTYPE(k_typeBool);
+        // TODO: As per 4.4, what do expressions being "comparable/ordered" mean?
+        case k_expKindEq: // ==
+        case k_expKindNotEq: // !=
         default:
             break;
     }
