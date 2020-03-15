@@ -229,7 +229,6 @@ void symSTMT_assign(STMT *s, SymbolTable *scope)
     IDENT *i;
     TYPE *t;
     VARSPEC *vs;
-    SYMBOL *sym;
 
     switch (s->val.assignStmt.kind)
     {
