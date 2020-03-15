@@ -626,6 +626,8 @@ void printType(TYPE *t) {
         case k_typeInfer:
             if (t->typeName != NULL) {
                 printf("%s", t->typeName);
+            } else if (t->val.identifier != NULL){
+                printf("%s", t->val.identifier);
             } else {
                 printf("%s", "<infer>");
             }
