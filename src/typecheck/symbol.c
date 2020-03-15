@@ -111,7 +111,10 @@ void symFUNC(FUNC *f, SymbolTable *scope)
         symFUNC_inputParams(ts, innerScope);
     }
     
-    symSTMT(f->rootStmt, innerScope);
+    // (Sophia): Call symSTMT on STMT inside blockSTMT, so that
+    // symbol table does not scope. The statements inside the 
+    // block statement should be the same scope as the input parameters
+    symSTMT(f->rootStmt->val.blockStmt, innerScope);
     closeScope();
 }
 

@@ -5,8 +5,6 @@ type structType struct {
 	b int
 }
 
-func main() {
-	type num int
-	var e, e2 int = structType.a, structType.a
-	var e3 int = structType.x // this should be illegal
+func f(f int) {
+	var f float64 // redeclares f
 }
