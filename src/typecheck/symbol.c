@@ -379,7 +379,7 @@ void symEXP(EXP *exp, SymbolTable *scope)
     {
     case k_expKindIdentifier:
         s = getSymbol(scope, exp->val.identExp.ident, exp->lineno);
-        exp->expS = s;
+        exp->val.identExp.symbol = s;
         break;
 
     case k_expKindAnd:

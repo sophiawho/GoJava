@@ -127,7 +127,7 @@ struct EXP {
     ExpressionKind kind;
     TYPE *type;
     union {
-        struct { char *ident; } identExp;
+        struct { char *ident; SYMBOL *symbol; } identExp;
 		int intLiteral;
 		float floatLiteral;
 		int boolLiteral;
@@ -143,7 +143,6 @@ struct EXP {
         struct { EXP *object; char *field; } fieldAccess;
     } val;
     EXP *next;
-    SYMBOL *expS;
 };
 EXP *getGenericExpr(ExpressionKind kind);
 EXP *makeEXP_identifier(char *id);
