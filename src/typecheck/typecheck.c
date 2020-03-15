@@ -21,6 +21,25 @@ TYPE *resolveType(TYPE *t) {
     return resolveType(t->parent);
 }
 
+bool isEqualType(TYPE *t1, TYPE *t2) {
+    if (t1 == NULL || t2 == NULL) return false;
+    if (t1->kind != t2->kind) return false;
+    switch(t1->kind) {
+        case k_typeSlice:
+            return isEqualType(t1->val.sliceType.type, t2->val.sliceType.type);
+        case k_typeArray:
+            if (t1->val.arrayType.size != t2->val.arrayType.size) return false;
+            return isEqualType(t1->val.arrayType.type, t2->val.arrayType.type);
+        case k_typeStruct:
+            break;
+        case k_typeInfer:
+            return strcmp(t1->typeName, t2->typeName) == 0;
+        default:
+            return true;
+    }
+    return false;
+}
+
 bool isOrdered(TYPE *t) {
     if (t->kind == k_typeInt ||
         t->kind == k_typeBool ||
@@ -57,7 +76,7 @@ bool resolveToIntegerBaseType(TYPE* t){
 
 // =============================== TYPECHECK ===================================
 
-void typecheckPROG(PROG *root) {
+void typePROG(PROG *root) {
 	if (root == NULL) { return; }
 	typeTOPLEVELDECL(root->rootTopLevelDecl);
 }
@@ -82,7 +101,7 @@ void typeTOPLEVELDECL(TOPLEVELDECL *tld) {
 /* 2.3 A function declaration typechecks if the statements of its body type check
 */
 void typeFUNC(FUNC *f) {
-    typeSTMT(f->rootStmt);
+    typeSTMT(f->rootStmt, f->returnType);
 }
 
 /* 2.1
@@ -99,9 +118,9 @@ void typeVARSPEC(VARSPEC *varspec) {
 }
 
 // =============================== 3. STATEMENTS ===================================
-void typeSTMT(STMT *s) {
+void typeSTMT(STMT *s, TYPE *returnType) {
     if (s == NULL) return;
-    typeSTMT(s->next);
+    typeSTMT(s->next, returnType);
     switch (s->kind) {
         // Trivially well-typed statements
         case k_stmtKindEmpty:
@@ -120,6 +139,13 @@ void typeSTMT(STMT *s) {
         // return expr is well-typed if its expression is well-typed
         // and the type of this expression is the same as the return type of the enclosing function
         case k_stmtKindReturn:
+            if (s->val.expStmt == NULL) {
+                if (returnType == NULL) return;
+                throwError("Invalid return. Function has non-void return type.", s->lineno);
+            }
+            if (returnType == NULL) throwError("Invalid return. Function has void return type.", s->lineno);
+            typeEXP(s->val.expStmt);
+            if (!isEqualType(s->val.expStmt->type, returnType)) throwError("Invalid return statement. Type does not match function return type.", s->lineno);
             break;
         // An inc/dec statement type checks if its expression is well-typed
         // and resolves to a numeric base type (int, float64, rune)
@@ -135,7 +161,7 @@ void typeSTMT(STMT *s) {
         case k_stmtKindTypeDecl:
             break;
         case k_stmtKindBlock:
-            typeSTMT(s->val.blockStmt);
+            typeSTMT(s->val.blockStmt, returnType);
             break;
         case k_stmtKindIfStmt:
             break;
@@ -147,5 +173,13 @@ void typeSTMT(STMT *s) {
 }
 
 void typeEXP(EXP *e) {
-    return;
+    if (e == NULL) return;
+    typeEXP(e->next);
+    switch (e->kind) {
+        case k_expKindIdentifier:
+            // Associate identifier with TYPE using SYMBOL
+            break;
+        default:
+            break;
+    }
 }

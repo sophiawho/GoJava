@@ -364,6 +364,7 @@ void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
 
     if (vs->type != NULL) {
         findParentType(scope, vs->type);
+        // TODO: Associate VARSPEC with TYPE found in Symbol?
     }
     if (vs->rhs != NULL) {
         symEXP(vs->rhs, scope);

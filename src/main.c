@@ -3,6 +3,7 @@
 
 #include "ast/tree.h"
 #include "typecheck/symbol.h"
+#include "typecheck/typecheck.h"
 #include "pretty.h"
 #include "weed.h"
 
@@ -47,6 +48,7 @@ int main(int argc, char *argv[])
                 yyparse();
                 weedPROG(root);
                 makeSymbolTable(root);
+                typePROG(root);
                 printf("OK\n");
         }
 
