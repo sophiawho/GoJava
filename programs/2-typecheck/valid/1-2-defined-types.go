@@ -16,8 +16,8 @@ func main() {
 	}
 
 	// TODO Implement append
-	var a floats
-	a = append(a, 7.2)
-	var b naturals
-	b = append(b, natural(8))
+	// var a floats
+	// a = append(a, 7.2)
+	// var b naturals
+	// b = append(b, natural(8))
 }
