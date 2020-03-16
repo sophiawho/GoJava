@@ -614,7 +614,11 @@ void printSymbol(SYMBOL *s) {
             break;
         case k_symbolKindVar:
             printf(" [variable] = ");
-            printType(s->val.varSpec->type);
+            if (s->val.varSpec->type != NULL) {
+                printType(s->val.varSpec->type);
+            } else {
+                printf("<infer>");
+            }
             break;
         case k_symbolKindType:
             printf(" [type] = ");
