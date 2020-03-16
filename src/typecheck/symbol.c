@@ -388,6 +388,14 @@ void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
     }
 }
 
+void symTYPECAST(EXP *e, EXP *typeExpr, EXP *exprToCast) {
+    SYMBOL *s = getSymbolFromExp(typeExpr);
+    if (s->kind != k_symbolKindType) return;
+    e->kind = k_expKindCast;
+    e->val.cast.type = s->val.type;
+    e->val.cast.exp = exprToCast;
+}
+
 void symEXP(EXP *exp, SymbolTable *scope)
 {
     if (exp == NULL) return;
@@ -433,11 +441,9 @@ void symEXP(EXP *exp, SymbolTable *scope)
         break;
 
     case k_expKindFuncCall:
-        // TODO: If the identifier in exp->val.funcCall.primaryExpr
-        // maps to a symbol that is of type TYPE instead of 
-        // type FUNC, this expression is a k_expKindCast
         symEXP(exp->val.funcCall.primaryExpr, scope);
         symEXP(exp->val.funcCall.expList, scope);
+        symTYPECAST(exp, exp->val.funcCall.primaryExpr, exp->val.funcCall.expList);
         break;
 
     case k_expKindArrayAccess:
@@ -614,7 +620,11 @@ void printSymbol(SYMBOL *s) {
             break;
         case k_symbolKindVar:
             printf(" [variable] = ");
-            printType(s->val.varSpec->type);
+            if (s->val.varSpec->type != NULL) {
+                printType(s->val.varSpec->type);
+            } else {
+                printf("<infer>");
+            }
             break;
         case k_symbolKindType:
             printf(" [type] = ");

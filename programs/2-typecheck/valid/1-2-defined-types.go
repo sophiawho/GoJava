@@ -5,13 +5,6 @@ func main() {
 	type natural num
 
 	var x int = 7;
-	// TODO (Sophia):
-	// This is failing because `num(7)` right now is a function call. 
-	// We need to change `symbol` to recognize that num is a cast:
-	// We can do that by getting the symbol for the identifier 'num', realizing it is mapped to 
-	// a type and not a function, then changing the expression type to a cast.
-	// I can fix this sometime Monday.
-	// Code pointers: https://github.com/comp520/2020_group01/commit/ae1cf52842
 	var y num = num(7);
 	var z natural = natural(7);
 
@@ -22,6 +15,7 @@ func main() {
 		type new []naturals
 	}
 
+	// TODO Implement append
 	var a floats
 	a = append(a, 7.2)
 	var b naturals
