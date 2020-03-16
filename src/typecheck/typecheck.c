@@ -290,7 +290,6 @@ void typeVARSPEC(VARSPEC *vs) {
         if (vs->type != NULL) {
 
             if (!isEqualType(vs->type, vs->rhs->type)) {
-
                 throwError("Illegal variable declaration. Lhs and rhs types don't match.\n",
                 vs->lineno);
             }
@@ -607,6 +606,24 @@ void typeEXP(EXP *e) {
             e->type = s->val.funcSpec->returnType;
             break;
         case k_expKindArrayAccess:
+            typeEXP(e->val.arrayAccess.arrayReference);
+            typeEXP(e->val.arrayAccess.indexExp);
+            TYPE* rtIndex = resolveType(e->val.arrayAccess.indexExp->type);
+            TYPE* rtExpr = resolveType(e->val.arrayAccess.arrayReference->type);
+            if (rtIndex->kind != k_typeInt) {
+                throwError("The index type of expression indexing must be of type int.", e->lineno);
+            }
+            if (rtExpr->kind != k_typeSlice && rtExpr->kind != k_typeArray) {
+                throwError("The expression being indexed to must be a slice or array.", e->lineno);
+            }
+            if (rtExpr->kind == k_typeSlice) {
+                e->type = e->val.arrayAccess.arrayReference->type->val.sliceType.type;
+            } else if (rtExpr->kind == k_typeArray) {
+                e->type = e->val.arrayAccess.arrayReference->type->val.arrayType.type;
+            }
+            if (e->type->kind == k_typeInfer) {
+                e->type = e->type->symbol->val.type;
+            }
             break;
         case k_expKindFieldAccess:
             break;
