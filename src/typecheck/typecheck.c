@@ -157,6 +157,19 @@ bool resolveToBaseType(TYPE *t){
     return false;
 }
 
+bool resolvesToSliceOrArray(TYPE *t) {
+    TYPE *rt = resolveType(t);
+    if (rt->kind == k_typeSlice || 
+        rt->kind == k_typeArray) return true;
+    return false;
+}
+
+bool resolvesToSlice(TYPE *t) {
+    TYPE *rt = resolveType(t);
+    if (rt->kind == k_typeSlice) return true;
+    return false;
+}
+
 /*
 * Function: Determines whether a type resolves to a numeric type. A numeric type
 * can resolve to a base type of either int, float64, or rune
@@ -644,6 +657,15 @@ void typeEXP(EXP *e) {
         case k_expKindFieldAccess:
             break;
         case k_expKindAppend:
+            typeEXP(e->val.append.slice);
+            typeEXP(e->val.append.addend);
+            if (!resolvesToSlice(e->val.append.slice->type)) {
+                throwError("The first expression in an append call must resolve to a slice type.", e->lineno);
+            }
+            if (!isEqualType(e->val.append.slice->type->val.sliceType.type, e->val.append.addend->type)) {
+                throwError("The expression types in this append call do not match.", e->lineno);
+            }
+            e->type = e->val.append.slice->type;
             break;
         case k_expKindLen:
             break;
