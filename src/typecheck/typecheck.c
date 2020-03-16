@@ -621,9 +621,9 @@ void typeEXP(EXP *e) {
             } else if (rtExpr->kind == k_typeArray) {
                 e->type = e->val.arrayAccess.arrayReference->type->val.arrayType.type;
             }
-            // if (e->type->kind == k_typeInfer) {
-            //     e->type = e->type->symbol->val.type;
-            // }
+            if (e->type->kind == k_typeInfer) {
+                e->type = e->type->symbol->val.type;
+            }
             break;
         case k_expKindFieldAccess:
             break;
