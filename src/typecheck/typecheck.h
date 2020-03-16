@@ -22,6 +22,5 @@ TYPE *resolveType(TYPE *t);
 char *typeToString(TYPE *t);
 SYMBOL *getSymbolFromExp(EXP *e);
 void typeFUNCCALL(TYPESPEC *inputParams, EXP *args);
-TYPE *getTypeFromArrayAccess(EXP *e);
 
 #endif /* !TYPECHECK_H */
