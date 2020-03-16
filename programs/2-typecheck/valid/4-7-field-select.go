@@ -13,10 +13,10 @@ func foo() {
 	type structType2 structType
 	var structElem structType
 
-	var e, e2 int = structElem.a, structElem.a
-	var f float64 = structElem.b
-	var g rune = structElem.c
-	var h string = structElem.d
-	var i [5]int = structElem.e
-	var j int = structElem.e[2]
+	// var e, e2 int = structElem.a, structElem.a
+	// var f float64 = structElem.b
+	// var g rune = structElem.c
+	// var h string = structElem.d
+	// var i [5]int = structElem.e
+	// var j int = structElem.e[2]
 }
