@@ -328,7 +328,9 @@ void symSTRUCTSPEC(STRUCTSPEC *ss, SymbolTable *scope, SymbolTable *structScope)
     symSTRUCTSPEC(ss->next, scope, structScope);
 
     // Check if the STRUCTSPEC type is defined in the scope
-    findParentType(scope, ss->type);
+    // Associate ss->type with parent type
+    TYPE *t = findParentType(scope, ss->type);
+    ss->type = t;
 
     // Will help check to see if attribute has already been declared or not
     // Only one identifier allower per line
@@ -362,6 +364,11 @@ void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
                 structScope = initSymbolTable();
                 symSTRUCTSPEC(t->val.structType, symTable, structScope);
                 free(structScope);
+
+                t->typeName = ident;
+                SYMBOL *s = putSymbol_Type(symTable, ident, t, ts->lineno);
+                if(s != NULL) s->val.type = t;
+                return;
             }
             t->typeName = ident;
             putSymbol_Type(symTable, ident, t, ts->lineno);
@@ -402,6 +409,9 @@ void associateVarWithType(VARSPEC *vs, SymbolTable *scope) {
     } else if (vs->type->kind == k_typeArray) {
         TYPE *t = findParentType(scope, vs->type);
         vs->type->val.arrayType.type = t;
+    } else if (vs->type->kind == k_typeStruct) {
+        SYMBOL *s = getSymbol(scope, vs->type->typeName, vs->lineno);
+        if (s != NULL) vs->type = s->val.type;
     }
 }
 
@@ -491,7 +501,6 @@ void symEXP(EXP *exp, SymbolTable *scope)
 
     case k_expKindFieldAccess:
         symEXP(exp->val.fieldAccess.object, scope);
-        // TODO nothing with field right?
         break;
 
     case k_expKindAppend:

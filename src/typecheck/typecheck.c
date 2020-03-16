@@ -126,7 +126,7 @@ bool isOrdered(TYPE *t) {
 */
 bool isAddressable(EXP *exp) {
     // TODO finish addressable
-    switch (exp->type->kind)
+    switch (exp->kind)
     {
     case k_expKindIdentifier:
     case k_expKindArrayAccess:
@@ -214,6 +214,21 @@ bool resolveToIntegerBaseType(TYPE* t){
 bool resolveToStringBaseType(TYPE *t) {
     TYPE *rt = resolveType(t);
     if (rt->kind == k_typeString) return true;
+    return false;
+}
+
+/*
+* Function: Determines whether a type resolves to struct
+* 
+* Args: 
+*   TYPE *t: The type to determine whether it resolves to struct
+*
+* Returns: bool
+*/
+bool resolveToStructBaseType(TYPE *t)
+{
+    TYPE *rt = resolveType(t);
+    if (rt->kind == k_typeStruct) return true;
     return false;
 }
 
@@ -337,6 +352,11 @@ void typeSTMT_Assign(EXP *lhs, EXP *rhs, int lineno) {
     typeEXP(rhs);
     // TODO (As per 3.7): Ensure expressions on LHS are lvalues (addressable):
     // Variables (non-constants), Slice indexing, Array indexing, Field selection
+    if (!isAddressable(lhs)) {
+        throwError("Illegal assignment. LHS must be addressable.\n", lineno);
+    }
+
+    // fprintf(stdout, typeToString(lhs->type));
     if (!isEqualType(lhs->type, rhs->type)) {
         throwError("Illegal assignment. LHS and RHS types don't match.\n", lineno);
     }
@@ -641,8 +661,22 @@ void typeEXP(EXP *e) {
                 e->type = e->type->symbol->val.type;
             }
             break;
+
         case k_expKindFieldAccess:
+            typeEXP(e->val.fieldAccess.object);
+            if (!resolveToStructBaseType(e->val.fieldAccess.object->type)) {
+                throwError("Invalid field access. Expecting a struct type", e->lineno);
+            }
+            
+            for (STRUCTSPEC *ss = e->val.fieldAccess.object->type->val.structType; ss; ss = ss->next) {
+                if (strcmp(ss->attribute->ident, e->val.fieldAccess.field) == 0) {
+                    e->type = ss->type;
+                    return;
+                }
+            }
+
             break;
+
         case k_expKindAppend:
             break;
         case k_expKindLen:
