@@ -178,8 +178,8 @@ IDENT *makeIDENT(char *ident);
 struct VARSPEC {
     int lineno;
     IDENT *ident;
-    EXP *rhs;
-    TYPE *type;
+    EXP *rhs; // optional
+    TYPE *type; // optional
     VARSPEC *next;
 };
 VARSPEC *makeVarSpec(IDENT *ident, EXP *rhs, TYPE *type);

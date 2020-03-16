@@ -5,6 +5,7 @@ func main() {
 	type natural num
 
 	var x int = 7;
+	// TODO this is not a function call, this is a cast. probably should change symbol
 	var y num = num(7);
 	var z natural = natural(7);
 
@@ -19,12 +20,4 @@ func main() {
 	a = append(a, 7.2)
 	var b naturals
 	b = append(b, natural(8))
-}
-
-type foo int
-type num foo
-
-func bar() num {
-	var x foo
-	return x
 }

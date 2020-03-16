@@ -13,6 +13,11 @@
 extern int print_sym_table;
 int indent_level = 0;
 
+bool isSpecialFunction(char *identifier)
+{
+    return strcmp((char *) "init", identifier) == 0 || strcmp((char*) "main", identifier) == 0;
+}
+
 void makeSymbolTable(PROG *root)
 {
     SymbolTable *global_scope = initSymbolTable();
@@ -51,6 +56,7 @@ void putBaseConstants(SymbolTable *symTable, char *ident, int boolValue)
     e->lineno = 0;
     e->kind = k_expKindBoolLiteral;
     e->val.boolLiteral = boolValue;
+    e->type = makeTYPE(k_typeBool);
 
     IDENT *i = makeIDENT(ident);
     TYPE *t = makeTYPE(k_typeBool);
@@ -94,12 +100,17 @@ void symFUNC_inputParams(TYPESPEC *ts, SymbolTable *scope) {
     symFUNC_inputParams(ts->next, scope);
     VARSPEC *vs = makeVarSpec(ts->ident, NULL, ts->type);
     symVARSPEC(vs, scope);
+    ts->type = vs->type;
 }
 
 void symFUNC(FUNC *f, SymbolTable *scope)
 {
     if (f->returnType != NULL) {
         findParentType(scope, f->returnType);
+        if (f->returnType->kind == k_typeInfer) {
+            SYMBOL *s = getSymbol(scope, f->returnType->val.identifier, f->lineno);
+            f->returnType = s->val.type;
+        } 
     }
     putSymbol_Func(scope, f->name, f, f->lineno);
 
@@ -299,6 +310,7 @@ void symSTMT_forLoop(STMT *s, SymbolTable *scope)
     case k_loopKindThreePart:
         symSTMT(s->val.forLoop.initStmt, innerScope);
         symEXP(s->val.forLoop.condition, innerScope);
+        symSTMT(s->val.forLoop.postStmt, innerScope);
         symSTMT(s->val.forLoop.body, innerScope);
         break;
     }
@@ -312,7 +324,7 @@ void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
     if (ts == NULL) return;
     symTYPESPEC(ts->next, symTable);
 
-    IDENT *ident = ts->ident;
+    char *ident = ts->ident->ident;
     TYPE *t;
     TYPE *parentType;
     switch (ts->kind)
@@ -323,15 +335,14 @@ void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
             if (t->kind == k_typeInfer) {
                 t->parent = parentType;
             }
-            t->typeName = ident->ident;
-            putSymbol_Type(symTable, ident->ident, t, ts->lineno);
+            t->typeName = ident;
+            putSymbol_Type(symTable, ident, t, ts->lineno);
             break;
         default:
             break;
     }
 }
 
-// TODO make this recursive
 TYPE *findParentType(SymbolTable *symTable, TYPE *t) {
     if (t->kind == k_typeSlice) {
         return findParentType(symTable, t->val.sliceType.type);
@@ -359,6 +370,11 @@ void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
 
     if (vs->type != NULL) {
         findParentType(scope, vs->type);
+        // Associate varspec with type put in symbol table
+        if (vs->type->kind == k_typeInfer) {
+            SYMBOL *s = getSymbol(scope, vs->type->val.identifier, vs->lineno);
+            vs->type = s->val.type;
+        } 
     }
     if (vs->rhs != NULL) {
         symEXP(vs->rhs, scope);
@@ -527,6 +543,15 @@ SYMBOL *putSymbol(SymbolTable *t, char *name, SymbolKind kind, int lineno)
 SYMBOL *putSymbol_Func(SymbolTable *t, char *name, FUNC *funcSpec, int lineno)
 {
     if (isBlankId(name)) return NULL;
+    if (isSpecialFunction(name)) {
+        if (funcSpec->returnType != NULL || funcSpec->inputParams != NULL) {
+            throwSpecialFunctionParameterError(name, lineno);
+        } 
+        if (strcmp(name, (char *) "init") == 0) {
+            if (print_sym_table) printf("init [function] = <unmapped>\n");
+            return NULL;
+        }
+    }
     SYMBOL *s = putSymbol(t, name, k_symbolKindFunc, lineno);
     s->val.funcSpec = funcSpec;
     printSymbol(s);
@@ -535,6 +560,7 @@ SYMBOL *putSymbol_Func(SymbolTable *t, char *name, FUNC *funcSpec, int lineno)
 
 SYMBOL *putSymbol_Type(SymbolTable *t, char *name, TYPE *type, int lineno) 
 {
+    if (isSpecialFunction(name)) throwSpecialFunctionDeclarationError(name, lineno);
     if (isBlankId(name)) return NULL;
     SYMBOL *s = putSymbol(t, name, k_symbolKindType, lineno);
     s->val.type = type;
@@ -544,6 +570,7 @@ SYMBOL *putSymbol_Type(SymbolTable *t, char *name, TYPE *type, int lineno)
 
 SYMBOL *putSymbol_Var(SymbolTable *t, char *name, VARSPEC *varSpec, int lineno) 
 {
+    if (isSpecialFunction(name)) throwSpecialFunctionDeclarationError(name, lineno);
     if (isBlankId(name)) return NULL;
     SYMBOL *s = putSymbol(t, name, k_symbolKindVar, lineno);
     s->val.varSpec = varSpec;

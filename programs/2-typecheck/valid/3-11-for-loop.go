@@ -1,6 +1,7 @@
-package main
+package test
+
 func main() {
-	for i := 0; i < 5; {
+	for i := 0; i < 5; i++ {
 		print(i)
 	}
 	for i := 0; i < 5; i++ {
