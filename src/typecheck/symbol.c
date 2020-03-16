@@ -322,6 +322,19 @@ void symSTMT_forLoop(STMT *s, SymbolTable *scope)
     closeScope();
 }
 
+void symSTRUCTSPEC(STRUCTSPEC *ss, SymbolTable *scope, SymbolTable *structScope)
+{
+    if (ss == NULL) return;
+    symSTRUCTSPEC(ss->next, scope, structScope);
+
+    // Check if the STRUCTSPEC type is defined in the scope
+    findParentType(scope, ss->type);
+
+    // Will help check to see if attribute has already been declared or not
+    // Only one identifier allower per line
+    if (!isBlankId(ss->attribute->ident)) putSymbol(structScope, ss->attribute->ident, 
+        k_symbolKindVar, ss->lineno);
+}
 
 void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
 {
@@ -331,6 +344,12 @@ void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
     char *ident = ts->ident->ident;
     TYPE *t;
     TYPE *parentType;
+
+    // This scope is only used to keep track of identifiers declared in a struct specification
+    // It's used to validate whether some identifier has been previously declared or not
+    // Don't use it as an actual new scope of code
+    SymbolTable *structScope;
+    
     switch (ts->kind)
     {
         case k_typeSpecKindTypeDeclaration:
@@ -338,6 +357,11 @@ void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
             parentType = findParentType(symTable, t);
             if (t->kind == k_typeInfer) {
                 t->parent = parentType;
+            }
+            if (t->kind == k_typeStruct) {
+                structScope = initSymbolTable();
+                symSTRUCTSPEC(t->val.structType, symTable, structScope);
+                free(structScope);
             }
             t->typeName = ident;
             putSymbol_Type(symTable, ident, t, ts->lineno);

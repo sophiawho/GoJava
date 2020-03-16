@@ -206,6 +206,7 @@ struct STRUCTSPEC {
     IDENT *attribute; // can have multiple attributes per type
     TYPE *type;
     STRUCTSPEC *next;
+    int lineno;
 };
 STRUCTSPEC *makeStructSpec(IDENT *attribute, TYPE *type);
 
