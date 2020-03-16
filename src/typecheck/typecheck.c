@@ -122,6 +122,22 @@ bool isOrdered(TYPE *t) {
     return false;
 }
 
+/* Function: TODO FINISH. Specs: 3.7
+*/
+bool isAddressable(EXP *exp) {
+    // TODO finish addressable
+    switch (exp->type->kind)
+    {
+    case k_expKindIdentifier:
+    case k_expKindArrayAccess:
+    case k_expKindFieldAccess:
+        return true;
+    default:
+        return false;
+    }
+    return false;
+}
+
 /*
 * Function: Determines whether a type resolves to a base type. A type can resolve 
 * to a base type of either int, float64, rune, string, or bool
