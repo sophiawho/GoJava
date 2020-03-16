@@ -142,7 +142,7 @@ struct EXP {
         struct { EXP *primaryExpr; EXP *expList; } funcCall;
         struct { EXP *arrayReference; EXP *indexExp; } arrayAccess;
         struct { EXP *object; char *field; } fieldAccess;
-        struct { TYPE *t; EXP *exp; } cast;
+        struct { TYPE *type; EXP *exp; } cast;
     } val;
     EXP *next;
 };

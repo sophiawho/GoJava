@@ -2,6 +2,7 @@
 #include "../ast/tree.h"
 #include "../ast/stmt.h"
 #include "../error.h"
+#include "symbol.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -592,7 +593,7 @@ void typeEXP(EXP *e) {
 
             // Both types must be the same
             if (!isEqualType(e->val.binary.lhs->type, e->val.binary.rhs->type)) {
-                throwError("Illegal arithmetic operation. Operands must resolve to same type.\n",
+                throwError("Illegal arithmetic operation. Operands must resolve to same type.",
                 e->lineno);
             }
 
@@ -615,7 +616,21 @@ void typeEXP(EXP *e) {
             break;
         case k_expKindCap:
             break;
-        // TODO TYPE CAST
+        case k_expKindCast:
+            if (!resolveToBaseType(e->val.cast.type)) {
+                throwError("Illegal typecast operation. Type must resolve to a base type", e->lineno);
+            }
+            typeEXP(e->val.cast.exp);
+            if (resolveType(e->val.cast.type) == resolveType(e->val.cast.exp->type)) {
+                e->type = e->val.cast.type;
+            } else if (resolveToNumbericBaseType(e->val.cast.type) && resolveToNumbericBaseType(e->val.cast.exp->type)) {
+                e->type = e->val.cast.type;
+            } else if (resolveToStringBaseType(e->val.cast.type) && resolveToIntegerBaseType(e->val.cast.exp->type)) {
+                e->type = e->val.cast.type;
+            } else {
+                throwError("Illegal typecast operation. The expr is not compatible with the type.", e->lineno);
+            }
+            break;
         default:
             break;
     }
