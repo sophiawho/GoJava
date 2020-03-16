@@ -11,6 +11,7 @@ func main() {
 	// We can do that by getting the symbol for the identifier 'num', realizing it is mapped to 
 	// a type and not a function, then changing the expression type to a cast.
 	// I can fix this sometime Monday.
+	// Code pointers: https://github.com/comp520/2020_group01/commit/ae1cf52842
 	var y num = num(7);
 	var z natural = natural(7);
 
