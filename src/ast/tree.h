@@ -67,6 +67,7 @@ struct TYPE {
         struct { int size; TYPE *type; } arrayType;
     } val;
     char *typeName; // for symbol table
+    SYMBOL *symbol; // FIELD NOT IN USE - DO NOT ACCESS THIS FIELD
     TYPE *parent;
 }; 
 TYPE *makeTYPE_ident(char *identifier); 

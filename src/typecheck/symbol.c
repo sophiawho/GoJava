@@ -106,11 +106,15 @@ void symFUNC_inputParams(TYPESPEC *ts, SymbolTable *scope) {
 void symFUNC(FUNC *f, SymbolTable *scope)
 {
     if (f->returnType != NULL) {
-        findParentType(scope, f->returnType);
+        TYPE *t = findParentType(scope, f->returnType);
         if (f->returnType->kind == k_typeInfer) {
             SYMBOL *s = getSymbol(scope, f->returnType->val.identifier, f->lineno);
             f->returnType = s->val.type;
-        } 
+        } else if (f->returnType->kind == k_typeSlice) {
+            f->returnType->val.sliceType.type = t;
+        } else if (f->returnType->kind == k_typeArray) {
+            f->returnType->val.arrayType.type = t;
+        }
     }
     putSymbol_Func(scope, f->name, f, f->lineno);
 
@@ -363,6 +367,20 @@ TYPE *findParentType(SymbolTable *symTable, TYPE *t) {
     return s->val.type;
 }
 
+void associateVarWithType(VARSPEC *vs, SymbolTable *scope) {
+    if (vs->type->kind == k_typeInfer) {
+        SYMBOL *s = getSymbol(scope, vs->type->val.identifier, vs->lineno);
+        vs->type = s->val.type;
+    }
+    if (vs->type->kind == k_typeSlice) {
+        TYPE *t = findParentType(scope, vs->type);
+        vs->type->val.sliceType.type = t;
+    } else if (vs->type->kind == k_typeArray) {
+        TYPE *t = findParentType(scope, vs->type);
+        vs->type->val.arrayType.type = t;
+    }
+}
+
 void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
 {
     if (vs == NULL) return;
@@ -370,11 +388,7 @@ void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
 
     if (vs->type != NULL) {
         findParentType(scope, vs->type);
-        // Associate varspec with type put in symbol table
-        if (vs->type->kind == k_typeInfer) {
-            SYMBOL *s = getSymbol(scope, vs->type->val.identifier, vs->lineno);
-            vs->type = s->val.type;
-        } 
+        associateVarWithType(vs, scope);
     }
     if (vs->rhs != NULL) {
         symEXP(vs->rhs, scope);
