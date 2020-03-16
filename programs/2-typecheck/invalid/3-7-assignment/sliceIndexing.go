@@ -3,5 +3,5 @@ package main
 
 func f() {
     var a []int
-    a[0] = 1
+    a[0] = "1"
 }
