@@ -265,20 +265,49 @@ void typeFUNC(FUNC *f) {
     typeSTMT(f->rootStmt, f->returnType);
 }
 
-/* 2.1
-Case 1: var x T = expr
-If expr is well-typed and its type is T1 and T1=T, the mapping x:T is 
-added to the symbol table
-
-Case 2: var x = expr
-If expr is well-typed and its type is T, the mapping x:T is added to the 
-symbol table.
+/*
+* Function: Typecheck a variable declaration (denoted as a VARSPEC abstract-syntax-tree node)
+* Follows the specifications from 2.1
+* Case 1: var x T = expr
+* If expr is well-typed and its type is T1 and T1=T, the mapping x:T is added to the symbol table
+* 
+* Case 2: var x = expr
+* If expr is well-typed and its type is T, the mapping x:T is added to the symbol table.
+* 
+* Args: 
+*   VARSPEC *vs: The variable declaration node to typecheck
+*
+* Returns: void
 */
-void typeVARSPEC(VARSPEC *varspec) {
-    return;
+void typeVARSPEC(VARSPEC *vs) {
+    if (vs == NULL) return;
+    typeVARSPEC(vs->next);
+
+    if (vs->rhs != NULL) {
+        typeEXP(vs->rhs);
+
+        if (vs->type != NULL) {
+
+            if (!isEqualType(vs->type, vs->rhs->type)) {
+
+                throwError("Illegal variable declaration. Lhs and rhs types don't match.\n",
+                vs->lineno);
+            }
+        }
+        vs->type = vs->rhs->type;
+    }
 }
 
+
 // =============================== 3. STATEMENTS ===================================
+
+void typeSTMT_colonAssign(EXP *lhs, EXP *rhs)
+{
+    if (lhs == NULL && rhs == NULL) return;
+    typeSTMT_colonAssign(lhs->next, rhs->next);
+    lhs->type = rhs->type;
+}
+
 void typeSTMT(STMT *s, TYPE *returnType) {
     if (s == NULL) return;
     typeSTMT(s->next, returnType);
@@ -318,8 +347,17 @@ void typeSTMT(STMT *s, TYPE *returnType) {
             break;
         case k_stmtKindAssign:
             // TODO 3.5 Short declaration
-            typeEXP(s->val.assignStmt.lhs);
             typeEXP(s->val.assignStmt.rhs);
+            if (s->val.assignStmt.kind == k_stmtColonAssign) {
+                typeSTMT_colonAssign(s->val.assignStmt.lhs, s->val.assignStmt.rhs);
+            }
+            else {
+                typeEXP(s->val.assignStmt.lhs);
+                if (!isEqualType(s->val.assignStmt.lhs->type, s->val.assignStmt.rhs->type)) {
+                    throwError("Illegal assignment. Lhs and rhs types don't match.\n",
+                    s->lineno);
+                }
+            }
             break;
         case k_stmtKindPrint:
             typeEXP(s->val.printStmt.expList);
@@ -343,9 +381,9 @@ void typeSTMT(STMT *s, TYPE *returnType) {
             typeEXPRCASECLAUSE(s->val.switchStmt.caseClauses);
             break;
         case k_stmtKindFor:
-            typeSTMT(s->val.forLoop.body, returnType);
-            typeEXP(s->val.forLoop.condition);
             typeSTMT(s->val.forLoop.initStmt, returnType);
+            typeEXP(s->val.forLoop.condition);
+            typeSTMT(s->val.forLoop.body, returnType);
             typeSTMT(s->val.forLoop.postStmt, returnType);
             break;
     }
@@ -430,7 +468,7 @@ void typeEXP(EXP *e) {
             typeEXP(e->val.binary.rhs);
 
             // Must be comparable
-            if (!isComparable(e->val.binary.lhs->type) && !isComparable(e->val.binary.rhs->type)) {
+            if (!isComparable(e->val.binary.lhs->type) || !isComparable(e->val.binary.rhs->type)) {
                 throwError("Illegal binary comparison. Operands must resolve to comparable types.\n", 
                 e->lineno);
             }
@@ -453,7 +491,7 @@ void typeEXP(EXP *e) {
             typeEXP(e->val.binary.rhs);
 
             // Must be ordered
-            if (!isOrdered(e->val.binary.lhs->type) && !isOrdered(e->val.binary.rhs->type)) {
+            if (!isOrdered(e->val.binary.lhs->type) || !isOrdered(e->val.binary.rhs->type)) {
                 throwError("Illegal binary comparison. Operands must resolve to ordered types.\n",
                 e->lineno);
             }
@@ -474,10 +512,10 @@ void typeEXP(EXP *e) {
 
             // Both types must both either be numeric or string
             if (
-                (!resolveToNumbericBaseType(e->val.binary.lhs->type) && 
+                (!resolveToNumbericBaseType(e->val.binary.lhs->type) || 
                 !resolveToNumbericBaseType(e->val.binary.rhs->type)) ||
 
-                (!resolveToStringBaseType(e->val.binary.lhs->type) && 
+                (!resolveToStringBaseType(e->val.binary.lhs->type) || 
                 !resolveToStringBaseType(e->val.binary.rhs->type))) {
                     throwError("Illegal addition. Operands must both either resolve to numeric or string types", e->lineno);
                 }
@@ -487,6 +525,7 @@ void typeEXP(EXP *e) {
                 throwError("Illegal addition. Operands must resolve to same type.\n",
                 e->lineno);
             }
+
             t = resolveType(e->val.binary.lhs->type);
             e->type = makeTYPE(t->kind);
             break;
@@ -498,19 +537,45 @@ void typeEXP(EXP *e) {
             typeEXP(e->val.binary.lhs);
             typeEXP(e->val.binary.rhs);
 
-            // TODO finish
+            // Both types must be numeric
+            if (!resolveToNumbericBaseType(e->val.binary.lhs->type) || !resolveToNumbericBaseType(e->val.binary.rhs->type)) {
+                throwError("Illegal arithmetic operation. Operands must both resolve to numeric types", e->lineno);
+            }
+
+            // Both types must be the same
+            if (!isEqualType(e->val.binary.lhs->type, e->val.binary.rhs->type)) {
+                throwError("Illegal addition. Operands must resolve to same type.\n",
+                e->lineno);
+            }
+
+            e->type = e->val.binary.lhs->type;
             break;
 
-        case k_expKindMod:      // %
-
-        case k_expKindBitOr:    // |
-        case k_expKindBitAnd:   // &
-
-        case k_expKindLeftShift:    // <<
-        case k_expKindRightShift:   // >>
-
+        case k_expKindMod:          // %
+        case k_expKindBitOr:        // |
+        case k_expKindBitAnd:       // &
         case k_expKindBitClear:     // &^
         case k_expKindBitXOR:       // ^
+        case k_expKindLeftShift:    // << *
+        case k_expKindRightShift:   // >> * With shift operations. Go requires unsigned integers
+            //                              on the left-hand side. GoLite simply allows signed int
+            // int op int -> int
+            typeEXP(e->val.binary.lhs);
+            typeEXP(e->val.binary.rhs);
+
+            // Both types must be int
+            if (!resolveToNumbericBaseType(e->val.binary.lhs->type) || !resolveToNumbericBaseType(e->val.binary.rhs->type)) {
+                throwError("Illegal arithmetic operation. Operands must both resolve to int", e->lineno);
+            }
+
+            // Both types must be the same
+            if (!isEqualType(e->val.binary.lhs->type, e->val.binary.rhs->type)) {
+                throwError("Illegal arithmetic operation. Operands must resolve to same type.\n",
+                e->lineno);
+            }
+
+            e->type = e->val.binary.lhs->type;
+            break;
 
         default:
             break;
