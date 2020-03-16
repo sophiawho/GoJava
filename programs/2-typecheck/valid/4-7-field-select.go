@@ -3,7 +3,6 @@ package test
 
 func foo() {
 	var a bool = false;
-	print(+a);
 	type structType struct {
 		a int
 		b float64 

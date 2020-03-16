@@ -309,6 +309,7 @@ void symSTMT_forLoop(STMT *s, SymbolTable *scope)
     case k_loopKindThreePart:
         symSTMT(s->val.forLoop.initStmt, innerScope);
         symEXP(s->val.forLoop.condition, innerScope);
+        symSTMT(s->val.forLoop.postStmt, innerScope);
         symSTMT(s->val.forLoop.body, innerScope);
         break;
     }

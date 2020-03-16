@@ -306,6 +306,11 @@ void typeSTMT_colonAssign(EXP *lhs, EXP *rhs)
     if (lhs == NULL && rhs == NULL) return;
     typeSTMT_colonAssign(lhs->next, rhs->next);
     lhs->type = rhs->type;
+    if (lhs->kind == k_expKindIdentifier) {
+        if (lhs->val.identExp.symbol != NULL && lhs->val.identExp.symbol->kind == k_symbolKindVar) {
+            lhs->val.identExp.symbol->val.varSpec->type = rhs->type;
+        }
+    }
 }
 
 void typeSTMT(STMT *s, TYPE *returnType) {
