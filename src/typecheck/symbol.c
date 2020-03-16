@@ -100,6 +100,7 @@ void symFUNC_inputParams(TYPESPEC *ts, SymbolTable *scope) {
     symFUNC_inputParams(ts->next, scope);
     VARSPEC *vs = makeVarSpec(ts->ident, NULL, ts->type);
     symVARSPEC(vs, scope);
+    ts->type = vs->type;
 }
 
 void symFUNC(FUNC *f, SymbolTable *scope)
@@ -323,7 +324,7 @@ void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
     if (ts == NULL) return;
     symTYPESPEC(ts->next, symTable);
 
-    IDENT *ident = ts->ident;
+    char *ident = ts->ident->ident;
     TYPE *t;
     TYPE *parentType;
     switch (ts->kind)
@@ -334,8 +335,8 @@ void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
             if (t->kind == k_typeInfer) {
                 t->parent = parentType;
             }
-            t->typeName = ident->ident;
-            putSymbol_Type(symTable, ident->ident, t, ts->lineno);
+            t->typeName = ident;
+            putSymbol_Type(symTable, ident, t, ts->lineno);
             break;
         default:
             break;

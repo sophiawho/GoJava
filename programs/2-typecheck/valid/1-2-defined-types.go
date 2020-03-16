@@ -5,6 +5,7 @@ func main() {
 	type natural num
 
 	var x int = 7;
+	// TODO this is not a function call, this is a cast. probably should change symbol
 	var y num = num(7);
 	var z natural = natural(7);
 

@@ -429,6 +429,7 @@ void typeEXP(EXP *e) {
     typeEXP(e->next);
 
     TYPE *t;
+    SYMBOL *s;
     switch (e->kind) {
 
         // ============= LITERAL EXPRESSIONS ================
@@ -440,10 +441,8 @@ void typeEXP(EXP *e) {
 
         // ============= IDENTIFIER EXPRESSION ================
         case k_expKindIdentifier:
-            // Associate identifier with TYPE using SYMBOL
-            if (e->val.identExp.symbol != NULL && e->val.identExp.symbol->val.varSpec->type != NULL) {
-                e->type = e->val.identExp.symbol->val.varSpec->type;
-            }
+            s = getSymbolFromExp(e);
+            e->type = s->val.varSpec->type;
             break;
 
         // ============= UNARY EXPRESSIONS ================
@@ -601,11 +600,10 @@ void typeEXP(EXP *e) {
             break;
         case k_expKindFuncCall:
             typeEXP(e->val.funcCall.primaryExpr);
-            // TODO Get FUNCSPEC from Symbol
-            // A function call is well-typed if:
-            // All arguments are well typed
-            // expr is well-typed, and in the symbol table
-            // and has function type (T1 * T2 * ... * Tk) -> Tr
+            s = getSymbolFromExp(e->val.funcCall.primaryExpr);
+            TYPESPEC *inputParams = s->val.funcSpec->inputParams;
+            typeFUNCCALL(inputParams, e->val.funcCall.expList);
+            e->type = s->val.funcSpec->returnType;
             break;
         case k_expKindArrayAccess:
             break;
@@ -620,5 +618,28 @@ void typeEXP(EXP *e) {
         // TODO TYPE CAST
         default:
             break;
+    }
+}
+
+SYMBOL *getSymbolFromExp(EXP *e) {
+    switch (e->kind) {
+        case k_expKindIdentifier:
+            return e->val.identExp.symbol;
+        case k_expKindUParenthesized:
+            return getSymbolFromExp(e->val.unary.rhs);
+        default:
+            return NULL;
+    }
+}
+
+void typeFUNCCALL(TYPESPEC *inputParams, EXP *args) {
+    if (inputParams == NULL && args == NULL) return;
+    if (inputParams == NULL || args == NULL) {
+        throwError("Function called with incorrect number of arguments.", inputParams == NULL ? args->lineno : inputParams->lineno);
+    }
+    typeFUNCCALL(inputParams->next, args->next);
+    typeEXP(args);
+    if (!isEqualType(args->type, inputParams->type)) {
+        throwError("Function called with incompatible argument types.", args->lineno);
     }
 }
