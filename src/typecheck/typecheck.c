@@ -447,6 +447,10 @@ void typeEXP(EXP *e) {
             break;
 
         // ============= UNARY EXPRESSIONS ================
+        case k_expKindUParenthesized:
+            typeEXP(e->val.unary.rhs);
+            e->type = e->val.unary.rhs->type;
+            break;
         case k_expKindUPlus:
         case k_expKindUMinus:
             typeEXP(e->val.unary.rhs);
@@ -534,12 +538,8 @@ void typeEXP(EXP *e) {
             typeEXP(e->val.binary.rhs);
 
             // Both types must both either be numeric or string
-            if (
-                (!resolveToNumbericBaseType(e->val.binary.lhs->type) || 
-                !resolveToNumbericBaseType(e->val.binary.rhs->type)) ||
-
-                (!resolveToStringBaseType(e->val.binary.lhs->type) || 
-                !resolveToStringBaseType(e->val.binary.rhs->type))) {
+            if ( (!resolveToNumbericBaseType(e->val.binary.lhs->type) && !resolveToStringBaseType(e->val.binary.lhs->type)) 
+                || (!resolveToNumbericBaseType(e->val.binary.rhs->type) && !resolveToStringBaseType(e->val.binary.rhs->type))) {
                     throwError("Illegal addition. Operands must both either resolve to numeric or string types", e->lineno);
                 }
 
@@ -599,7 +599,25 @@ void typeEXP(EXP *e) {
 
             e->type = e->val.binary.lhs->type;
             break;
-
+        case k_expKindFuncCall:
+            typeEXP(e->val.funcCall.primaryExpr);
+            // TODO Get FUNCSPEC from Symbol
+            // A function call is well-typed if:
+            // All arguments are well typed
+            // expr is well-typed, and in the symbol table
+            // and has function type (T1 * T2 * ... * Tk) -> Tr
+            break;
+        case k_expKindArrayAccess:
+            break;
+        case k_expKindFieldAccess:
+            break;
+        case k_expKindAppend:
+            break;
+        case k_expKindLen:
+            break;
+        case k_expKindCap:
+            break;
+        // TODO TYPE CAST
         default:
             break;
     }
