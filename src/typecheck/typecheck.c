@@ -305,12 +305,34 @@ void typeSTMT_colonAssign(EXP *lhs, EXP *rhs)
 {
     if (lhs == NULL && rhs == NULL) return;
     typeSTMT_colonAssign(lhs->next, rhs->next);
+    typeEXP(rhs);
     lhs->type = rhs->type;
     if (lhs->kind == k_expKindIdentifier) {
         if (lhs->val.identExp.symbol != NULL && lhs->val.identExp.symbol->kind == k_symbolKindVar) {
             lhs->val.identExp.symbol->val.varSpec->type = rhs->type;
         }
     }
+}
+
+void typeSTMT_Assign(EXP *lhs, EXP *rhs, int lineno) {
+    if (lhs == NULL && rhs == NULL) return;
+    typeSTMT_Assign(lhs->next, rhs->next, lineno);
+    typeEXP(lhs);
+    typeEXP(rhs);
+    // TODO (As per 3.7): Ensure expressions on LHS are lvalues (addressable):
+    // Variables (non-constants), Slice indexing, Array indexing, Field selection
+    if (!isEqualType(lhs->type, rhs->type)) {
+        throwError("Illegal assignment. LHS and RHS types don't match.\n", lineno);
+    }
+}
+
+void typeSTMT_opAssign(AssignKind op, EXP *v, EXP *expr) {
+    // TODO 3.8 OP ASSIGNMENT v op expr
+    typeEXP(v);
+    typeEXP(expr);
+    // op accepts two arguments of types typeof(v) and typeof(expr) 
+    // and returns a value of typeof(v)
+    // The expressions on the LHS must also be lvalues.
 }
 
 void typeSTMT(STMT *s, TYPE *returnType) {
@@ -352,16 +374,12 @@ void typeSTMT(STMT *s, TYPE *returnType) {
             break;
         case k_stmtKindAssign:
             // TODO 3.5 Short declaration
-            typeEXP(s->val.assignStmt.rhs);
             if (s->val.assignStmt.kind == k_stmtColonAssign) {
                 typeSTMT_colonAssign(s->val.assignStmt.lhs, s->val.assignStmt.rhs);
-            }
-            else {
-                typeEXP(s->val.assignStmt.lhs);
-                if (!isEqualType(s->val.assignStmt.lhs->type, s->val.assignStmt.rhs->type)) {
-                    throwError("Illegal assignment. Lhs and rhs types don't match.\n",
-                    s->lineno);
-                }
+            } else if (s->val.assignStmt.kind == k_stmtAssign) {
+                typeSTMT_Assign(s->val.assignStmt.lhs, s->val.assignStmt.rhs, s->lineno);
+            } else {
+                typeSTMT_opAssign(s->val.assignStmt.kind, s->val.assignStmt.lhs, s->val.assignStmt.rhs);
             }
             break;
         case k_stmtKindPrint:
