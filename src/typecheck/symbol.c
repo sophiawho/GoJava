@@ -433,6 +433,9 @@ void symEXP(EXP *exp, SymbolTable *scope)
         break;
 
     case k_expKindFuncCall:
+        // TODO: If the identifier in exp->val.funcCall.primaryExpr
+        // maps to a symbol that is of type TYPE instead of 
+        // type FUNC, this expression is a k_expKindCast
         symEXP(exp->val.funcCall.primaryExpr, scope);
         symEXP(exp->val.funcCall.expList, scope);
         break;

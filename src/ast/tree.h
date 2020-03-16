@@ -119,7 +119,8 @@ typedef enum {
     k_expKindLen,
     k_expKindCap,
     // Parenthesized expressions
-    k_expKindUParenthesized
+    k_expKindUParenthesized,
+    k_expKindCast,
 } ExpressionKind;
 
 struct EXP {
@@ -141,6 +142,7 @@ struct EXP {
         struct { EXP *primaryExpr; EXP *expList; } funcCall;
         struct { EXP *arrayReference; EXP *indexExp; } arrayAccess;
         struct { EXP *object; char *field; } fieldAccess;
+        struct { TYPE *t; EXP *exp; } cast;
     } val;
     EXP *next;
 };
