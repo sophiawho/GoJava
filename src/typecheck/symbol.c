@@ -346,7 +346,8 @@ void symSTRUCTSPEC(STRUCTSPEC *ss, SymbolTable *scope, SymbolTable *structScope)
 
     // Check if the STRUCTSPEC type is defined in the scope
     // Associate ss->type with parent type
-    // TODO 
+    // TODO I want to resolve <infer> types with the following statement
+    // TYPE *t = searchTYPE(scope, ss->type);
     TYPE *t = findParentType(scope, ss->type);
     ss->type = t;
 

@@ -334,6 +334,29 @@ void typeVARSPEC(VARSPEC *vs) {
         if (vs->type != NULL) {
             
             // TODO: When a field is an array, slice, or struct. The type (instead of being an array, slice or struct) is the parent type. Even if I directly use the type instead of the parent type, I get seg faults.
+            // run this to get error ./run.sh typecheck programs/2-typecheck/valid/4-7-fieldSelect1.go
+            // What needs to be done? a Struct field TYPE needs to be able to have slice, array, or struct kind.
+            // func foo() {
+            //     var a bool = false;
+            //     type structType struct {
+            //         a int
+            //         b float64 
+            //         c rune
+            //         d string
+            //         e [5]int
+            //         x, y, z myType1
+            //     }
+            //     type structType2 structType
+            //     var structElem structType
+
+            //     var e, e2 int = structElem.a, structElem.a
+            //     var f float64 = structElem.b
+            //     var g rune = structElem.c
+            //     var h string = structElem.d
+            //     var i [5]int = structElem.e  -> LHS comes out as an int (expected to be array). RHS comes out as an int (expected to be array). 
+            //     var j int = structElem.e[2] -> LHS comes out as an int (correct). structElem.e comes out as an int (should be array). structElem.e[2]
+            // }
+
             TYPE *left = resolveType(vs->type);
             TYPE *right = resolveType(vs->rhs->type);
             fprintf(stdout, "%d %s %s\n", vs->lineno, typeToString(left), typeToString(right));
@@ -696,6 +719,7 @@ void typeEXP(EXP *e) {
 
             e->type = e->val.binary.lhs->type;
             break;
+
         case k_expKindFuncCall:
             typeEXP(e->val.funcCall.primaryExpr);
             s = getSymbolFromExp(e->val.funcCall.primaryExpr);
@@ -703,6 +727,7 @@ void typeEXP(EXP *e) {
             typeFUNCCALL(inputParams, e->val.funcCall.expList);
             e->type = s->val.funcSpec->returnType;
             break;
+
         case k_expKindArrayAccess:
             typeEXP(e->val.arrayAccess.arrayReference);
             typeEXP(e->val.arrayAccess.indexExp);
