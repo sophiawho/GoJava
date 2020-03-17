@@ -332,9 +332,13 @@ void typeVARSPEC(VARSPEC *vs) {
         typeEXP(vs->rhs);
 
         if (vs->type != NULL) {
-
+            
+            // TODO: When a field is an array, slice, or struct. The type (instead of being an array, slice or struct) is the parent type. Even if I directly use the type instead of the parent type, I get seg faults.
+            TYPE *left = resolveType(vs->type);
+            TYPE *right = resolveType(vs->rhs->type);
+            fprintf(stdout, "%d %s %s\n", vs->lineno, typeToString(left), typeToString(right));
             if (!isEqualType(vs->type, vs->rhs->type)) {
-                throwError("Illegal variable declaration. Lhs and rhs types don't match.\n",
+                throwError("Illegal variable declaration. LHS and RHS types don't match.\n",
                 vs->lineno);
             }
         }

@@ -322,6 +322,23 @@ void symSTMT_forLoop(STMT *s, SymbolTable *scope)
     closeScope();
 }
 
+TYPE* searchTYPE(SymbolTable *symTable, TYPE *t)
+{
+    if (t->kind == k_typeInfer) return searchTYPE(symTable, t->parent);
+    // if (t->kind == k_typeSlice) {
+    //     return t;
+    // } else if (t->kind == k_typeArray) {
+    //     return t;
+    // } else if (t->kind == k_typeStruct) {
+    //     return t;
+    // }
+    SYMBOL *s = getSymbol(symTable, t->val.identifier, t->lineno);
+    if (s == NULL ) {
+        throwErrorUndefinedId(t->lineno, t->val.identifier);
+    }
+    return s->val.type;
+}
+
 void symSTRUCTSPEC(STRUCTSPEC *ss, SymbolTable *scope, SymbolTable *structScope)
 {
     if (ss == NULL) return;
@@ -329,6 +346,7 @@ void symSTRUCTSPEC(STRUCTSPEC *ss, SymbolTable *scope, SymbolTable *structScope)
 
     // Check if the STRUCTSPEC type is defined in the scope
     // Associate ss->type with parent type
+    // TODO 
     TYPE *t = findParentType(scope, ss->type);
     ss->type = t;
 
