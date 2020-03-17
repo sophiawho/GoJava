@@ -242,6 +242,21 @@ void symSTMT(STMT *s, SymbolTable *scope)
     }
 }
 
+void symSTMT_assign_colonAssign(EXP *lhs, EXP *rhs, SymbolTable *scope)
+{
+    if (lhs == NULL && rhs == NULL) return;
+    symSTMT_assign_colonAssign(lhs->next, rhs->next, scope);
+
+    symEXP(rhs, scope);
+
+    IDENT *i = makeIDENT(lhs->val.identExp.ident);
+    TYPE *t = makeTYPE(k_typeInfer);
+    VARSPEC *vs = makeVarSpec(i, rhs, t);
+    putSymbol_Var(scope, lhs->val.identExp.ident, vs, lhs->lineno);
+
+    symEXP(lhs, scope);
+}
+
 void symSTMT_assign(STMT *s, SymbolTable *scope)
 {
     IDENT *i;
@@ -251,14 +266,8 @@ void symSTMT_assign(STMT *s, SymbolTable *scope)
     switch (s->val.assignStmt.kind)
     {
     case k_stmtColonAssign:
-        symEXP(s->val.assignStmt.rhs, scope);
-
-        i = makeIDENT(s->val.assignStmt.lhs->val.identExp.ident);
-        t = makeTYPE(k_typeInfer);
-        vs = makeVarSpec(i, s->val.assignStmt.rhs, t);
-        putSymbol_Var(scope, s->val.assignStmt.lhs->val.identExp.ident, vs, s->lineno);
-        
-        symEXP(s->val.assignStmt.lhs, scope);
+        // Need to recursively call on each identifier and expression on LHS and RHS
+        symSTMT_assign_colonAssign(s->val.assignStmt.lhs, s->val.assignStmt.rhs, scope);
         break;
 
     default:
