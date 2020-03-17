@@ -388,6 +388,21 @@ void typeSTMT_opAssign(AssignKind op, EXP *v, EXP *expr) {
     // op accepts two arguments of types typeof(v) and typeof(expr) 
     // and returns a value of typeof(v)
     // The expressions on the LHS must also be lvalues.
+    
+    // This never occur, since non-addressable expressions on the LHS are
+    // caught by the weeder!
+    if (!isAddressable(v)) {
+        throwError("Illegal assignment. LHS must be addressable.", v->lineno);
+    }
+
+    if ((v->type->typeName == NULL && expr->type->typeName != NULL) ||
+        (v->type->typeName != NULL && expr->type->typeName == NULL)) {
+            throwError("Illegal assignment. LHS and RHS types don't match.\n", expr->lineno);
+        }
+
+    if (!isEqualType(v->type, expr->type)) {
+        throwError("Illegal assignment. LHS and RHS types don't match.", expr->lineno);
+    }
 }
 
 void typeSTMT(STMT *s, TYPE *returnType) {
