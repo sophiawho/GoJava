@@ -371,7 +371,11 @@ void typeSTMT_Assign(EXP *lhs, EXP *rhs, int lineno) {
         throwError("Illegal assignment. LHS must be addressable.\n", lineno);
     }
 
-    // fprintf(stdout, typeToString(lhs->type));
+    if ((lhs->type->typeName == NULL && rhs->type->typeName != NULL) ||
+        (lhs->type->typeName != NULL && rhs->type->typeName == NULL)) {
+            throwError("Illegal assignment. LHS and RHS types don't match.\n", lineno);
+        }
+
     if (!isEqualType(lhs->type, rhs->type)) {
         throwError("Illegal assignment. LHS and RHS types don't match.\n", lineno);
     }
