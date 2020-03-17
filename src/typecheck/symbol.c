@@ -322,23 +322,6 @@ void symSTMT_forLoop(STMT *s, SymbolTable *scope)
     closeScope();
 }
 
-TYPE* searchTYPE(SymbolTable *symTable, TYPE *t)
-{
-    if (t->kind == k_typeInfer) return searchTYPE(symTable, t->parent);
-    // if (t->kind == k_typeSlice) {
-    //     return t;
-    // } else if (t->kind == k_typeArray) {
-    //     return t;
-    // } else if (t->kind == k_typeStruct) {
-    //     return t;
-    // }
-    SYMBOL *s = getSymbol(symTable, t->val.identifier, t->lineno);
-    if (s == NULL ) {
-        throwErrorUndefinedId(t->lineno, t->val.identifier);
-    }
-    return s->val.type;
-}
-
 void symSTRUCTSPEC(STRUCTSPEC *ss, SymbolTable *scope, SymbolTable *structScope)
 {
     if (ss == NULL) return;
@@ -346,9 +329,7 @@ void symSTRUCTSPEC(STRUCTSPEC *ss, SymbolTable *scope, SymbolTable *structScope)
 
     // Check if the STRUCTSPEC type is defined in the scope
     // Associate ss->type with parent type
-    // TODO I want to resolve <infer> types with the following statement
-    // TYPE *t = searchTYPE(scope, ss->type);
-    TYPE *t = findParentType(scope, ss->type);
+    TYPE *t = findFieldTypeForStruct(scope, ss->type);
     ss->type = t;
 
     // Will help check to see if attribute has already been declared or not
@@ -386,8 +367,7 @@ void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
                 free(structScope);
 
                 t->typeName = ident;
-                SYMBOL *s = putSymbol_Type(symTable, ident, t, ts->lineno);
-                if(s != NULL) s->val.type = t;
+                putSymbol_Type(symTable, ident, t, ts->lineno);
                 return;
             }
             t->typeName = ident;
@@ -411,6 +391,19 @@ TYPE *findParentType(SymbolTable *symTable, TYPE *t) {
         }
         return NULL; // a struct has no parent type
     }
+    SYMBOL *s = getSymbol(symTable, t->val.identifier, t->lineno);
+    if (s == NULL ) {
+        throwErrorUndefinedId(t->lineno, t->val.identifier);
+    }
+    return s->val.type;
+}
+
+TYPE *findFieldTypeForStruct(SymbolTable *symTable, TYPE *t) {
+    if (t->kind == k_typeSlice) {
+        return makeTYPE_slice(findParentType(symTable, t->val.sliceType.type));
+    } else if (t->kind == k_typeArray) {
+        return makeTYPE_array(t->val.arrayType.size, findParentType(symTable, t->val.arrayType.type));
+    } 
     SYMBOL *s = getSymbol(symTable, t->val.identifier, t->lineno);
     if (s == NULL ) {
         throwErrorUndefinedId(t->lineno, t->val.identifier);

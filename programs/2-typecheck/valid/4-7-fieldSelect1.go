@@ -11,7 +11,7 @@ func foo() {
 		c rune
 		d string
 		e [5]int
-		x, y, z myType1
+		x, y, z myType1 // TODO symbol traverse x, y, and z
 	}
 	type structType2 structType
 	var structElem structType
@@ -22,4 +22,5 @@ func foo() {
 	var h string = structElem.d
 	var i [5]int = structElem.e
 	var j int = structElem.e[2]
+	var k myType1 = (myType1)(3)
 }
