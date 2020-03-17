@@ -695,7 +695,7 @@ void typeEXP(EXP *e) {
         case k_expKindFieldAccess:
             typeEXP(e->val.fieldAccess.object);
             if (!resolveToStructBaseType(e->val.fieldAccess.object->type)) {
-                throwError("Invalid field access. Expecting a struct type", e->lineno);
+                throwError("Illegal field access. Expecting a struct type", e->lineno);
             }
             
             for (STRUCTSPEC *ss = e->val.fieldAccess.object->type->val.structType; ss; ss = ss->next) {
@@ -705,6 +705,8 @@ void typeEXP(EXP *e) {
                 }
             }
 
+            // Otherwise no field-identifier match
+            throwError("Illegal field access. No such field exists", e->lineno);
             break;
 
         case k_expKindAppend:

@@ -333,9 +333,10 @@ void symSTRUCTSPEC(STRUCTSPEC *ss, SymbolTable *scope, SymbolTable *structScope)
     ss->type = t;
 
     // Will help check to see if attribute has already been declared or not
-    // Only one identifier allower per line
-    if (!isBlankId(ss->attribute->ident)) putSymbol(structScope, ss->attribute->ident, 
-        k_symbolKindVar, ss->lineno);
+    for (IDENT *i = ss->attribute; i; i = i->next) {
+        if (!isBlankId(ss->attribute->ident)) putSymbol(structScope, i->ident, 
+            k_symbolKindVar, ss->lineno);
+    }
 }
 
 void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
@@ -398,6 +399,16 @@ TYPE *findParentType(SymbolTable *symTable, TYPE *t) {
     return s->val.type;
 }
 
+/*
+* Function: Associates a variable with its type information given a scope. Queries for the type's symbol from the
+* symbol table and assigns the vs->type with the queried symbol's TYPE;
+*
+* Args:
+*   VARSPEC *vs: Variable Specification AST node to wire symbol TYPE with
+*   SymbolTable *scope: The symbol table to query for a Variable Specification type's symbol from
+*
+* Returns: void
+*/
 void associateVarWithType(VARSPEC *vs, SymbolTable *scope) {
     if (vs->type->kind == k_typeInfer) {
         SYMBOL *s = getSymbol(scope, vs->type->val.identifier, vs->lineno);
