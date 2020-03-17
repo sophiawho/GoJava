@@ -434,6 +434,11 @@ void typeSTMT(STMT *s, TYPE *returnType) {
             typeEXP(s->val.ifStmt.condition);
             typeSTMT(s->val.ifStmt.trueBody, returnType);
             typeSTMT(s->val.ifStmt.falseBody, returnType);
+            if (s->val.ifStmt.condition != NULL) {
+                if (!resolveToBoolBaseType(s->val.ifStmt.condition->type)) {
+                    throwError("The condition expression of a for loop must resolve to type bool.", s->lineno);
+                }
+            }
             break;
         case k_stmtKindSwitch:
             typeSTMT(s->val.switchStmt.simpleStmt, returnType);
@@ -444,6 +449,11 @@ void typeSTMT(STMT *s, TYPE *returnType) {
             typeEXP(s->val.forLoop.condition);
             typeSTMT(s->val.forLoop.body, returnType);
             typeSTMT(s->val.forLoop.postStmt, returnType);
+            if (s->val.forLoop.condition != NULL) {
+                if (!resolveToBoolBaseType(s->val.forLoop.condition->type)) {
+                    throwError("The condition expression of a for loop must resolve to type bool.", s->lineno);
+                }
+            }
             break;
     }
 }
