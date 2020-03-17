@@ -728,7 +728,7 @@ void typeEXP(EXP *e) {
             
             for (STRUCTSPEC *ss = e->val.fieldAccess.object->type->val.structType; ss; ss = ss->next) {
                 for (IDENT *ident = ss->attribute; ident; ident = ident->next) {
-                    if (strcmp(ss->attribute->ident, e->val.fieldAccess.field) == 0) {
+                    if (strcmp(ident->ident, e->val.fieldAccess.field) == 0) {
                         e->type = ss->type;
                         return;
                     }

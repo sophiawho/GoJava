@@ -726,9 +726,11 @@ void printSymbol(SYMBOL *s) {
 void printStructSpec(STRUCTSPEC *ss) {
     if (ss == NULL) return;
     printStructSpec(ss->next);
-    printf(" %s ", ss->attribute->ident);
-    printType(ss->type);
-    printf(";");
+    for (IDENT *ident = ss->attribute; ident; ident = ident->next) {
+        printf(" %s ", ident->ident);
+        printType(ss->type);
+        printf(";");
+    }
 }
 
 void printType(TYPE *t) {

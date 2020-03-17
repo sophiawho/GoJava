@@ -6,17 +6,17 @@ type myType1 int
 func foo() {
 	var a bool = false;
 	type structType struct {
-		a int
+		a, aa int
 		b float64 
 		c rune
 		d string
 		e [5]int
-		x, y, z myType1 // TODO symbol traverse x, y, and z
+		x, y, z myType1
 	}
 	type structType2 structType
 	var structElem structType
 
-	var e, e2 int = structElem.a, structElem.a
+	var e, e2 int = structElem.a, structElem.aa
 	var f float64 = structElem.b
 	var g rune = structElem.c
 	var h string = structElem.d
