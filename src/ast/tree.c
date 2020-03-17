@@ -88,28 +88,28 @@ EXP *makeEXP_identifier(char *id) {
 EXP *makeEXP_intLiteral(int intLiteral) {
 	EXP *e = getGenericExpr(k_expKindIntLiteral);
 	e->val.intLiteral = intLiteral;
-	e->type = makeTYPE(k_typeInfer);
+	e->type = makeTYPE(k_typeInt);
 	return e;
 }
 
 EXP *makeEXP_floatLiteral(float floatLiteral) {
 	EXP *e = getGenericExpr(k_expKindFloatLiteral);
 	e->val.floatLiteral = floatLiteral;
-	e->type = makeTYPE(k_typeInfer);
+	e->type = makeTYPE(k_typeFloat);
 	return e;
 }
 
 EXP *makeEXP_runeLiteral(char runeLiteral) {
     EXP *e = getGenericExpr(k_expKindRuneLiteral);
 	e->val.runeLiteral = runeLiteral;
-	e->type = makeTYPE(k_typeInfer);
+	e->type = makeTYPE(k_typeRune);
 	return e;
 }
 
 EXP *makeEXP_stringLiteral(char *stringLiteral) {
     EXP *e = getGenericExpr(k_expKindStringLiteral);
 	e->val.stringLiteral = stringLiteral;
-	e->type = makeTYPE(k_typeInfer);
+	e->type = makeTYPE(k_typeString);
 	return e;
 }
 
@@ -221,5 +221,6 @@ STRUCTSPEC *makeStructSpec(IDENT *attribute, TYPE *type) {
 	STRUCTSPEC *ss = malloc(sizeof(STRUCTSPEC));
 	ss->attribute = attribute;
 	ss->type = type;
+	ss->lineno = yylineno;
 	return ss;
 }

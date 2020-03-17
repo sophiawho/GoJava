@@ -66,7 +66,8 @@ struct TYPE {
         struct { TYPE *type; } sliceType;
         struct { int size; TYPE *type; } arrayType;
     } val;
-    char *typeName; // for symbol table
+    char *typeName; // used to query symbol from symbol table
+    SYMBOL *symbol; // FIELD NOT IN USE - DO NOT ACCESS THIS FIELD
     TYPE *parent;
 }; 
 TYPE *makeTYPE_ident(char *identifier); 
@@ -119,7 +120,8 @@ typedef enum {
     k_expKindLen,
     k_expKindCap,
     // Parenthesized expressions
-    k_expKindUParenthesized
+    k_expKindUParenthesized,
+    k_expKindCast,
 } ExpressionKind;
 
 struct EXP {
@@ -141,6 +143,7 @@ struct EXP {
         struct { EXP *primaryExpr; EXP *expList; } funcCall;
         struct { EXP *arrayReference; EXP *indexExp; } arrayAccess;
         struct { EXP *object; char *field; } fieldAccess;
+        struct { TYPE *type; EXP *exp; } cast;
     } val;
     EXP *next;
 };
@@ -178,8 +181,8 @@ IDENT *makeIDENT(char *ident);
 struct VARSPEC {
     int lineno;
     IDENT *ident;
-    EXP *rhs;
-    TYPE *type;
+    EXP *rhs; // optional
+    TYPE *type; // optional
     VARSPEC *next;
 };
 VARSPEC *makeVarSpec(IDENT *ident, EXP *rhs, TYPE *type);
@@ -203,6 +206,7 @@ struct STRUCTSPEC {
     IDENT *attribute; // can have multiple attributes per type
     TYPE *type;
     STRUCTSPEC *next;
+    int lineno;
 };
 STRUCTSPEC *makeStructSpec(IDENT *attribute, TYPE *type);
 

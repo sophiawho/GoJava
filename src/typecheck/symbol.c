@@ -13,6 +13,11 @@
 extern int print_sym_table;
 int indent_level = 0;
 
+bool isSpecialFunction(char *identifier)
+{
+    return strcmp((char *) "init", identifier) == 0 || strcmp((char*) "main", identifier) == 0;
+}
+
 void makeSymbolTable(PROG *root)
 {
     SymbolTable *global_scope = initSymbolTable();
@@ -51,6 +56,7 @@ void putBaseConstants(SymbolTable *symTable, char *ident, int boolValue)
     e->lineno = 0;
     e->kind = k_expKindBoolLiteral;
     e->val.boolLiteral = boolValue;
+    e->type = makeTYPE(k_typeBool);
 
     IDENT *i = makeIDENT(ident);
     TYPE *t = makeTYPE(k_typeBool);
@@ -94,12 +100,21 @@ void symFUNC_inputParams(TYPESPEC *ts, SymbolTable *scope) {
     symFUNC_inputParams(ts->next, scope);
     VARSPEC *vs = makeVarSpec(ts->ident, NULL, ts->type);
     symVARSPEC(vs, scope);
+    ts->type = vs->type;
 }
 
 void symFUNC(FUNC *f, SymbolTable *scope)
 {
     if (f->returnType != NULL) {
-        findParentType(scope, f->returnType);
+        TYPE *t = findParentType(scope, f->returnType);
+        if (f->returnType->kind == k_typeInfer) {
+            SYMBOL *s = getSymbol(scope, f->returnType->val.identifier, f->lineno);
+            f->returnType = s->val.type;
+        } else if (f->returnType->kind == k_typeSlice) {
+            f->returnType->val.sliceType.type = t;
+        } else if (f->returnType->kind == k_typeArray) {
+            f->returnType->val.arrayType.type = t;
+        }
     }
     putSymbol_Func(scope, f->name, f, f->lineno);
 
@@ -227,6 +242,21 @@ void symSTMT(STMT *s, SymbolTable *scope)
     }
 }
 
+void symSTMT_assign_colonAssign(EXP *lhs, EXP *rhs, SymbolTable *scope)
+{
+    if (lhs == NULL && rhs == NULL) return;
+    symSTMT_assign_colonAssign(lhs->next, rhs->next, scope);
+
+    symEXP(rhs, scope);
+
+    IDENT *i = makeIDENT(lhs->val.identExp.ident);
+    TYPE *t = makeTYPE(k_typeInfer);
+    VARSPEC *vs = makeVarSpec(i, rhs, t);
+    putSymbol_Var(scope, lhs->val.identExp.ident, vs, lhs->lineno);
+
+    symEXP(lhs, scope);
+}
+
 void symSTMT_assign(STMT *s, SymbolTable *scope)
 {
     IDENT *i;
@@ -236,14 +266,8 @@ void symSTMT_assign(STMT *s, SymbolTable *scope)
     switch (s->val.assignStmt.kind)
     {
     case k_stmtColonAssign:
-        symEXP(s->val.assignStmt.rhs, scope);
-
-        i = makeIDENT(s->val.assignStmt.lhs->val.identExp.ident);
-        t = makeTYPE(k_typeInfer);
-        vs = makeVarSpec(i, s->val.assignStmt.rhs, t);
-        putSymbol_Var(scope, s->val.assignStmt.lhs->val.identExp.ident, vs, s->lineno);
-        
-        symEXP(s->val.assignStmt.lhs, scope);
+        // Need to recursively call on each identifier and expression on LHS and RHS
+        symSTMT_assign_colonAssign(s->val.assignStmt.lhs, s->val.assignStmt.rhs, scope);
         break;
 
     default:
@@ -299,6 +323,7 @@ void symSTMT_forLoop(STMT *s, SymbolTable *scope)
     case k_loopKindThreePart:
         symSTMT(s->val.forLoop.initStmt, innerScope);
         symEXP(s->val.forLoop.condition, innerScope);
+        symSTMT(s->val.forLoop.postStmt, innerScope);
         symSTMT(s->val.forLoop.body, innerScope);
         break;
     }
@@ -306,15 +331,37 @@ void symSTMT_forLoop(STMT *s, SymbolTable *scope)
     closeScope();
 }
 
+void symSTRUCTSPEC(STRUCTSPEC *ss, SymbolTable *scope, SymbolTable *structScope)
+{
+    if (ss == NULL) return;
+    symSTRUCTSPEC(ss->next, scope, structScope);
+
+    // Check if the STRUCTSPEC type is defined in the scope
+    // Associate ss->type with parent type
+    TYPE *t = findFieldTypeForStruct(scope, ss->type);
+    ss->type = t;
+
+    // Will help check to see if attribute has already been declared or not
+    for (IDENT *i = ss->attribute; i; i = i->next) {
+        if (!isBlankId(ss->attribute->ident)) putSymbol(structScope, i->ident, 
+            k_symbolKindVar, ss->lineno);
+    }
+}
 
 void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
 {
     if (ts == NULL) return;
     symTYPESPEC(ts->next, symTable);
 
-    IDENT *ident = ts->ident;
+    char *ident = ts->ident->ident;
     TYPE *t;
     TYPE *parentType;
+
+    // This scope is only used to keep track of identifiers declared in a struct specification
+    // It's used to validate whether some identifier has been previously declared or not
+    // Don't use it as an actual new scope of code
+    SymbolTable *structScope;
+    
     switch (ts->kind)
     {
         case k_typeSpecKindTypeDeclaration:
@@ -323,15 +370,23 @@ void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
             if (t->kind == k_typeInfer) {
                 t->parent = parentType;
             }
-            t->typeName = ident->ident;
-            putSymbol_Type(symTable, ident->ident, t, ts->lineno);
+            if (t->kind == k_typeStruct) {
+                structScope = initSymbolTable();
+                symSTRUCTSPEC(t->val.structType, symTable, structScope);
+                free(structScope);
+
+                t->typeName = ident;
+                putSymbol_Type(symTable, ident, t, ts->lineno);
+                return;
+            }
+            t->typeName = ident;
+            putSymbol_Type(symTable, ident, t, ts->lineno);
             break;
         default:
             break;
     }
 }
 
-// TODO make this recursive
 TYPE *findParentType(SymbolTable *symTable, TYPE *t) {
     if (t->kind == k_typeSlice) {
         return findParentType(symTable, t->val.sliceType.type);
@@ -352,6 +407,46 @@ TYPE *findParentType(SymbolTable *symTable, TYPE *t) {
     return s->val.type;
 }
 
+TYPE *findFieldTypeForStruct(SymbolTable *symTable, TYPE *t) {
+    if (t->kind == k_typeSlice) {
+        return makeTYPE_slice(findParentType(symTable, t->val.sliceType.type));
+    } else if (t->kind == k_typeArray) {
+        return makeTYPE_array(t->val.arrayType.size, findParentType(symTable, t->val.arrayType.type));
+    } 
+    SYMBOL *s = getSymbol(symTable, t->val.identifier, t->lineno);
+    if (s == NULL ) {
+        throwErrorUndefinedId(t->lineno, t->val.identifier);
+    }
+    return s->val.type;
+}
+
+/*
+* Function: Associates a variable with its type information given a scope. Queries for the type's symbol from the
+* symbol table and assigns the vs->type with the queried symbol's TYPE;
+*
+* Args:
+*   VARSPEC *vs: Variable Specification AST node to wire symbol TYPE with
+*   SymbolTable *scope: The symbol table to query for a Variable Specification type's symbol from
+*
+* Returns: void
+*/
+void associateVarWithType(VARSPEC *vs, SymbolTable *scope) {
+    if (vs->type->kind == k_typeInfer) {
+        SYMBOL *s = getSymbol(scope, vs->type->val.identifier, vs->lineno);
+        vs->type = s->val.type;
+    }
+    if (vs->type->kind == k_typeSlice) {
+        TYPE *t = findParentType(scope, vs->type);
+        vs->type->val.sliceType.type = t;
+    } else if (vs->type->kind == k_typeArray) {
+        TYPE *t = findParentType(scope, vs->type);
+        vs->type->val.arrayType.type = t;
+    } else if (vs->type->kind == k_typeStruct) {
+        SYMBOL *s = getSymbol(scope, vs->type->typeName, vs->lineno);
+        if (s != NULL) vs->type = s->val.type;
+    }
+}
+
 void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
 {
     if (vs == NULL) return;
@@ -359,6 +454,7 @@ void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
 
     if (vs->type != NULL) {
         findParentType(scope, vs->type);
+        associateVarWithType(vs, scope);
     }
     if (vs->rhs != NULL) {
         symEXP(vs->rhs, scope);
@@ -370,6 +466,14 @@ void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
         putSymbol_Var(scope, ident->ident, vs, vs->lineno);
         ident = ident->next;
     }
+}
+
+void symTYPECAST(EXP *e, EXP *typeExpr, EXP *exprToCast) {
+    SYMBOL *s = getSymbolFromExp(typeExpr);
+    if (s->kind != k_symbolKindType) return;
+    e->kind = k_expKindCast;
+    e->val.cast.type = s->val.type;
+    e->val.cast.exp = exprToCast;
 }
 
 void symEXP(EXP *exp, SymbolTable *scope)
@@ -419,6 +523,7 @@ void symEXP(EXP *exp, SymbolTable *scope)
     case k_expKindFuncCall:
         symEXP(exp->val.funcCall.primaryExpr, scope);
         symEXP(exp->val.funcCall.expList, scope);
+        symTYPECAST(exp, exp->val.funcCall.primaryExpr, exp->val.funcCall.expList);
         break;
 
     case k_expKindArrayAccess:
@@ -428,7 +533,6 @@ void symEXP(EXP *exp, SymbolTable *scope)
 
     case k_expKindFieldAccess:
         symEXP(exp->val.fieldAccess.object, scope);
-        // TODO nothing with field right?
         break;
 
     case k_expKindAppend:
@@ -527,6 +631,15 @@ SYMBOL *putSymbol(SymbolTable *t, char *name, SymbolKind kind, int lineno)
 SYMBOL *putSymbol_Func(SymbolTable *t, char *name, FUNC *funcSpec, int lineno)
 {
     if (isBlankId(name)) return NULL;
+    if (isSpecialFunction(name)) {
+        if (funcSpec->returnType != NULL || funcSpec->inputParams != NULL) {
+            throwSpecialFunctionParameterError(name, lineno);
+        } 
+        if (strcmp(name, (char *) "init") == 0) {
+            if (print_sym_table) printf("init [function] = <unmapped>\n");
+            return NULL;
+        }
+    }
     SYMBOL *s = putSymbol(t, name, k_symbolKindFunc, lineno);
     s->val.funcSpec = funcSpec;
     printSymbol(s);
@@ -535,6 +648,7 @@ SYMBOL *putSymbol_Func(SymbolTable *t, char *name, FUNC *funcSpec, int lineno)
 
 SYMBOL *putSymbol_Type(SymbolTable *t, char *name, TYPE *type, int lineno) 
 {
+    if (isSpecialFunction(name)) throwSpecialFunctionDeclarationError(name, lineno);
     if (isBlankId(name)) return NULL;
     SYMBOL *s = putSymbol(t, name, k_symbolKindType, lineno);
     s->val.type = type;
@@ -544,6 +658,7 @@ SYMBOL *putSymbol_Type(SymbolTable *t, char *name, TYPE *type, int lineno)
 
 SYMBOL *putSymbol_Var(SymbolTable *t, char *name, VARSPEC *varSpec, int lineno) 
 {
+    if (isSpecialFunction(name)) throwSpecialFunctionDeclarationError(name, lineno);
     if (isBlankId(name)) return NULL;
     SYMBOL *s = putSymbol(t, name, k_symbolKindVar, lineno);
     s->val.varSpec = varSpec;
@@ -584,7 +699,11 @@ void printSymbol(SYMBOL *s) {
             break;
         case k_symbolKindVar:
             printf(" [variable] = ");
-            printType(s->val.varSpec->type);
+            if (s->val.varSpec->type != NULL) {
+                printType(s->val.varSpec->type);
+            } else {
+                printf("<infer>");
+            }
             break;
         case k_symbolKindType:
             printf(" [type] = ");
@@ -616,9 +735,11 @@ void printSymbol(SYMBOL *s) {
 void printStructSpec(STRUCTSPEC *ss) {
     if (ss == NULL) return;
     printStructSpec(ss->next);
-    printf(" %s ", ss->attribute->ident);
-    printType(ss->type);
-    printf(";");
+    for (IDENT *ident = ss->attribute; ident; ident = ident->next) {
+        printf(" %s ", ident->ident);
+        printType(ss->type);
+        printf(";");
+    }
 }
 
 void printType(TYPE *t) {

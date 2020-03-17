@@ -3,6 +3,6 @@ package test
 
 func main() {
 	var a int
-	var b int
+	var b float64
 	a=b
 }

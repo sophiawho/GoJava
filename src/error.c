@@ -11,6 +11,16 @@ void throwError(char *description, int lineno)
     exit(EXIT_FAILURE);
 }
 
+void throwSpecialFunctionDeclarationError(char *id, int lineno) {
+    fprintf(stderr, "Error: (line %d) %s must be a function\n", lineno, id);
+    exit(EXIT_FAILURE);
+}
+
+void throwSpecialFunctionParameterError(char *id, int lineno) {
+    fprintf(stderr, "Error: (line %d) %s must have no parameters and no return value\n", lineno, id);
+    exit(EXIT_FAILURE);
+}
+
 void throwErrorUndefinedId(int lineno, char *id)
 {
     fprintf(stderr, "Error: (line %d) \"%s\" is not declared\n", lineno, id);
