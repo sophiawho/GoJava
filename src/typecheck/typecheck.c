@@ -461,8 +461,24 @@ void typeSTMT(STMT *s, TYPE *returnType) {
             }
             break;
         case k_stmtKindSwitch:
+            // init simpleStmt type checks
             typeSTMT(s->val.switchStmt.simpleStmt, returnType);
-            typeEXPRCASECLAUSE(s->val.switchStmt.caseClauses);
+            typeEXP(s->val.switchStmt.exp);
+            TYPE *switchExprType;
+            if (s->val.switchStmt.exp != NULL) {
+                switchExprType = s->val.switchStmt.exp->type;
+            } else {
+                switchExprType = makeTYPE(k_typeBool);
+            }
+            // switch WITH an expression type
+            // expr is well-typed and is a comparable type
+            // the expressions e1, e2,..., en are well-typed
+            // and have the same type as expr
+            // the statements under the different alternatives type check
+            typeEXPRCASECLAUSE(s->val.switchStmt.caseClauses, returnType, switchExprType);
+            // switch WITHOUT an expression type
+            // e1, e2, .., en are well typed and have type bool
+            // all statements type check
             break;
         case k_stmtKindFor:
             typeSTMT(s->val.forLoop.initStmt, returnType);
@@ -478,7 +494,19 @@ void typeSTMT(STMT *s, TYPE *returnType) {
     }
 }
 
-void typeEXPRCASECLAUSE(EXPRCASECLAUSE *caseClause) {
+void typeEXPRCASECLAUSE(EXPRCASECLAUSE *caseClause, TYPE *returnType, TYPE *expType) {
+    if (caseClause == NULL) return;
+    typeEXPRCASECLAUSE(caseClause->next, returnType, expType);
+    typeSTMT(caseClause->stmtList, returnType);
+    typeEXP(caseClause->expList);
+    if (caseClause->kind == k_defaultClause) return;
+    EXP *currentExp = caseClause->expList;
+    while (currentExp != NULL) {
+        if (!isEqualType(currentExp->type, expType)) {
+            throwError("Switch statement clauses must match switch statement expression.", caseClause->lineno);
+        }
+        currentExp = currentExp->next;
+    }
     return;
 }
 
