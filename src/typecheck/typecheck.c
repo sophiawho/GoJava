@@ -129,6 +129,10 @@ bool isAddressable(EXP *exp) {
     switch (exp->kind)
     {
     case k_expKindIdentifier:
+        if ((strcmp(exp->val.identExp.ident, (char *) "false") == 0)  ||
+            (strcmp(exp->val.identExp.ident, (char *) "true") == 0)) {
+                return false;
+            }
     case k_expKindArrayAccess:
     case k_expKindFieldAccess:
         return true;
