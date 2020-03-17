@@ -413,6 +413,13 @@ void typeSTMT(STMT *s, TYPE *returnType) {
             break;
         case k_stmtKindPrint:
             typeEXP(s->val.printStmt.expList);
+            EXP *printExp = s->val.printStmt.expList;
+            while (printExp != NULL) {
+                if (!resolveToBaseType(printExp->type)) {
+                    throwError("Expressions in a print statement must resolve to a base type.", s->lineno);
+                }
+                printExp = printExp->next;
+            }
             break;
         case k_stmtKindVarDecl:
             typeVARSPEC(s->val.varDecl);
