@@ -13,15 +13,18 @@ func foo() {
 	c = append(c, 'e')
 	d = append(d, "hello")
 
-	// //cap
-	// var e [12]int
-	// var f int = cap(a)
-	// var g int = cap(b)
-	// var h int = cap(e)
+	//cap
+	var e [12]int
+	var f int = cap(a)
+	var g int = cap(b)
+	var h int = cap(e)
 
-	// //length
-	// var i int = len(c)
-	// var j int = len(d)
-	// var k int = len(e)
-	// var l int = len("hello")
+	//length
+	var i int = len(c)
+	var j int = len(d)
+	var k int = len(e)
+	var l int = len("hello")
+
+	var s string = "hello"
+	print(len(s), "test")
 }

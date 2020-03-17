@@ -668,8 +668,18 @@ void typeEXP(EXP *e) {
             e->type = e->val.append.slice->type;
             break;
         case k_expKindLen:
+            typeEXP(e->val.lenExp);
+            if (!resolvesToSliceOrArray(e->val.lenExp->type) && !resolveToStringBaseType(e->val.lenExp->type)) {
+                throwError("The expression in a len call must be a string, slice, or array.", e->lineno);
+            }
+            e->type->kind = k_typeInt;
             break;
         case k_expKindCap:
+            typeEXP(e->val.capExp);
+            if (!resolvesToSliceOrArray(e->val.lenExp->type)) {
+                throwError("The expression in a cap call must be a slice or array.", e->lineno);
+            }
+            e->type->kind = k_typeInt;
             break;
         case k_expKindCast:
             if (!resolveToBaseType(e->val.cast.type)) {
