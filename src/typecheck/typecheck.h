@@ -15,7 +15,7 @@ void typeEXP(EXP *e);
 void typeTYPE(TYPE *t);
 void typeFUNC(FUNC *f);
 void typeSTMT(STMT *s, TYPE *returnType);
-void typeEXPRCASECLAUSE(EXPRCASECLAUSE *caseClause);
+void typeEXPRCASECLAUSE(EXPRCASECLAUSE *caseClause, TYPE *returnType, TYPE *expType);
 TYPE *resolveType(TYPE *t);
 
 // Helper functions
