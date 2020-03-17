@@ -66,7 +66,7 @@ struct TYPE {
         struct { TYPE *type; } sliceType;
         struct { int size; TYPE *type; } arrayType;
     } val;
-    char *typeName; // for symbol table
+    char *typeName; // used to query symbol from symbol table
     SYMBOL *symbol; // FIELD NOT IN USE - DO NOT ACCESS THIS FIELD
     TYPE *parent;
 }; 
@@ -206,6 +206,7 @@ struct STRUCTSPEC {
     IDENT *attribute; // can have multiple attributes per type
     TYPE *type;
     STRUCTSPEC *next;
+    int lineno;
 };
 STRUCTSPEC *makeStructSpec(IDENT *attribute, TYPE *type);
 

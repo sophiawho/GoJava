@@ -221,5 +221,6 @@ STRUCTSPEC *makeStructSpec(IDENT *attribute, TYPE *type) {
 	STRUCTSPEC *ss = malloc(sizeof(STRUCTSPEC));
 	ss->attribute = attribute;
 	ss->type = type;
+	ss->lineno = yylineno;
 	return ss;
 }

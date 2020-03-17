@@ -322,6 +322,22 @@ void symSTMT_forLoop(STMT *s, SymbolTable *scope)
     closeScope();
 }
 
+void symSTRUCTSPEC(STRUCTSPEC *ss, SymbolTable *scope, SymbolTable *structScope)
+{
+    if (ss == NULL) return;
+    symSTRUCTSPEC(ss->next, scope, structScope);
+
+    // Check if the STRUCTSPEC type is defined in the scope
+    // Associate ss->type with parent type
+    TYPE *t = findFieldTypeForStruct(scope, ss->type);
+    ss->type = t;
+
+    // Will help check to see if attribute has already been declared or not
+    for (IDENT *i = ss->attribute; i; i = i->next) {
+        if (!isBlankId(ss->attribute->ident)) putSymbol(structScope, i->ident, 
+            k_symbolKindVar, ss->lineno);
+    }
+}
 
 void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
 {
@@ -331,6 +347,12 @@ void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
     char *ident = ts->ident->ident;
     TYPE *t;
     TYPE *parentType;
+
+    // This scope is only used to keep track of identifiers declared in a struct specification
+    // It's used to validate whether some identifier has been previously declared or not
+    // Don't use it as an actual new scope of code
+    SymbolTable *structScope;
+    
     switch (ts->kind)
     {
         case k_typeSpecKindTypeDeclaration:
@@ -338,6 +360,15 @@ void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
             parentType = findParentType(symTable, t);
             if (t->kind == k_typeInfer) {
                 t->parent = parentType;
+            }
+            if (t->kind == k_typeStruct) {
+                structScope = initSymbolTable();
+                symSTRUCTSPEC(t->val.structType, symTable, structScope);
+                free(structScope);
+
+                t->typeName = ident;
+                putSymbol_Type(symTable, ident, t, ts->lineno);
+                return;
             }
             t->typeName = ident;
             putSymbol_Type(symTable, ident, t, ts->lineno);
@@ -367,6 +398,29 @@ TYPE *findParentType(SymbolTable *symTable, TYPE *t) {
     return s->val.type;
 }
 
+TYPE *findFieldTypeForStruct(SymbolTable *symTable, TYPE *t) {
+    if (t->kind == k_typeSlice) {
+        return makeTYPE_slice(findParentType(symTable, t->val.sliceType.type));
+    } else if (t->kind == k_typeArray) {
+        return makeTYPE_array(t->val.arrayType.size, findParentType(symTable, t->val.arrayType.type));
+    } 
+    SYMBOL *s = getSymbol(symTable, t->val.identifier, t->lineno);
+    if (s == NULL ) {
+        throwErrorUndefinedId(t->lineno, t->val.identifier);
+    }
+    return s->val.type;
+}
+
+/*
+* Function: Associates a variable with its type information given a scope. Queries for the type's symbol from the
+* symbol table and assigns the vs->type with the queried symbol's TYPE;
+*
+* Args:
+*   VARSPEC *vs: Variable Specification AST node to wire symbol TYPE with
+*   SymbolTable *scope: The symbol table to query for a Variable Specification type's symbol from
+*
+* Returns: void
+*/
 void associateVarWithType(VARSPEC *vs, SymbolTable *scope) {
     if (vs->type->kind == k_typeInfer) {
         SYMBOL *s = getSymbol(scope, vs->type->val.identifier, vs->lineno);
@@ -378,6 +432,9 @@ void associateVarWithType(VARSPEC *vs, SymbolTable *scope) {
     } else if (vs->type->kind == k_typeArray) {
         TYPE *t = findParentType(scope, vs->type);
         vs->type->val.arrayType.type = t;
+    } else if (vs->type->kind == k_typeStruct) {
+        SYMBOL *s = getSymbol(scope, vs->type->typeName, vs->lineno);
+        if (s != NULL) vs->type = s->val.type;
     }
 }
 
@@ -467,7 +524,6 @@ void symEXP(EXP *exp, SymbolTable *scope)
 
     case k_expKindFieldAccess:
         symEXP(exp->val.fieldAccess.object, scope);
-        // TODO nothing with field right?
         break;
 
     case k_expKindAppend:
@@ -670,9 +726,11 @@ void printSymbol(SYMBOL *s) {
 void printStructSpec(STRUCTSPEC *ss) {
     if (ss == NULL) return;
     printStructSpec(ss->next);
-    printf(" %s ", ss->attribute->ident);
-    printType(ss->type);
-    printf(";");
+    for (IDENT *ident = ss->attribute; ident; ident = ident->next) {
+        printf(" %s ", ident->ident);
+        printType(ss->type);
+        printf(";");
+    }
 }
 
 void printType(TYPE *t) {

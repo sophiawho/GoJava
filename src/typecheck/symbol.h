@@ -42,6 +42,7 @@ void putBaseConstants(SymbolTable *sym, char *ident, int boolValue);
 void putBaseTypeSpec(SymbolTable *symTable, char *typeName, TypeKind typeKind);
 
 TYPE *findParentType(SymbolTable *symTable, TYPE *t);
+TYPE *findFieldTypeForStruct(SymbolTable *symTable, TYPE *t);
 
 void printIndent();
 void openScope();
