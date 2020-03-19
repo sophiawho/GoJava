@@ -2,6 +2,7 @@
 #include "../ast/tree.h"
 #include "../ast/stmt.h"
 #include "../error.h"
+#include "../weed.h"
 #include "symbol.h"
 
 #include <string.h>
@@ -358,6 +359,13 @@ void typeSTMT_colonAssign(EXP *lhs, EXP *rhs)
     if (rhs->type == NULL) {
         throwError("Void cannot be used as a value in short declaration.", lhs->lineno);
     }
+    if (!isBlankId(lhs->val.identExp.ident)) {
+        typeEXP(lhs);
+        if (lhs->type->kind != k_typeInfer && !isEqualType(lhs->type, rhs->type)) {
+            throwError("Illegal variable declaration. LHS and RHS types don't match.\n",
+            lhs->lineno);
+        }
+    }
     lhs->type = rhs->type;
     if (lhs->kind == k_expKindIdentifier) {
         if (lhs->val.identExp.symbol != NULL && lhs->val.identExp.symbol->kind == k_symbolKindVar) {
@@ -628,6 +636,7 @@ void typeEXP(EXP *e) {
         // ============= IDENTIFIER EXPRESSION ================
         case k_expKindIdentifier:
             s = getSymbolFromExp(e);
+            if (s == NULL) break;
             e->type = s->val.varSpec->type;
             break;
 

@@ -49,60 +49,6 @@ void openScope();
 void closeScope();
 void printSymbol(SYMBOL *s);
 void printType(TYPE *t);
+int Hash(char *str);
 
 #endif /* !SYMBOL_H */
-
-/**
-REFERENCE COMPILER INPUT:
-package test
-
-var aba int
-
-func main() {
-	type num int
-	type natural num
-
-	var x int = 7;
-	var y num = num(7);
-	var z natural = natural(7);
-
-	type floats []float64
-	type naturals []natural
-
-	{
-		type new []naturals
-	}
-
-	var a floats
-	a = append(a, 7.2)
-	var b naturals
-	b = append(b, natural(8))
-}
----------------------------------------------------------------------
-REFERENCE COMPILER OUTPUT:
-{
-	int [type] = int
-	float64 [type] = float64
-	bool [type] = bool
-	rune [type] = rune
-	string [type] = string
-	true [constant] = bool
-	false [constant] = bool
-	{
-		aba [variable] = int
-		main [function] = () -> void
-		{
-			num [type] = num -> int
-			natural [type] = natural -> num -> int
-			x [variable] = int
-			y [variable] = num
-			z [variable] = natural
-			floats [type] = floats -> []float64
-			naturals [type] = naturals -> []natural
-			a [variable] = floats
-			b [variable] = naturals
-		}
-	}
-}
-
-*/

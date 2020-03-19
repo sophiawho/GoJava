@@ -242,6 +242,28 @@ void symSTMT(STMT *s, SymbolTable *scope)
     }
 }
 
+bool isIdentifierDeclared(EXP *lhs, SymbolTable *t) {
+    char *name = lhs->val.identExp.ident;
+    int hash = Hash(name);
+    for (SYMBOL *s = t->table[hash]; s; s = s->next) 
+    {
+        if (strcmp(s->name, name) == 0) return true;
+    }
+    return false;
+}
+
+void checkUndeclared(EXP *lhs, SymbolTable *t) 
+{
+    bool oneUndeclared = false;
+    for (EXP *cur = lhs; cur; cur = cur->next) {
+        if (!isIdentifierDeclared(cur, t)) oneUndeclared = true;
+    }
+
+    if (!oneUndeclared) {
+        throwError("At least one variable on the LHS of a short declaration must be undeclared in the current scope.", lhs->lineno);
+    }
+}
+
 void symSTMT_assign_colonAssign(EXP *lhs, EXP *rhs, SymbolTable *scope)
 {
     if (lhs == NULL && rhs == NULL) return;
@@ -249,24 +271,23 @@ void symSTMT_assign_colonAssign(EXP *lhs, EXP *rhs, SymbolTable *scope)
 
     symEXP(rhs, scope);
 
-    IDENT *i = makeIDENT(lhs->val.identExp.ident);
-    TYPE *t = makeTYPE(k_typeInfer);
-    VARSPEC *vs = makeVarSpec(i, rhs, t);
-    putSymbol_Var(scope, lhs->val.identExp.ident, vs, lhs->lineno);
+    if (!isIdentifierDeclared(lhs, scope)) {
+        IDENT *i = makeIDENT(lhs->val.identExp.ident);
+        TYPE *t = makeTYPE(k_typeInfer);
+        VARSPEC *vs = makeVarSpec(i, rhs, t);
+        putSymbol_Var(scope, lhs->val.identExp.ident, vs, lhs->lineno);
+    }
 
     symEXP(lhs, scope);
 }
 
 void symSTMT_assign(STMT *s, SymbolTable *scope)
 {
-    IDENT *i;
-    TYPE *t;
-    VARSPEC *vs;
-
     switch (s->val.assignStmt.kind)
     {
     case k_stmtColonAssign:
         // Need to recursively call on each identifier and expression on LHS and RHS
+        checkUndeclared(s->val.assignStmt.lhs, scope);
         symSTMT_assign_colonAssign(s->val.assignStmt.lhs, s->val.assignStmt.rhs, scope);
         break;
 

@@ -16,5 +16,6 @@ func main() {
 		_ int
 		_ float64
 	}
+	b, c := 0, 0
 	_, a := 0, 0
 }
