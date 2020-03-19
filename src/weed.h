@@ -10,7 +10,6 @@ void weedPROG(PROG *p);
 void weedTOPLEVELDECL(TOPLEVELDECL *d);
 
 void weedFUNC(FUNC *f);
-void weedFUNC_checkForReturnStmt(FUNC *f);
 void weedFUNC_inputParams(TYPESPEC *ts);
 void weedFUNC_inputParams_id(IDENT *id);
 

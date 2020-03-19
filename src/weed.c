@@ -53,24 +53,56 @@ void weedTOPLEVELDECL(TOPLEVELDECL *d)
     return;
 }
 
+bool containsBreak(STMT *s) 
+{
+    while (s != NULL) 
+    {
+        if (s->kind == k_stmtKindBreak) {
+            printf("break\n");
+            return true;
+        }
+        if (s->kind == k_stmtKindIfStmt) {
+            if (containsBreak(s->val.ifStmt.trueBody->val.blockStmt) || containsBreak(s->val.ifStmt.falseBody->val.blockStmt)) {
+                return true;
+            }
+        }
+        s = s->next;
+    }
+    return false;
+}
+
+bool isTerminatingStmt(STMT *s)
+{
+    while(s != NULL) 
+    {
+        if (s->kind == k_stmtKindReturn) return true;
+        if (s->kind == k_stmtKindIfStmt && s->val.ifStmt.falseBody != NULL) {
+            if (isTerminatingStmt(s->val.ifStmt.trueBody) && isTerminatingStmt(s->val.ifStmt.falseBody)) {
+                return true;
+            }
+        }
+        if (s->kind == k_stmtKindFor && s->val.forLoop.condition == NULL) {
+            if (!containsBreak(s->val.forLoop.body->val.blockStmt)) {
+                return true;
+            } else {
+                throwError("Function does not have a terminating statement [loop cannot break]", s->lineno);
+            }
+        }
+        s = s->next;
+    }
+    return false;
+}
+
 void weedFUNC(FUNC *f)
 {
     if (f != NULL) {
-        if (f->returnType != NULL) weedFUNC_checkForReturnStmt(f);
+        if (f->returnType != NULL) {
+            if (!isTerminatingStmt(f->rootStmt->val.blockStmt)) {
+                throwError("Function does not have a terminating statement", f->lineno);
+            }
+        }
         weedSTMT(f->rootStmt);
     }
-}
-
-void weedFUNC_checkForReturnStmt(FUNC *f)
-{
-    STMT *s = f->rootStmt->val.blockStmt;
-    while(s != NULL) 
-    {
-        if (s->kind == k_stmtKindReturn) return;
-        s = s->next;
-    }
-
-    throwError("expected return statement", f->lineno);
 }
 
 int forLoopDepth = 0;
