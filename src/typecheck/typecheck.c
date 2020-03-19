@@ -332,8 +332,12 @@ void typeVARSPEC(VARSPEC *vs) {
     if (vs == NULL) return;
     typeVARSPEC(vs->next);
 
+
     if (vs->rhs != NULL) {
         typeEXP(vs->rhs);
+        if (vs->rhs->type == NULL) {
+            throwError("Void cannot be used as a value in variable declaration.", vs->lineno);
+        }
         if (vs->type != NULL) {
             if (!isEqualType(vs->type, vs->rhs->type)) {
                 throwError("Illegal variable declaration. LHS and RHS types don't match.\n",
@@ -352,6 +356,9 @@ void typeSTMT_colonAssign(EXP *lhs, EXP *rhs)
     if (lhs == NULL && rhs == NULL) return;
     typeSTMT_colonAssign(lhs->next, rhs->next);
     typeEXP(rhs);
+    if (rhs->type == NULL) {
+        throwError("Void cannot be used as a value in short declaration.", lhs->lineno);
+    }
     lhs->type = rhs->type;
     if (lhs->kind == k_expKindIdentifier) {
         if (lhs->val.identExp.symbol != NULL && lhs->val.identExp.symbol->kind == k_symbolKindVar) {
@@ -365,6 +372,9 @@ void typeSTMT_Assign(EXP *lhs, EXP *rhs, int lineno) {
     typeSTMT_Assign(lhs->next, rhs->next, lineno);
     typeEXP(lhs);
     typeEXP(rhs);
+    if (rhs->type == NULL) {
+        throwError("Void cannot be used as a value in an assignment declaration.", lhs->lineno);
+    }
     // TODO (As per 3.7): Ensure expressions on LHS are lvalues (addressable):
     // Variables (non-constants), Slice indexing, Array indexing, Field selection
     if (!isAddressable(lhs)) {
@@ -385,6 +395,9 @@ void typeSTMT_opAssign(AssignKind op, EXP *v, EXP *expr) {
     // TODO 3.8 OP ASSIGNMENT v op expr
     typeEXP(v);
     typeEXP(expr);
+    if (expr->type == NULL) {
+        throwError("Void cannot be used as a value in operator assignment declaration.", expr->lineno);
+    }
     // op accepts two arguments of types typeof(v) and typeof(expr) 
     // and returns a value of typeof(v)
     // The expressions on the LHS must also be lvalues.
@@ -503,7 +516,6 @@ void typeSTMT(STMT *s, TYPE *returnType) {
             }
             break;
         case k_stmtKindAssign:
-            // TODO 3.5 Short declaration
             if (s->val.assignStmt.kind == k_stmtColonAssign) {
                 typeSTMT_colonAssign(s->val.assignStmt.lhs, s->val.assignStmt.rhs);
             } else if (s->val.assignStmt.kind == k_stmtAssign) {
