@@ -462,10 +462,7 @@ void associateVarWithType(VARSPEC *vs, SymbolTable *scope) {
     } else if (vs->type->kind == k_typeArray) {
         TYPE *t = findParentType(scope, vs->type);
         vs->type->val.arrayType.type = t;
-    } else if (vs->type->kind == k_typeStruct) {
-        SYMBOL *s = getSymbol(scope, vs->type->typeName, vs->lineno);
-        if (s != NULL) vs->type = s->val.type;
-    }
+    } 
 }
 
 void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
@@ -609,7 +606,7 @@ int Hash(char *str)
 
 SYMBOL *getSymbol(SymbolTable *t, char *name, int lineno)
 {    
-    if (name == NULL) throwInternalError("null identifier in 'getSymbol'");
+    if (name == NULL) throwInternalError("null identifier in 'getSymbol'", lineno);
     if (isBlankId(name)) return NULL;
     int hash = Hash(name);
 

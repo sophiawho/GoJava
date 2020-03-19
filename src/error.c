@@ -33,8 +33,8 @@ void throwErrorRedeclaredId(int lineno, char *id)
     exit(EXIT_FAILURE);
 }
 
-void throwInternalError(char *description)
+void throwInternalError(char *description, int lineno)
 {
-    fprintf(stderr, "Internal Error: %s\n", description);
+    fprintf(stderr, "Internal Error: (line %d) %s\n", lineno, description);
     exit(EXIT_FAILURE);
 }

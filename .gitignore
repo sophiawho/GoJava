@@ -10,3 +10,4 @@ src/*.output
 *.bak
 *.h.gch
 .idea
+solutions/2-typecheck/*
