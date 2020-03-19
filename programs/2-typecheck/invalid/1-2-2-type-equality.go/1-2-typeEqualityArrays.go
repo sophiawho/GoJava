@@ -1,3 +1,4 @@
+// Return type expects an array of different size
 package test 
 
 type a int

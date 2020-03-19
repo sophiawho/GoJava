@@ -1,4 +1,4 @@
-// invalid binary exp: && stored in an int
+// invalid binary exp: && with types int and bool
 package test
 
-var a int = true && false;
+var a bool = true && 1;
