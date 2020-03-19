@@ -462,7 +462,12 @@ void associateVarWithType(VARSPEC *vs, SymbolTable *scope) {
     } else if (vs->type->kind == k_typeArray) {
         TYPE *t = findParentType(scope, vs->type);
         vs->type->val.arrayType.type = t;
-    } 
+    } else if (vs->type->kind == k_typeStruct) {
+        for (STRUCTSPEC *ss = vs->type->val.structType; ss; ss = ss->next) {
+            TYPE *t = findFieldTypeForStruct(scope, ss->type);
+            ss->type = t;
+        }
+    }
 }
 
 void symVARSPEC(VARSPEC *vs, SymbolTable *scope)

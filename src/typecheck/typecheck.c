@@ -95,12 +95,10 @@ bool isComparable(TYPE *t) {
 
     // Struct values are comparable if all their fields are comparable
     if (t->kind == k_typeStruct) {
-
-        bool isComp = isComparable(t->val.structType->type);
-        if (t->val.structType->next != NULL) {
-            isComp = isComp && isComparable(t->val.structType->next->type);
+        for (STRUCTSPEC *ss = t->val.structType; ss; ss = ss->next) {
+            if (!isComparable(ss->type)) return false;
         }
-        return isComp;
+        return true;
     }
     return false;
 }
@@ -137,6 +135,8 @@ bool isAddressable(EXP *exp) {
     case k_expKindArrayAccess:
     case k_expKindFieldAccess:
         return true;
+    case k_expKindUParenthesized:
+        return isAddressable(exp->val.unary.rhs);
     default:
         return false;
     }
@@ -260,7 +260,7 @@ bool resolveToStructBaseType(TYPE *t)
 */
 char *typeToString(TYPE *t)
 {
-    if (t == NULL) throwInternalError("Null type in 'typeToString'");
+    if (t == NULL) throwInternalError("Null type in 'typeToString'", 0);
     switch (t->kind)
     {
     case k_typeSlice:
