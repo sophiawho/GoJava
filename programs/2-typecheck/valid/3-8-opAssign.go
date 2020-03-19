@@ -22,10 +22,6 @@ func main() {
 
     var a1 int
     var a2 float64
-    var a3_1 []int
-    var a3_2 []int
-    var a4_1 [3]int
-    var a4_2 [3]int
 
     a1 += 1
     a1 -= 1
@@ -40,28 +36,6 @@ func main() {
     a2 -= 1.0
     a2 *= 1.0
     a2 /= 1.0
-    a2 %= 1.0
-    a2 &= 1.0
-    a2 |= 1.0
-    a2 ^= 1.0
-
-    a3_1 += a3_2
-    a3_1 -= a3_2
-    a3_1 *= a3_2
-    a3_1 /= a3_2
-    a3_1 %= a3_2
-    a3_1 &= a3_2
-    a3_1 |= a3_2
-    a3_1 ^= a3_2
-
-    a4_1 += a4_2
-    a4_1 -= a4_2
-    a4_1 *= a4_2
-    a4_1 /= a4_2
-    a4_1 %= a4_2
-    a4_1 &= a4_2
-    a4_1 |= a4_2
-    a4_1 ^= a4_2
 
     x5.field1 += a1
     x5.field1 -= a1
@@ -76,27 +50,5 @@ func main() {
     x5.field2 -= a2
     x5.field2 *= a2
     x5.field2 /= a2
-    x5.field2 %= a2
-    x5.field2 &= a2
-    x5.field2 |= a2
-    x5.field2 ^= a2
-
-    x5.field3 += a3_1
-    x5.field3 -= a3_1
-    x5.field3 *= a3_1
-    x5.field3 /= a3_1
-    x5.field3 %= a3_1
-    x5.field3 &= a3_1
-    x5.field3 |= a3_1
-    x5.field3 ^= a3_1
-
-    x5.field4 += a4_1
-    x5.field4 -= a4_1
-    x5.field4 *= a4_1
-    x5.field4 /= a4_1
-    x5.field4 %= a4_1
-    x5.field4 &= a4_1
-    x5.field4 |= a4_1
-    x5.field4 ^= a4_1
 
 }

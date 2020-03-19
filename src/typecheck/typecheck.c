@@ -403,6 +403,66 @@ void typeSTMT_opAssign(AssignKind op, EXP *v, EXP *expr) {
     if (!isEqualType(v->type, expr->type)) {
         throwError("Illegal assignment. LHS and RHS types don't match.", expr->lineno);
     }
+
+    switch(op) {
+        case k_opAssignKindPlusEq:
+            if (!resolveToStringBaseType(v->type) && !resolveToNumbericBaseType(v->type)) {
+                throwError("Incompatible type in assign op += [expected string or numeric]", expr->lineno);
+            }
+            break;
+        case k_opAssignKindMinusEq:
+            if (!resolveToNumbericBaseType(v->type)) {
+                throwError("Incompatible type in assign op -= [expected numeric]", expr->lineno);
+            }
+            break;
+        case k_opAssignKindMultEq:
+            if (!resolveToNumbericBaseType(v->type)) {
+                throwError("Incompatible type in assign op *= [expected numeric]", expr->lineno);
+            }
+            break;
+        case k_opAssignKindDivEq:
+            if (!resolveToNumbericBaseType(v->type)) {
+                throwError("Incompatible type in assign op /= [expected numeric]", expr->lineno);
+            }
+            break;
+        case k_opAssignKindModEq:       
+            if (!resolveToIntegerBaseType(v->type)) {
+                throwError("Incompatible type in assign op %= [expected integer or rune]", expr->lineno);
+            }
+            break;
+        case k_opAssignKindBitAndEq:
+            if (!resolveToIntegerBaseType(v->type)) {
+                throwError("Incompatible type in assign op &= [expected integer or rune]", expr->lineno);
+            }
+            break;
+        case k_opAssignKindBitOrEq:
+            if (!resolveToIntegerBaseType(v->type)) {
+                throwError("Incompatible type in assign op |= [expected integer or rune]", expr->lineno);
+            }
+            break;
+        case k_opAssignKindBitXorEq:
+            if (!resolveToIntegerBaseType(v->type)) {
+                throwError("Incompatible type in assign op ^= [expected integer or rune]", expr->lineno);
+            }
+            break;
+        case k_opAssignKindLeftShiftEq:
+            if (!resolveToIntegerBaseType(v->type)) {
+                throwError("Incompatible type in assign op <<= [expected integer or rune]", expr->lineno);
+            }
+            break;
+        case k_opAssignKindRightShiftEq:
+            if (!resolveToIntegerBaseType(v->type)) {
+                throwError("Incompatible type in assign op >>= [expected integer or rune]", expr->lineno);
+            }
+            break;
+        case k_opAssignKindBitClearEq:
+            if (!resolveToIntegerBaseType(v->type)) {
+                throwError("Incompatible type in assign op &^= [expected integer or rune]", expr->lineno);
+            }
+            break;
+        default:
+            break;
+    }
 }
 
 void typeSTMT(STMT *s, TYPE *returnType) {
