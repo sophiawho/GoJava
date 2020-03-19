@@ -242,6 +242,28 @@ void symSTMT(STMT *s, SymbolTable *scope)
     }
 }
 
+bool isIdentifierDeclared(EXP *lhs, SymbolTable *t) {
+    char *name = lhs->val.identExp.ident;
+    int hash = Hash(name);
+    for (SYMBOL *s = t->table[hash]; s; s = s->next) 
+    {
+        if (strcmp(s->name, name) == 0) return true;
+    }
+    return false;
+}
+
+void checkUndeclared(EXP *lhs, SymbolTable *t) 
+{
+    bool oneUndeclared = false;
+    for (EXP *cur = lhs; cur; cur = cur->next) {
+        if (!isIdentifierDeclared(cur, t)) oneUndeclared = true;
+    }
+
+    if (!oneUndeclared) {
+        throwError("At least one variable on the LHS of a short declaration must be undeclared in the current scope.", lhs->lineno);
+    }
+}
+
 void symSTMT_assign_colonAssign(EXP *lhs, EXP *rhs, SymbolTable *scope)
 {
     if (lhs == NULL && rhs == NULL) return;
@@ -249,24 +271,23 @@ void symSTMT_assign_colonAssign(EXP *lhs, EXP *rhs, SymbolTable *scope)
 
     symEXP(rhs, scope);
 
-    IDENT *i = makeIDENT(lhs->val.identExp.ident);
-    TYPE *t = makeTYPE(k_typeInfer);
-    VARSPEC *vs = makeVarSpec(i, rhs, t);
-    putSymbol_Var(scope, lhs->val.identExp.ident, vs, lhs->lineno);
+    if (!isIdentifierDeclared(lhs, scope)) {
+        IDENT *i = makeIDENT(lhs->val.identExp.ident);
+        TYPE *t = makeTYPE(k_typeInfer);
+        VARSPEC *vs = makeVarSpec(i, rhs, t);
+        putSymbol_Var(scope, lhs->val.identExp.ident, vs, lhs->lineno);
+    }
 
     symEXP(lhs, scope);
 }
 
 void symSTMT_assign(STMT *s, SymbolTable *scope)
 {
-    IDENT *i;
-    TYPE *t;
-    VARSPEC *vs;
-
     switch (s->val.assignStmt.kind)
     {
     case k_stmtColonAssign:
         // Need to recursively call on each identifier and expression on LHS and RHS
+        checkUndeclared(s->val.assignStmt.lhs, scope);
         symSTMT_assign_colonAssign(s->val.assignStmt.lhs, s->val.assignStmt.rhs, scope);
         break;
 
@@ -442,8 +463,10 @@ void associateVarWithType(VARSPEC *vs, SymbolTable *scope) {
         TYPE *t = findParentType(scope, vs->type);
         vs->type->val.arrayType.type = t;
     } else if (vs->type->kind == k_typeStruct) {
-        SYMBOL *s = getSymbol(scope, vs->type->typeName, vs->lineno);
-        if (s != NULL) vs->type = s->val.type;
+        for (STRUCTSPEC *ss = vs->type->val.structType; ss; ss = ss->next) {
+            TYPE *t = findFieldTypeForStruct(scope, ss->type);
+            ss->type = t;
+        }
     }
 }
 
@@ -588,7 +611,7 @@ int Hash(char *str)
 
 SYMBOL *getSymbol(SymbolTable *t, char *name, int lineno)
 {    
-    if (name == NULL) throwInternalError("null identifier in 'getSymbol'");
+    if (name == NULL) throwInternalError("null identifier in 'getSymbol'", lineno);
     if (isBlankId(name)) return NULL;
     int hash = Hash(name);
 
