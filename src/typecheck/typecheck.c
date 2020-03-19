@@ -332,7 +332,6 @@ void typeVARSPEC(VARSPEC *vs) {
     if (vs == NULL) return;
     typeVARSPEC(vs->next);
 
-
     if (vs->rhs != NULL) {
         typeEXP(vs->rhs);
         if (vs->rhs->type == NULL) {
