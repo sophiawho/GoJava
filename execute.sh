@@ -16,19 +16,23 @@
 #   (a) Output ONLY the execution
 #   (b) Exit with status code 0 for success, not 0 otherwise
 
-rm ${1%.*}.out 2> /dev/null
+rm ${1%.*}.class 2> /dev/null
 
 # You MUST replace the following line with the command to compile your generated code
 # Note the bash replacement which changes:
 #   programs/3-semantics+codegen/valid/test.min -> programs/3-semantics+codegen/valid/test.c
 # stdout is redirected to /dev/null
-FILENAME="${1%.*}.c"
-gcc -std=c11 -o ${1%.*}.out $FILENAME > /dev/null
+FILEPATH="$(dirname {1%.*})"
+FILENAME="$(basename {1%.*})"
+
+cd $FILEPATH
+javac $FILENAME.java
 
 # You MUST replace the following line with the command to execute your compiled code
 # Note the bash replacement which changes:
 #   programs/3-semantics+codegen/valid/test.min -> programs/3-semantics+codegen/valid/test.out
-./${1%.*}.out
+java $JAVAFILE
+EXITCODE $?
 
 # Lastly, we propagate the exit code
 exit $?
