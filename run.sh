@@ -28,4 +28,6 @@ fi
 #
 # You MUST replace the following command with the command for invoking your compiler
 
-./src/golite "$1" < "$2"
+filename="${2%.*}"
+
+./src/golite "$1" "$filename" < "$2"

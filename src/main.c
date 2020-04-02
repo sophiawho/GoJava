@@ -2,9 +2,10 @@
 #include <string.h>
 
 #include "ast/tree.h"
+#include "codegen/code.h"
+#include "pretty.h"
 #include "typecheck/symbol.h"
 #include "typecheck/typecheck.h"
-#include "pretty.h"
 #include "weed.h"
 
 void yyparse();
@@ -49,6 +50,15 @@ int main(int argc, char *argv[])
                 weedPROG(root);
                 makeSymbolTable(root);
                 typePROG(root);
+                printf("OK\n");
+        }
+        else if (strcmp(argv[1], "codegen") == 0) {
+                g_tokens = 0;
+                yyparse();
+                weedPROG(root);
+                makeSymbolTable(root);
+                typePROG(root);
+                generatePROG(root, argv[2]);
                 printf("OK\n");
         }
 
