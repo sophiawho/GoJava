@@ -41,10 +41,10 @@ void generateHeader(char *className) {
 void generateFooter() {
     fprintf(outputFile, "\n\tpublic static void main(String[] args) {\n");
     // TODO Call 0+ __golite__init functions; Somehow keep track of number of init functions
-    for (int i = 0; i < numInitFunc; i++) {
-        fprintf(outputFile, "\t\t__golite__init_%d();\n", i);
-    }
-    fprintf("\t\t__golite__main();\n");
+    // for (int i = 0; i < num_init_functions; i++) {
+    //     fprintf(outputFile, "\t\t__golite__init_%d();\n", i);
+    // }
+    fprintf(outputFile, "\t\t__golite__main();\n");
     fprintf(outputFile, "\t}\n");
     fprintf(outputFile, "}\n");
 }
