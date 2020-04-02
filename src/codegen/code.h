@@ -7,6 +7,8 @@
 // #include "../pretty.h"
 
 void generatePROG(PROG *root, char *filename);
+void generateTOPLEVELDECL(TOPLEVELDECL *tld);
+void generateFUNC(FUNC *f);
 void generateHeader(char *classname);
 void generateFooter();
 char *prepend(char *str);

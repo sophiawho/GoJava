@@ -8,7 +8,11 @@
 
 package test
 
-func main() {
+func init() {
+	println();
+}
+
+func init() {
 	var a rune = 'A'
 	var b rune = 'B'
 	println(a) // 65
@@ -17,6 +21,9 @@ func main() {
 	print(a, b) // 6566
 	println()
 	println()
+}
+
+func main() {
 	var c string = "hello"
 	var d string = `hello\n`
 	println(c)
