@@ -8,6 +8,8 @@
 //~Cap: 8 , len: 7
 //~Cap: 8 , len: 8
 //~Cap: 16 , len: 9
+//~Cap: 5 , len: 5
+//~
 
 package test
 
@@ -17,4 +19,7 @@ func init() {
 		println("Cap:", cap(a), ", len:", len(a))
 		a = append(a, 0)
 	}
+
+	var b[5]int
+	println("Cap:", cap(b), ", len:", len(b))
 }
