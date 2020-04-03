@@ -8,7 +8,9 @@
 // #include "../pretty.h"
 
 FILE *outputFile;
+int indent;
 
+void generateINDENT(int indent);
 void generatePROG(PROG *root, char *filename);
 void generateTOPLEVELDECL(TOPLEVELDECL *tld);
 void generateFUNC(FUNC *f);

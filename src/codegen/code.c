@@ -8,8 +8,13 @@
 #include <string.h>
 #include "code.h"
 
-int indent = 0;
 int initFuncCounter = 0;
+
+void generateINDENT(int indent){
+    for (int i = 0; i < indent; i++) {
+        fprintf(outputFile, "\t");
+    }
+}
 
 // Helper function to prepend all identifiers with `__golite__`
 char *prepend(char *str) {
@@ -21,7 +26,8 @@ char *prepend(char *str) {
 
 void generatePROG(PROG *root, char *filename) {
     if (root == NULL) return;
-    indent = 0; initFuncCounter = 0;
+    indent = 0; 
+    initFuncCounter = 0;
     openOutputFile(filename);
 
     char *basec = strdup(filename);
@@ -62,7 +68,9 @@ void generateFUNC(FUNC *f) {
         fprintf(outputFile, "\n\t@SuppressWarnings({\"unchecked\", \"deprecation\"})\n");
         fprintf(outputFile, "\tpublic static void %s() {\n", prepend(f->name));
     }
+    indent=2;
     generateSTMT(f->rootStmt->val.blockStmt);
+    indent=0;
     // TODO print function parameters
     fprintf(outputFile, "\t}\n");
 }

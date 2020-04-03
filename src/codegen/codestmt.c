@@ -11,11 +11,12 @@
 void traverseExpForPrint(EXP *e, bool newLine, bool last) {
     if (e == NULL) return;
     traverseExpForPrint(e->next, newLine, false);
-    fprintf(outputFile, "\t\t");
-    fprintf(outputFile, "System.out.print(");
+    generateINDENT(indent); fprintf(outputFile, "System.out.print(");
     generateEXP(e, false);
     fprintf(outputFile, ");\n");
-    if (newLine && !last) fprintf(outputFile, "\t\tSystem.out.print(\" \");\n"); 
+    if (newLine && !last) {
+        generateINDENT(indent); fprintf(outputFile, "System.out.print(\" \");\n");
+    } 
 }
 
 void generateSTMT(STMT *s) {
@@ -27,18 +28,10 @@ void generateSTMT(STMT *s) {
             break;
         case k_stmtKindPrint: ;
             bool newline = s->val.printStmt.newLine;
-            // print EXP list
-            // different behaviour between print and println
-            //  TODO format floats
             traverseExpForPrint(s->val.printStmt.expList, newline, true);
-            // for (EXP *e = s->val.printStmt.expList; e; e=e->next) {
-            //     fprintf(outputFile, "\t\t");
-            //     fprintf(outputFile, "System.out.print(");
-            //     generateExpForPrint(e);
-            //     fprintf(outputFile, ");\n");
-            //     if (newline && e->next != NULL) fprintf(outputFile, "\t\tSystem.out.print(\" \");\n");
-            // }
-            if (newline) fprintf(outputFile, "\t\tSystem.out.println();\n");
+            if (newline) {
+                generateINDENT(indent); fprintf(outputFile, "System.out.println();\n");
+            }
             break;
         default:
             break;
@@ -51,7 +44,7 @@ void generateVarDecl(VARSPEC *vs) {
     if (vs == NULL) return;
     generateVarDecl(vs->next);
     char *type = getStringFromType(vs->type);
-    fprintf(outputFile, "\t\t%s %s", type, prepend(vs->ident->ident));
+    generateINDENT(indent); fprintf(outputFile, "%s %s", type, prepend(vs->ident->ident));
     if (vs->rhs != NULL) {
         fprintf(outputFile, " = new %s(", type);
         generateEXP(vs->rhs, false);
@@ -77,6 +70,7 @@ void generateEXP(EXP *e, bool recurse) {
             fprintf(outputFile, "%d", e->val.intLiteral);
             break;
         case k_expKindFloatLiteral:
+            //  TODO format floats; print(0.12) should output //~+1.200000e-001
             fprintf(outputFile, "%f", e->val.floatLiteral);
             break;
         case k_expKindBoolLiteral:
