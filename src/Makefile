@@ -6,7 +6,7 @@ main: parser.tab.o lex.yy.o main.o ast/tree.o ast/stmt.o error.o weed.o pretty.o
 	$(CC) lex.yy.o parser.tab.o ast/tree.o ast/stmt.o error.o weed.o pretty.o typecheck/symbol.o typecheck/typecheck.o codegen/code.o codegen/codestmt.o main.o -o golite -lfl
 
 parser.tab.c parser.tab.h: golite.y
-	bison -v --yacc --defines=parser.tab.c --output=parser.tab.h golite.y
+	bison --yacc --defines=parser.tab.c --output=parser.tab.h golite.y
 
 lex.yy.c: golite.l parser.tab.h
 	flex golite.l
