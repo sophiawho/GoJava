@@ -8,41 +8,12 @@
 #include <string.h>
 #include <stdbool.h>
 
-void generateExpForPrint(EXP *e) {
-    switch (e->kind)
-    {
-        case k_expKindIdentifier:
-            fprintf(outputFile, "%s", prepend(e->val.identExp.ident));
-            break;
-        case k_expKindIntLiteral:
-            fprintf(outputFile, "%d", e->val.intLiteral);
-            break;
-        case k_expKindFloatLiteral:
-            fprintf(outputFile, "%f", e->val.floatLiteral);
-            break;
-        case k_expKindBoolLiteral:
-            fprintf(outputFile, "%s", e->val.boolLiteral ? "true" : "false");
-            break;
-        case k_expKindRuneLiteral: // Interpret runes as integers
-            fprintf(outputFile, "(int) '%c'", e->val.runeLiteral);
-            break;
-        case k_expKindStringLiteral: ;
-            char *formatted = strdup(e->val.stringLiteral);
-            formatted++;
-            formatted[strlen(formatted)-1] = 0;
-            fprintf(outputFile, "\"%s\"", formatted);
-            break;
-        default:
-            break;
-    }
-}
-
 void traverseExpForPrint(EXP *e, bool newLine, bool last) {
     if (e == NULL) return;
     traverseExpForPrint(e->next, newLine, false);
     fprintf(outputFile, "\t\t");
     fprintf(outputFile, "System.out.print(");
-    generateExpForPrint(e);
+    generateEXP(e, false);
     fprintf(outputFile, ");\n");
     if (newLine && !last) fprintf(outputFile, "\t\tSystem.out.print(\" \");\n"); 
 }
@@ -83,7 +54,7 @@ void generateVarDecl(VARSPEC *vs) {
     fprintf(outputFile, "\t\t%s %s", type, prepend(vs->ident->ident));
     if (vs->rhs != NULL) {
         fprintf(outputFile, " = new %s(", type);
-        generateEXP(vs->rhs);
+        generateEXP(vs->rhs, false);
         fprintf(outputFile, ")");
     }
     fprintf(outputFile, ";\n");
@@ -93,9 +64,10 @@ void generateVarDecl(VARSPEC *vs) {
     // TODO: type is optional, right now we assume type is given
 }
 
-void generateEXP(EXP *e) {
+// If recurse = false, only print out current expression and ignore the rest of the expression list
+void generateEXP(EXP *e, bool recurse) {
     if (e == NULL) return;
-    generateEXP(e->next);
+    if (recurse) generateEXP(e->next, recurse);
     switch (e->kind)
     {
         case k_expKindIdentifier:

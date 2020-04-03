@@ -3,10 +3,11 @@
 
 #include "../ast/tree.h"
 #include "../ast/stmt.h"
+#include <stdbool.h>
 
 void generateSTMT(STMT *s);
 void generateVarDecl(VARSPEC *vs);
-void generateEXP(EXP *e);
+void generateEXP(EXP *e, bool recurse);
 char *getStringFromType(TYPE *t);
 
 #endif
