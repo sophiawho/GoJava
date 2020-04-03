@@ -59,7 +59,8 @@ void generateFUNC(FUNC *f) {
         initFuncCounter++;
     } else {
         // TODO print return type instead of void
-        fprintf(outputFile, "\n\tpublic static void %s() {\n", prepend(f->name));
+        fprintf(outputFile, "\n\t@SuppressWarnings({\"unchecked\", \"deprecation\"})\n");
+        fprintf(outputFile, "\tpublic static void %s() {\n", prepend(f->name));
     }
     generateSTMT(f->rootStmt->val.blockStmt);
     // TODO print function parameters
