@@ -1,7 +1,7 @@
-// ~Cap: 2 , len: 1
-// ~Cap: 2 , len: 1
-// ~Cap: 2 , len: 2
-// ~Cap: 2 , len: 1
+//~Cap: 2 , len: 1
+//~Cap: 2 , len: 1
+//~Cap: 2 , len: 2
+//~Cap: 2 , len: 1
 
 package test
 

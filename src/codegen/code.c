@@ -1,5 +1,6 @@
 #include "../ast/tree.h"
 #include "../ast/stmt.h"
+#include "codestmt.h"
 
 #include <libgen.h>
 #include <stdio.h>
@@ -7,7 +8,6 @@
 #include <string.h>
 #include "code.h"
 
-FILE *outputFile;
 int indent = 0;
 int initFuncCounter = 0;
 
@@ -54,14 +54,16 @@ void generateFUNC(FUNC *f) {
     if (strcmp(f->name, "_") == 0) {
         return;
     } else if (strcmp(f->name, "init") == 0) {
-        fprintf(outputFile, "\n\tpublic static void %s_%d() {\n", prepend(f->name), initFuncCounter);
+        fprintf(outputFile, "\n\t@SuppressWarnings({\"unchecked\", \"deprecation\"})\n");
+        fprintf(outputFile, "\tpublic static void %s_%d() {\n", prepend(f->name), initFuncCounter);
         initFuncCounter++;
     } else {
+        // TODO print return type instead of void
         fprintf(outputFile, "\n\tpublic static void %s() {\n", prepend(f->name));
     }
+    generateSTMT(f->rootStmt->val.blockStmt);
+    // TODO print function parameters
     fprintf(outputFile, "\t}\n");
-    // TODO function params
-    // generateSTMT(f->rootStmt)
 }
 
 void generateHeader(char *className) {
@@ -69,7 +71,8 @@ void generateHeader(char *className) {
 }
 
 void generateFooter() {
-    fprintf(outputFile, "\n\tpublic static void main(String[] args) {\n");
+    fprintf(outputFile, "\n\t@SuppressWarnings({\"unchecked\", \"deprecation\"})\n");
+    fprintf(outputFile, "\tpublic static void main(String[] args) {\n");
     for (int i = 0; i < initFuncCounter; i++) {
         fprintf(outputFile, "\t\t__golite__init_%d();\n", i);
     }

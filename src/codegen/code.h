@@ -3,8 +3,11 @@
 
 #include "../ast/tree.h"
 #include "../ast/stmt.h"
+#include <stdio.h>
 // #include "../typecheck/symbol.h"
 // #include "../pretty.h"
+
+FILE *outputFile;
 
 void generatePROG(PROG *root, char *filename);
 void generateTOPLEVELDECL(TOPLEVELDECL *tld);

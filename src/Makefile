@@ -2,8 +2,8 @@ CC = gcc
 
 CFLAGS = -Wall
 
-main: parser.tab.o lex.yy.o main.o ast/tree.o ast/stmt.o error.o weed.o pretty.o typecheck/symbol.o typecheck/typecheck.o codegen/code.o
-	$(CC) lex.yy.o parser.tab.o ast/tree.o ast/stmt.o error.o weed.o pretty.o typecheck/symbol.o typecheck/typecheck.o codegen/code.o main.o -o golite -lfl
+main: parser.tab.o lex.yy.o main.o ast/tree.o ast/stmt.o error.o weed.o pretty.o typecheck/symbol.o typecheck/typecheck.o codegen/code.o codegen/codestmt.o
+	$(CC) lex.yy.o parser.tab.o ast/tree.o ast/stmt.o error.o weed.o pretty.o typecheck/symbol.o typecheck/typecheck.o codegen/code.o codegen/codestmt.o main.o -o golite -lfl
 
 parser.tab.c parser.tab.h: golite.y
 	bison -v --yacc --defines=parser.tab.c --output=parser.tab.h golite.y

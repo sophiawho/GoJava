@@ -1,9 +1,9 @@
-// ~true
-// ~false
-// 0
-// 1
-// 0
-// 0
+//~true
+//~false
+//0
+//1
+//0
+//0
 
 package test
 
