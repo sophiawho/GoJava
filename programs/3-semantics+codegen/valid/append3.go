@@ -1,9 +1,10 @@
-//~!
+//!
 
 package test
 
 func main() {
-	var a, b []int
+	var a []int
+	var b []int
 	a = append(a, 0)
 	b = a
 

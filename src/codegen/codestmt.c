@@ -19,21 +19,33 @@ void traverseExpForPrint(EXP *e, bool newLine, bool last) {
     } 
 }
 
+void generateAssignStmt(AssignKind kind, EXP *lhs, EXP *rhs) {
+    if (kind == k_stmtAssign) {
+        generateINDENT(indent);
+        if (lhs->kind == k_expKindArrayAccess && lhs->val.arrayAccess.arrayReference->type->kind == k_typeSlice) {
+            char *arrayIdent = lhs->val.arrayAccess.arrayReference->val.identExp.ident;
+            EXP *indexExp = lhs->val.arrayAccess.indexExp;  
+            fprintf(outputFile, "%s.put(", prepend(arrayIdent));
+            generateEXP(indexExp, false);
+            fprintf(outputFile, ", ");
+            generateEXP(rhs, false);
+            fprintf(outputFile, ")");
+        } else {
+            // If regular assign stmt: [indendation] lhs = rhs
+            generateEXP(lhs, false);
+            fprintf(outputFile, " = ");
+            generateEXP(rhs, false);
+        }
+        fprintf(outputFile, ";\n");
+    }
+}
+
 void generateSTMT(STMT *s) {
     if (s == NULL) return;
     generateSTMT(s->next);
     switch (s->kind) {
         case k_stmtKindAssign:
-            if (s->val.assignStmt.kind == k_stmtAssign) {
-                // If regular assign stmt: [indendation] lhs = rhs
-                EXP *lhs = s->val.assignStmt.lhs;
-                EXP *rhs = s->val.assignStmt.rhs;
-                generateINDENT(indent);
-                generateEXP(lhs, false);
-                fprintf(outputFile, " = ");
-                generateEXP(rhs, false);
-                fprintf(outputFile, ";\n");
-            }
+            generateAssignStmt(s->val.assignStmt.kind, s->val.assignStmt.lhs, s->val.assignStmt.rhs);
             break;
         case k_stmtKindVarDecl:
             generateVarDecl(s->val.varDecl);
@@ -61,7 +73,12 @@ void generateVarDecl(VARSPEC *vs) {
             generateINDENT(indent); fprintf(outputFile, "%s[] %s = new %s[%d]", type, prepend(vs->ident->ident), type, vs->type->val.arrayType.size);
         } else if (vs->type->kind == k_typeSlice) {
             char *type = getStringFromType(vs->type->val.sliceType.type);
-            generateINDENT(indent); fprintf(outputFile, "Slice<%s> %s = new Slice<>()", type, prepend(vs->ident->ident));
+            generateINDENT(indent); fprintf(outputFile, "Slice<%s> %s = ", type, prepend(vs->ident->ident));
+            if (vs->rhs != NULL && vs->rhs->kind == k_expKindAppend) {
+                generateEXP(vs->rhs, false);
+            } else {
+                fprintf(outputFile, " new Slice<>()");
+            }
         } else {
             char *type = getStringFromType(vs->type);
             generateINDENT(indent); fprintf(outputFile, "%s %s", type, prepend(vs->ident->ident));

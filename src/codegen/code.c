@@ -88,7 +88,7 @@ void generateHeader(char *className) {
         printf("Helper class Slice.java not in project.\n");
         exit(1);
     }
-    fprintf(outputFile, "public class %s {\n", className);
+    fprintf(outputFile, "\n\npublic class %s {\n", className);
 }
 
 void generateFooter() {
