@@ -7,7 +7,7 @@
 
 package test
 
-func init() {
+func main() {
 	var a, b [2] int 
 	println(a==b)
 	b[1] = 1

@@ -19,10 +19,34 @@ void traverseExpForPrint(EXP *e, bool newLine, bool last) {
     } 
 }
 
+void generateAssignStmt(AssignKind kind, EXP *lhs, EXP *rhs) {
+    if (kind == k_stmtAssign) {
+        generateINDENT(indent);
+        if (lhs->kind == k_expKindArrayAccess && lhs->val.arrayAccess.arrayReference->type->kind == k_typeSlice) {
+            char *arrayIdent = lhs->val.arrayAccess.arrayReference->val.identExp.ident;
+            EXP *indexExp = lhs->val.arrayAccess.indexExp;  
+            fprintf(outputFile, "%s.put(", prepend(arrayIdent));
+            generateEXP(indexExp, false);
+            fprintf(outputFile, ", ");
+            generateEXP(rhs, false);
+            fprintf(outputFile, ")");
+        } else {
+            // If regular assign stmt: [indendation] lhs = rhs
+            generateEXP(lhs, false);
+            fprintf(outputFile, " = ");
+            generateEXP(rhs, false);
+        }
+        fprintf(outputFile, ";\n");
+    }
+}
+
 void generateSTMT(STMT *s) {
     if (s == NULL) return;
     generateSTMT(s->next);
     switch (s->kind) {
+        case k_stmtKindAssign:
+            generateAssignStmt(s->val.assignStmt.kind, s->val.assignStmt.lhs, s->val.assignStmt.rhs);
+            break;
         case k_stmtKindVarDecl:
             generateVarDecl(s->val.varDecl);
             break;
@@ -43,12 +67,28 @@ void generateSTMT(STMT *s) {
 void generateVarDecl(VARSPEC *vs) {
     if (vs == NULL) return;
     generateVarDecl(vs->next);
-    char *type = getStringFromType(vs->type);
-    generateINDENT(indent); fprintf(outputFile, "%s %s", type, prepend(vs->ident->ident));
-    if (vs->rhs != NULL) {
-        fprintf(outputFile, " = new %s(", type);
-        generateEXP(vs->rhs, false);
-        fprintf(outputFile, ")");
+    if (vs->type != NULL) {
+        if (vs->type->kind == k_typeArray) {
+            char *type = getStringFromType(vs->type->val.arrayType.type, true);
+            generateINDENT(indent); fprintf(outputFile, "%s[] %s = new %s[%d]", type, prepend(vs->ident->ident), type, vs->type->val.arrayType.size);
+        } else if (vs->type->kind == k_typeSlice) {
+            char *type = getStringFromType(vs->type->val.sliceType.type, false);
+            generateINDENT(indent); fprintf(outputFile, "Slice<%s> %s = ", type, prepend(vs->ident->ident));
+            if (vs->rhs != NULL && vs->rhs->kind == k_expKindAppend) {
+                generateEXP(vs->rhs, false);
+            } else {
+                fprintf(outputFile, " new Slice<>()");
+            }
+        } else {
+            char *type = getStringFromType(vs->type, true);
+            generateINDENT(indent); fprintf(outputFile, "%s %s", type, prepend(vs->ident->ident));
+            if (vs->rhs != NULL) {
+                fprintf(outputFile, " = ");
+                generateEXP(vs->rhs, false);
+            }
+        }
+    } else {
+        generateINDENT(indent); fprintf(outputFile, "Type has not been specified. This is not yet supported by codegen.");
     }
     fprintf(outputFile, ";\n");
     // TODO: multiple identifiers and expressions
@@ -206,6 +246,7 @@ void generateEXP(EXP *e, bool recurse)
             fprintf(outputFile, "%s", "^");
             generateEXP(e->val.unary.rhs, recurse);
             break;
+        
         case k_expKindFuncCall:
             generateEXP(e->val.funcCall.primaryExpr, recurse);
             fprintf(outputFile, "%s", "(");
@@ -215,11 +256,19 @@ void generateEXP(EXP *e, bool recurse)
                 if (f_e->next != NULL) fprintf(outputFile, "%s", ",");
             }
             break;
-        case k_expKindArrayAccess:
-            generateEXP(e->val.arrayAccess.arrayReference, recurse);
-            fprintf(outputFile, "%s", "[");
-            generateEXP(e->val.arrayAccess.indexExp, recurse);
-            fprintf(outputFile, "%s", "]");
+        
+        case k_expKindArrayAccess: ;
+            char *arrayIdent = e->val.arrayAccess.arrayReference->val.identExp.ident;
+            EXP *indexExp = e->val.arrayAccess.indexExp;
+            if (e->val.arrayAccess.arrayReference->type->kind == k_typeSlice) {
+                fprintf(outputFile, "%s.get(", prepend(arrayIdent));
+                generateEXP(indexExp, false);
+                fprintf(outputFile, ")");
+            } else if (e->val.arrayAccess.arrayReference->type->kind == k_typeArray) {
+                fprintf(outputFile, "%s[", prepend(arrayIdent));
+                generateEXP(indexExp, false);
+                fprintf(outputFile, "]");
+            }
             break;
         case k_expKindFieldAccess:
             generateEXP(e->val.fieldAccess.object, recurse);
@@ -227,24 +276,29 @@ void generateEXP(EXP *e, bool recurse)
             break;
 
         // Builtins
-        case k_expKindAppend:
-            fprintf(outputFile, "%s", "ArrayUtils.add(");
-            generateEXP(e->val.append.slice, recurse);
-            fprintf(outputFile, "%s", ", ");
-            generateEXP(e->val.append.addend, recurse);
-            fprintf(outputFile, "%s", ")");
+        case k_expKindAppend: ;
+            char *sliceIdent = e->val.append.slice->val.identExp.ident;
+            EXP *addend = e->val.append.addend;
+            fprintf(outputFile, "%s.append(", prepend(sliceIdent));
+            generateEXP(addend, false);
+            fprintf(outputFile, ")");
             break;
-        case k_expKindLen:
-            // TODO create builtin length function that supports: array, slice, and string
-            fprintf(outputFile, "%s", "JAVA_LENGTH(");
-            generateEXP(e->val.lenExp, recurse);
-            fprintf(outputFile, "%s", ")");
+        case k_expKindLen: ;
+            char *lenIdent = e->val.lenExp->val.identExp.ident;
+            if (e->val.lenExp->type->kind == k_typeSlice) {
+                fprintf(outputFile, "%s.len", prepend(lenIdent));
+            } else if (e->val.lenExp->type->kind == k_typeArray) {
+                // TODO ARRAY
+                fprintf(outputFile, "%s.length", prepend(lenIdent));
+            }
             break;
-        case k_expKindCap:
-            // TODO create builtin cap function
-            fprintf(outputFile, "JAVA_CAP");
-            generateEXP(e->val.capExp, recurse);
-            fprintf(outputFile, "%s", ")");
+        case k_expKindCap: ;
+            char *capIdent = e->val.capExp->val.identExp.ident;
+            if (e->val.capExp->type->kind == k_typeSlice) {
+                fprintf(outputFile, "%s.cap", prepend(capIdent));
+            } else if (e->val.capExp->type->kind == k_typeArray) {
+                fprintf(outputFile, "%s.length", prepend(capIdent));
+            }
             break;
 
         // Parenthesized expressions
@@ -253,29 +307,31 @@ void generateEXP(EXP *e, bool recurse)
             generateEXP(e->val.unary.rhs, recurse);
             fprintf(outputFile, ")");
             break;
+        
+        // Type Cast
         case k_expKindCast:
-            fprintf(outputFile, "%s(", getStringFromType(e->val.cast.type));
+            fprintf(outputFile, "%s(", getStringFromType(e->val.cast.type, true));
             generateEXP(e->val.cast.exp, recurse);
             fprintf(outputFile, "%s", ")");
             break;
-        
+
         default:
             break;
     }
 }
 
-char *getStringFromType(TYPE *t){
+char *getStringFromType(TYPE *t, bool isPrimitive){
     if (t != NULL) {
         switch(t->kind) {
             case k_typeInt:
             case k_typeRune:
-                return "Integer";
+                return isPrimitive ? "int" : "Integer";
             case k_typeBool:
-                return "Boolean";
+                return isPrimitive ? "bool" : "Boolean";
             case k_typeString:
                 return "String";
             case k_typeFloat:
-                return "Double";
+                return isPrimitive ? "double" : "Double";
             default:
                 return "Currently unsupported in `getStringFromType` func.";
         }
