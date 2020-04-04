@@ -34,7 +34,7 @@ class Slice<T> {
     }
 
     public T get(int index) throws ArrayIndexOutOfBoundsException {
-        if (index < 0 || |index >= len || index >= cap) {
+        if (index < 0 || index >= len || index >= cap) {
             throw new ArrayIndexOutOfBoundsException("Index must be between 0 and the length/capacity of the slice.");
         }
         return data.get(index);
