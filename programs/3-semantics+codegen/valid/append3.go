@@ -1,9 +1,10 @@
-//~!
+//!
 
 package test
 
-func init() {
-	var a, b []int
+func main() {
+	var a []int
+	var b []int
 	a = append(a, 0)
 	b = a
 

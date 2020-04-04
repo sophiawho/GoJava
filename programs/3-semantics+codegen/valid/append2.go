@@ -2,11 +2,14 @@
 //~Cap: 2 , len: 1
 //~Cap: 2 , len: 2
 //~Cap: 2 , len: 1
+//~0 1 0
+//~
 
 package test
 
-func init() {
-	var a, b []int
+func main() {
+	var a []int
+	var b []int
 	a = append(a, 0)
 	b = a
 
@@ -17,4 +20,6 @@ func init() {
 
 	println("Cap:", cap(a), ", len:", len(a))
 	println("Cap:", cap(b), ", len:", len(b))
+
+	println(a[0], a[1], b[0])
 }
