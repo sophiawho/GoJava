@@ -2,7 +2,7 @@
 
 package test
 
-func init() {
+func main() {
 	var a, b []int
 	a = append(a, 0)
 	b = a

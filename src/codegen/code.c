@@ -76,6 +76,18 @@ void generateFUNC(FUNC *f) {
 }
 
 void generateHeader(char *className) {
+    // Copy over helper Slice.java
+    FILE *sliceClass = fopen("helpers/Slice.java", "r");
+    if (sliceClass) {
+        char *line = (char*)malloc(1024);
+        while (fgets(line, sizeof(line), sliceClass)) {
+            fputs(line, outputFile);
+        }
+        fclose(sliceClass);
+    } else {
+        printf("Helper class Slice.java not in project.\n");
+        exit(1);
+    }
     fprintf(outputFile, "public class %s {\n", className);
 }
 
