@@ -14,6 +14,7 @@ void generateINDENT(int indent);
 void generatePROG(PROG *root, char *filename);
 void generateTOPLEVELDECL(TOPLEVELDECL *tld);
 void generateFUNC(FUNC *f);
+void generateImports();
 void generateHeader(char *classname);
 void generateFooter();
 char *prepend(char *str);

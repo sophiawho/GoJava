@@ -58,14 +58,17 @@ void generateVarDecl(VARSPEC *vs) {
 }
 
 // If recurse = false, only print out current expression and ignore the rest of the expression list
-void generateEXP(EXP *e, bool recurse) {
+void generateEXP(EXP *e, bool recurse)
+{
     if (e == NULL) return;
     if (recurse) generateEXP(e->next, recurse);
+
     switch (e->kind)
     {
         case k_expKindIdentifier:
             fprintf(outputFile, "%s", prepend(e->val.identExp.ident));
             break;
+        // Literals
         case k_expKindIntLiteral:
             fprintf(outputFile, "%d", e->val.intLiteral);
             break;
@@ -85,6 +88,177 @@ void generateEXP(EXP *e, bool recurse) {
             formatted[strlen(formatted)-1] = 0;
             fprintf(outputFile, "\"%s\"", formatted);
             break;
+
+        // Binary operators
+        case k_expKindAnd:
+            generateEXP(e->val.binary.lhs, recurse);
+            fprintf(outputFile, "%s", "&&");
+            generateEXP(e->val.binary.rhs, recurse);
+            break;
+        case k_expKindOr:
+            generateEXP(e->val.binary.lhs, recurse);
+            fprintf(outputFile, "%s", "||");
+            generateEXP(e->val.binary.rhs, recurse);
+            break;
+        // Relational binary operators
+        case k_expKindEq:
+            generateEXP(e->val.binary.lhs, recurse);
+            fprintf(outputFile, "%s", "==");
+            generateEXP(e->val.binary.rhs, recurse);
+            break;
+        case k_expKindNotEq:
+            generateEXP(e->val.binary.lhs, recurse);
+            fprintf(outputFile, "%s", "!=");
+            generateEXP(e->val.binary.rhs, recurse);
+            break;
+        case k_expKindLess:
+            generateEXP(e->val.binary.lhs, recurse);
+            fprintf(outputFile, "%s", "<");
+            generateEXP(e->val.binary.rhs, recurse);
+            break;
+        case k_expKindLessEq:
+            generateEXP(e->val.binary.lhs, recurse);
+            fprintf(outputFile, "%s", "<=");
+            generateEXP(e->val.binary.rhs, recurse);
+            break;
+        case k_expKindGrtr:
+            generateEXP(e->val.binary.lhs, recurse);
+            fprintf(outputFile, "%s", ">");
+            generateEXP(e->val.binary.rhs, recurse);
+            break;
+        case k_expKindGrtrEq:
+            generateEXP(e->val.binary.lhs, recurse);
+            fprintf(outputFile, "%s", ">=");
+            generateEXP(e->val.binary.rhs, recurse);
+            break;
+        // Additive binary operators
+        case k_expKindAdd:
+            generateEXP(e->val.binary.lhs, recurse);
+            fprintf(outputFile, "%s", "+");
+            generateEXP(e->val.binary.rhs, recurse);
+            break;
+        case k_expKindMinus:
+            generateEXP(e->val.binary.lhs, recurse);
+            fprintf(outputFile, "%s", "-");
+            generateEXP(e->val.binary.rhs, recurse);
+            break;
+        case k_expKindBitOr:
+            generateEXP(e->val.binary.lhs, recurse);
+            fprintf(outputFile, "%s", "|");
+            generateEXP(e->val.binary.rhs, recurse);
+            break;
+        case k_expKindBitXOR:
+            generateEXP(e->val.binary.lhs, recurse);
+            fprintf(outputFile, "%s", "^");
+            generateEXP(e->val.binary.rhs, recurse);
+            break;
+        // Multiplicative binary operators
+        case k_expKindMult:
+            generateEXP(e->val.binary.lhs, recurse);
+            fprintf(outputFile, "%s", "*");
+            generateEXP(e->val.binary.rhs, recurse);
+            break;
+        case k_expKindDiv:
+            generateEXP(e->val.binary.lhs, recurse);
+            fprintf(outputFile, "%s", "/");
+            generateEXP(e->val.binary.rhs, recurse);
+            break;
+        case k_expKindMod:
+            generateEXP(e->val.binary.lhs, recurse);
+            fprintf(outputFile, "%s", "\%");
+            generateEXP(e->val.binary.rhs, recurse);
+            break;
+        case k_expKindLeftShift:
+            generateEXP(e->val.binary.lhs, recurse);
+            fprintf(outputFile, "%s", "<<");
+            generateEXP(e->val.binary.rhs, recurse);
+            break;
+        case k_expKindRightShift:
+            generateEXP(e->val.binary.lhs, recurse);
+            fprintf(outputFile, "%s", ">>");
+            generateEXP(e->val.binary.rhs, recurse);
+            break;
+        case k_expKindBitAnd:
+            generateEXP(e->val.binary.lhs, recurse);
+            fprintf(outputFile, "%s", "&");
+            generateEXP(e->val.binary.rhs, recurse);
+            break;
+        case k_expKindBitClear:
+            generateEXP(e->val.binary.lhs, recurse);
+            fprintf(outputFile, "%s", "&^");
+            generateEXP(e->val.binary.rhs, recurse);
+            break;
+            
+        // Golite supports four unary operators
+        case k_expKindUPlus:
+            // fprintf(outputFile, "%s", "+"); // TODO is this needed?
+            generateEXP(e->val.unary.rhs, recurse);
+            break;
+        case k_expKindUMinus:
+            fprintf(outputFile, "%s", "-");
+            generateEXP(e->val.unary.rhs, recurse);
+            break;
+        case k_expKindBang:
+            fprintf(outputFile, "%s", "!");
+            generateEXP(e->val.unary.rhs, recurse);
+            break;
+        case k_expKindUBitXOR:
+            fprintf(outputFile, "%s", "^");
+            generateEXP(e->val.unary.rhs, recurse);
+            break;
+        case k_expKindFuncCall:
+            generateEXP(e->val.funcCall.primaryExpr, recurse);
+            fprintf(outputFile, "%s", "(");
+            for (EXP *f_e = e->val.funcCall.expList; f_e; f_e = f_e->next)
+            {
+                generateEXP(f_e, recurse);
+                if (f_e->next != NULL) fprintf(outputFile, "%s", ",");
+            }
+            break;
+        case k_expKindArrayAccess:
+            generateEXP(e->val.arrayAccess.arrayReference, recurse);
+            fprintf(outputFile, "%s", "[");
+            generateEXP(e->val.arrayAccess.indexExp, recurse);
+            fprintf(outputFile, "%s", "]");
+            break;
+        case k_expKindFieldAccess:
+            generateEXP(e->val.fieldAccess.object, recurse);
+            fprintf(outputFile, ".%s", e->val.fieldAccess.field);
+            break;
+
+        // Builtins
+        case k_expKindAppend:
+            fprintf(outputFile, "%s", "ArrayUtils.add(");
+            generateEXP(e->val.append.slice, recurse);
+            fprintf(outputFile, "%s", ", ");
+            generateEXP(e->val.append.addend, recurse);
+            fprintf(outputFile, "%s", ")");
+            break;
+        case k_expKindLen:
+            // TODO create builtin length function that supports: array, slice, and string
+            fprintf(outputFile, "%s", "JAVA_LENGTH(");
+            generateEXP(e->val.lenExp, recurse);
+            fprintf(outputFile, "%s", ")");
+            break;
+        case k_expKindCap:
+            // TODO create builtin cap function
+            fprintf(outputFile, "JAVA_CAP");
+            generateEXP(e->val.capExp, recurse);
+            fprintf(outputFile, "%s", ")");
+            break;
+
+        // Parenthesized expressions
+        case k_expKindUParenthesized:
+            fprintf(outputFile, "(");
+            generateEXP(e->val.unary.rhs, recurse);
+            fprintf(outputFile, ")");
+            break;
+        case k_expKindCast:
+            fprintf(outputFile, "%s(", getStringFromType(e->val.cast.type));
+            generateEXP(e->val.cast.exp, recurse);
+            fprintf(outputFile, "%s", ")");
+            break;
+        
         default:
             break;
     }

@@ -32,6 +32,7 @@ void generatePROG(PROG *root, char *filename) {
 
     char *basec = strdup(filename);
     char *className = basename(basec);
+    void generateImports();
     generateHeader(className);
     generateTOPLEVELDECL(root->rootTopLevelDecl);
     // Use `prepend` to prepend __golite__ to all function and identifier names, ie: main() becomes __golite__main()
@@ -75,6 +76,11 @@ void generateFUNC(FUNC *f) {
     fprintf(outputFile, "\t}\n");
 }
 
+void generateImports()
+{
+    fprintf(outputFile, "org.apache.commons.lang3.ArrayUtils;\n");
+}
+
 void generateHeader(char *className) {
     fprintf(outputFile, "public class %s {\n", className);
 }
@@ -92,7 +98,7 @@ void generateFooter() {
 
 // Helper function to open file pointer for writing generated Java code
 void openOutputFile(char *filename) {
-    char *outputFileName = malloc((strlen(filename)+5)*sizeof(char));
+    char *outputFileName = malloc((strlen(filename)+6) * sizeof(char));
     for (int i=0; filename[i]; i++) {
         outputFileName[i] = filename[i];
     }
