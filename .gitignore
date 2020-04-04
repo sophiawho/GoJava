@@ -15,5 +15,5 @@ programs/3-semantics+codegen/valid/*.class
 programs/3-semantics+codegen/valid/*.java
 programs/3-benchmarks+codegen/valid/*.class
 programs/3-benchmarks+codegen/valid/*.java
-*.java
+pending-programs/*.java
 *.class
