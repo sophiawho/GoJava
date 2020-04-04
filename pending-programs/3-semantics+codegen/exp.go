@@ -5,10 +5,6 @@
 
 package main
 
-import (
-	"fmt"
-)
-
 func main () {
 	var a string = "apple"
 	var b string = "Apple"
