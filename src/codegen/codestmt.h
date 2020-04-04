@@ -8,6 +8,6 @@
 void generateSTMT(STMT *s);
 void generateVarDecl(VARSPEC *vs);
 void generateEXP(EXP *e, bool recurse);
-char *getStringFromType(TYPE *t);
+char *getStringFromType(TYPE *t, bool isPrimitive);
 
 #endif

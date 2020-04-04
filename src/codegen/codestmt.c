@@ -69,10 +69,10 @@ void generateVarDecl(VARSPEC *vs) {
     generateVarDecl(vs->next);
     if (vs->type != NULL) {
         if (vs->type->kind == k_typeArray) {
-            char *type = getStringFromType(vs->type->val.arrayType.type);
+            char *type = getStringFromType(vs->type->val.arrayType.type, true);
             generateINDENT(indent); fprintf(outputFile, "%s[] %s = new %s[%d]", type, prepend(vs->ident->ident), type, vs->type->val.arrayType.size);
         } else if (vs->type->kind == k_typeSlice) {
-            char *type = getStringFromType(vs->type->val.sliceType.type);
+            char *type = getStringFromType(vs->type->val.sliceType.type, false);
             generateINDENT(indent); fprintf(outputFile, "Slice<%s> %s = ", type, prepend(vs->ident->ident));
             if (vs->rhs != NULL && vs->rhs->kind == k_expKindAppend) {
                 generateEXP(vs->rhs, false);
@@ -80,12 +80,11 @@ void generateVarDecl(VARSPEC *vs) {
                 fprintf(outputFile, " new Slice<>()");
             }
         } else {
-            char *type = getStringFromType(vs->type);
+            char *type = getStringFromType(vs->type, true);
             generateINDENT(indent); fprintf(outputFile, "%s %s", type, prepend(vs->ident->ident));
             if (vs->rhs != NULL) {
-                fprintf(outputFile, " = new %s(", type);
+                fprintf(outputFile, " = ");
                 generateEXP(vs->rhs, false);
-                fprintf(outputFile, ")");
             }
         }
     } else {
@@ -167,18 +166,18 @@ void generateEXP(EXP *e, bool recurse) {
     }
 }
 
-char *getStringFromType(TYPE *t){
+char *getStringFromType(TYPE *t, bool isPrimitive){
     if (t != NULL) {
         switch(t->kind) {
             case k_typeInt:
             case k_typeRune:
-                return "Integer";
+                return isPrimitive ? "int" : "Integer";
             case k_typeBool:
-                return "Boolean";
+                return isPrimitive ? "bool" : "Boolean";
             case k_typeString:
                 return "String";
             case k_typeFloat:
-                return "Double";
+                return isPrimitive ? "double" : "Double";
             default:
                 return "Currently unsupported in `getStringFromType` func.";
         }
