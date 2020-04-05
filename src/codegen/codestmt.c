@@ -57,11 +57,20 @@ void generateSTMT(STMT *s) {
     if (s == NULL) return;
     generateSTMT(s->next);
     switch (s->kind) {
+        case k_stmtKindEmpty:
+            // do nothing, can be removed
+            break;
+        case k_stmtKindExpStmt:
+            generateEXP(s->val.expStmt, true);
+            break;
+        case k_stmtKindIncDec:
+            generateINDENT(indent);
+            generateEXP(s->val.incDecStmt.exp, false);
+            if (s->val.incDecStmt.amount == 1) fprintf(outputFile, "++;\n");
+            else fprintf(outputFile, "--;\n");
+            break;
         case k_stmtKindAssign:
             generateAssignStmt(s->val.assignStmt.kind, s->val.assignStmt.lhs, s->val.assignStmt.rhs);
-            break;
-        case k_stmtKindVarDecl:
-            generateVarDecl(s->val.varDecl);
             break;
         case k_stmtKindPrint: ;
             bool newline = s->val.printStmt.newLine;
@@ -70,6 +79,34 @@ void generateSTMT(STMT *s) {
                 generateINDENT(indent); fprintf(outputFile, "System.out.println();\n");
             }
             break;
+        case k_stmtKindVarDecl:
+            generateVarDecl(s->val.varDecl);
+            break;
+        case k_stmtKindTypeDecl:
+            generateTYPESPEC(s->val.typeDecl);
+            break;
+        case k_stmtKindBlock:
+            generateSTMT(s->val.blockStmt);
+            break;
+        case k_stmtKindIfStmt:
+            // TODO
+            break;
+        case k_stmtKindSwitch:
+            // TODO
+            break;
+        case k_stmtKindFor: 
+            // TODO
+            break;
+        case k_stmtKindBreak:
+            // TODO
+            break;
+        case k_stmtKindContinue:
+            // TODO
+            break;
+        case k_stmtKindReturn:
+            // TODO
+            break;
+
         default:
             break;
     }
@@ -108,6 +145,62 @@ void generateVarDecl(VARSPEC *vs) {
     // TODO: arrays, slices, etc
     // TODO: if outside of a function, must prepend "public static" 
     // TODO: type is optional, right now we assume type is given
+}
+
+void generateTYPESPEC(TYPESPEC *ts)
+{
+    if (ts == NULL) return;
+    generateTYPESPEC(ts->next);
+
+    switch (ts->kind)
+    {
+    case k_typeSpecKindTypeDeclaration:
+        // The only type required to emit is struct types
+        // TODO
+        if (ts->type->kind == k_typeStruct)
+        {
+            generateINDENT(indent);
+            // Structs are implemented as Classes in Java
+            fprintf(outputFile, "class %s {\n", prepend(ts->ident->ident));
+            indent++;
+            
+            generateSTRUCTSPEC(ts->type->val.structType);
+            
+            indent--;
+            generateINDENT(indent);
+            fprintf(outputFile, "}\n");
+        }
+        break;
+    
+    case k_typeSpecKindParameterList:
+        // Need to write as a loop for commas
+        for (IDENT *id = ts->ident; id; id = id->next)
+        {
+            fprintf(outputFile, "%s ", getStringFromType(ts->type, true)); //not sure if is_primitive=True
+            if (id->next != NULL) fprintf(outputFile, "%s, ", id->ident);
+            else fprintf(outputFile, "%s;\n", id->ident);
+        }
+        break;
+    }
+}
+
+// Generate a struct's attribute and type specifiers. This is to be used within the 
+// context of emitting the declaration of a struct type
+void generateSTRUCTSPEC(STRUCTSPEC *ss)
+{
+    if (ss == NULL) return;
+    generateSTRUCTSPEC(ss->next);
+
+    generateINDENT(indent);
+
+    // There is only 1 TYPE per STRUCTSPEC
+    fprintf(outputFile, "%s ", getStringFromType(ss->type, false)); // Cannot be certain it is primitive
+
+    for (IDENT *id = ss->attribute; id; id=id->next)
+    {
+        if (id->next != NULL) fprintf(outputFile, "%s, ", id->ident);
+        else fprintf(outputFile, "%s\n", id->ident);
+    }
 }
 
 // If recurse = false, only print out current expression and ignore the rest of the expression list
@@ -318,6 +411,9 @@ char *getStringFromType(TYPE *t, bool isPrimitive){
                 return "String";
             case k_typeFloat:
                 return isPrimitive ? "double" : "Double";
+            case k_typeStruct:
+                // Structs are implemented as Classes in Java so we need their declared type name
+                return t->typeName;
             default:
                 return "Currently unsupported in `getStringFromType` func.";
         }
