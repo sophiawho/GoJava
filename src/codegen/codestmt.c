@@ -129,7 +129,17 @@ void generateVarDecl(VARSPEC *vs) {
             } else {
                 fprintf(outputFile, " new Slice<>()");
             }
-        } else {
+        } 
+        else if (vs->type->kind == k_typeStruct)
+        {
+            char *type = getStringFromType(vs->type, true);
+            generateINDENT(indent); 
+
+            // Structs are implemented as Classes in Java, so we need to allocate memory with `new` and
+            // construct the variable
+            fprintf(outputFile, "%s %s = new %s()", type, prepend(vs->ident->ident), type);
+        }
+        else {
             char *type = getStringFromType(vs->type, true);
             generateINDENT(indent); fprintf(outputFile, "%s %s", type, prepend(vs->ident->ident));
             if (vs->rhs != NULL) {
@@ -199,7 +209,7 @@ void generateSTRUCTSPEC(STRUCTSPEC *ss)
     for (IDENT *id = ss->attribute; id; id=id->next)
     {
         if (id->next != NULL) fprintf(outputFile, "%s, ", id->ident);
-        else fprintf(outputFile, "%s\n", id->ident);
+        else fprintf(outputFile, "%s;\n", id->ident);
     }
 }
 
@@ -429,7 +439,7 @@ char *getStringFromType(TYPE *t, bool isPrimitive){
                 return isPrimitive ? "double" : "Double";
             case k_typeStruct:
                 // Structs are implemented as Classes in Java so we need their declared type name
-                return t->typeName;
+                return prepend(t->typeName);
             default:
                 return "Currently unsupported in `getStringFromType` func.";
         }
