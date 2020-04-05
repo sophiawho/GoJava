@@ -114,6 +114,8 @@ void generateHeader(char *className) {
     }
 
     fprintf(outputFile, "\n\npublic class %s {\n", className);
+    generateGlobalVariables();
+}
 
 // Generate any necessary Java package imports
 void generateImports()
@@ -123,14 +125,30 @@ void generateImports()
     fprintf(outputFile, "import java.text.DecimalFormatSymbols;\n");
     fprintf(outputFile, "import java.util.Locale;\n");
 }
+
+// Generate any necessary variables to be used within the class
+void generateGlobalVariables()
+{
+    // Generate variables for `true` and `false` boolean literals within the global 
+    // scope. GoLite doesn't reserve boolean literals as keywords, so they can be 
+    // changed by the programmer, hence why we need to generate variables for the 
+    // literals in Java. Use these variables anytime a boolean literal is emitted
+    indent++;
+    generateINDENT(indent);
+    fprintf(outputFile, "static boolean %s = true;\n", prepend("true"));
+    generateINDENT(indent);
+    fprintf(outputFile, "static boolean %s = false;\n", prepend("false"));
+    indent--;
 }
 
 void generateFooter() {
     fprintf(outputFile, "\n\t@SuppressWarnings({\"unchecked\", \"deprecation\"})\n");
     fprintf(outputFile, "\tpublic static void main(String[] args) {\n");
+
     for (int i = 0; i < initFuncCounter; i++) {
         fprintf(outputFile, "\t\t__golite__init_%d();\n", i);
     }
+
     fprintf(outputFile, "\t\t__golite__main();\n");
     fprintf(outputFile, "\t}\n");
     fprintf(outputFile, "}\n");
