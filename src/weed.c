@@ -78,7 +78,7 @@ bool isTerminatingStmt(STMT *s)
         if (s->kind == k_stmtKindBlock) return isTerminatingStmt(s->val.blockStmt);
         if (s->kind == k_stmtKindReturn) return true;
         if (s->kind == k_stmtKindIfStmt && s->val.ifStmt.falseBody != NULL) {
-            if (s->val.ifStmt.trueBody && s->val.ifStmt.falseBody) {
+            if (isTerminatingStmt(s->val.ifStmt.trueBody) && isTerminatingStmt(s->val.ifStmt.falseBody)) {	
                 return true;
             }
         }
