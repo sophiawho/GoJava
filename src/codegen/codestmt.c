@@ -108,6 +108,7 @@ void generateEXP(EXP *e, bool recurse)
         case k_expKindIdentifier:
             fprintf(outputFile, "%s", prepend(e->val.identExp.ident));
             break;
+        
         // Literals
         case k_expKindIntLiteral:
             fprintf(outputFile, "%d", e->val.intLiteral);
@@ -225,7 +226,8 @@ void generateEXP(EXP *e, bool recurse)
             break;
         case k_expKindBitClear:
             generateEXP(e->val.binary.lhs, recurse);
-            fprintf(outputFile, "%s", "&^");
+            // Bit clear is equivalent to `AND NOT` (Java: & ~)
+            fprintf(outputFile, "%s", "& ~");
             generateEXP(e->val.binary.rhs, recurse);
             break;
             
@@ -252,7 +254,7 @@ void generateEXP(EXP *e, bool recurse)
             fprintf(outputFile, "%s", "(");
             for (EXP *f_e = e->val.funcCall.expList; f_e; f_e = f_e->next)
             {
-                generateEXP(f_e, recurse);
+                generateEXP(f_e, false);
                 if (f_e->next != NULL) fprintf(outputFile, "%s", ",");
             }
             break;
@@ -312,7 +314,7 @@ void generateEXP(EXP *e, bool recurse)
         case k_expKindCast:
             fprintf(outputFile, "%s(", getStringFromType(e->val.cast.type, true));
             generateEXP(e->val.cast.exp, recurse);
-            fprintf(outputFile, "%s", ")");
+            fprintf(outputFile, ")");
             break;
 
         default:
