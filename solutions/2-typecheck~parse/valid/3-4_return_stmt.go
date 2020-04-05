@@ -33,6 +33,12 @@ func ret_loop_inf() int {
 	}
 }
 
+func block() int {
+	{
+		return 0
+	}
+}
+
 func ret_if() int {
 	if true {
 		return 0
@@ -43,6 +49,7 @@ func ret_if() int {
 	}
 }
 
+// Error: Function does not have a terminating statement
 func ret_switch() int {
 	switch {
 		case true:
