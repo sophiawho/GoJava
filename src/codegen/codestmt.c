@@ -61,7 +61,9 @@ void generateSTMT(STMT *s) {
             // do nothing, can be removed
             break;
         case k_stmtKindExpStmt:
+            generateINDENT(indent);
             generateEXP(s->val.expStmt, true);
+            fprintf(outputFile, ";\n");
             break;
         case k_stmtKindIncDec:
             generateINDENT(indent);
@@ -104,7 +106,13 @@ void generateSTMT(STMT *s) {
             // TODO
             break;
         case k_stmtKindReturn:
-            // TODO
+            if (s->val.returnExp != NULL)
+            {
+                generateINDENT(indent);
+                fprintf(outputFile, "return ");
+                generateEXP(s->val.returnExp, false);
+                fprintf(outputFile, ";\n");
+            }
             break;
 
         default:
@@ -347,12 +355,13 @@ void generateEXP(EXP *e, bool recurse)
         
         case k_expKindFuncCall:
             generateEXP(e->val.funcCall.primaryExpr, recurse);
-            fprintf(outputFile, "%s", "(");
+            fprintf(outputFile, "(");
             for (EXP *f_e = e->val.funcCall.expList; f_e; f_e = f_e->next)
             {
                 generateEXP(f_e, false);
-                if (f_e->next != NULL) fprintf(outputFile, "%s", ",");
+                if (f_e->next != NULL) fprintf(outputFile, ", ");
             }
+            fprintf(outputFile, ")");
             break;
         
         case k_expKindArrayAccess: ;
