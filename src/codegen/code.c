@@ -124,6 +124,9 @@ void generateImports()
     fprintf(outputFile, "import java.text.DecimalFormat;\n");
     fprintf(outputFile, "import java.text.DecimalFormatSymbols;\n");
     fprintf(outputFile, "import java.util.Locale;\n");
+
+    // For array comparisons
+    fprintf(outputFile, "import java.util.Arrays;\n");
 }
 
 // Generate any necessary variables to be used within the class

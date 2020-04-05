@@ -245,10 +245,26 @@ void generateEXP(EXP *e, bool recurse)
             break;
         // Relational binary operators
         case k_expKindEq:
-            generateEXP_binary(e, recurse, "==");
+            if (e->val.binary.lhs->type->kind == k_typeArray && e->val.binary.rhs->type->kind == k_typeArray)
+            {
+                fprintf(outputFile, "Arrays.equals(");
+                generateEXP(e->val.binary.lhs, recurse);
+                fprintf(outputFile, ", ");
+                generateEXP(e->val.binary.rhs, recurse);
+                fprintf(outputFile, ")");
+            }
+            else generateEXP_binary(e, recurse, "==");
             break;
         case k_expKindNotEq:
-            generateEXP_binary(e, recurse, "!=");
+            if (e->val.binary.lhs->type->kind == k_typeArray && e->val.binary.rhs->type->kind == k_typeArray)
+            {
+                fprintf(outputFile, "!(Arrays.equals(");
+                generateEXP(e->val.binary.lhs, recurse);
+                fprintf(outputFile, ", ");
+                generateEXP(e->val.binary.rhs, recurse);
+                fprintf(outputFile, "))");
+            }
+            else generateEXP_binary(e, recurse, "!=");
             break;
         case k_expKindLess:
             generateEXP_binary(e, recurse, "<");
