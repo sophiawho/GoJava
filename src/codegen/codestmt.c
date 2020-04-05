@@ -340,7 +340,8 @@ void generateEXP(EXP *e, bool recurse)
             generateEXP(e->val.unary.rhs, recurse);
             break;
         case k_expKindUBitXOR:
-            fprintf(outputFile, "%s", "^");
+            // Unary Bitwise XOR is equivalent to 2's complement
+            fprintf(outputFile, "%s", "~");
             generateEXP(e->val.unary.rhs, recurse);
             break;
         
