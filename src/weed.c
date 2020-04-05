@@ -75,9 +75,10 @@ bool isTerminatingStmt(STMT *s)
 {
     while(s != NULL) 
     {
+        if (s->kind == k_stmtKindBlock) return isTerminatingStmt(s->val.blockStmt);
         if (s->kind == k_stmtKindReturn) return true;
         if (s->kind == k_stmtKindIfStmt && s->val.ifStmt.falseBody != NULL) {
-            if (isTerminatingStmt(s->val.ifStmt.trueBody) && isTerminatingStmt(s->val.ifStmt.falseBody)) {
+            if (s->val.ifStmt.trueBody && s->val.ifStmt.falseBody) {
                 return true;
             }
         }
@@ -87,6 +88,18 @@ bool isTerminatingStmt(STMT *s)
             } else {
                 throwError("Function does not have a terminating statement [loop cannot break]", s->lineno);
             }
+        }
+        if (s->kind == k_stmtKindSwitch) {
+            bool containsDefault = false;
+            for (EXPRCASECLAUSE *ecc = s->val.switchStmt.caseClauses; ecc; ecc=ecc->next) {
+                if (ecc->kind == k_defaultClause) containsDefault = true;
+                if (containsBreak(ecc->stmtList)) {
+                    throwError("Function does not have a terimnating statement [switch clause cannot break", s->lineno);
+                } else if (!isTerminatingStmt(ecc->stmtList)) {
+                    throwError("Function does not have a terminating function [switch clause statements must each end in a terminating statement", s->lineno);
+                }
+            }
+            if (containsDefault) return true;
         }
         s = s->next;
     }
