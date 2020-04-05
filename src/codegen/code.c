@@ -51,6 +51,11 @@ void generateTOPLEVELDECL(TOPLEVELDECL *tld) {
             generateFUNC(tld->val.funcDecl);
             break;
         case k_topLevelDeclType:
+            // Anything in top level needs to be static
+            fprintf(outputFile, "\tstatic ");
+            indent++;
+            generateTYPESPEC(tld->val.typeDecl);
+            indent--;
             break;
         case k_topLevelDeclVar:
             break;

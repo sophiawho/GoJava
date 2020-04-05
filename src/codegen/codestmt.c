@@ -157,6 +157,7 @@ void generateVarDecl(VARSPEC *vs) {
     // TODO: type is optional, right now we assume type is given
 }
 
+// Generate type declarations (NOTE: only for struct types!) and input parameters
 void generateTYPESPEC(TYPESPEC *ts)
 {
     if (ts == NULL) return;
