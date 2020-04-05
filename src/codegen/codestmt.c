@@ -14,6 +14,8 @@ void traverseExpForPrint(EXP *e, bool newLine, bool last) {
 
     generateINDENT(indent); fprintf(outputFile, "System.out.print(");
 
+    // Format floats in scientific notation:
+    // 6 decimal digits, 3 mantissa digits, positive or negative prefixes for base and mantissa
     if (e->type->kind == k_typeFloat) 
     {
         fprintf(outputFile, "%s(", FLOAT_FORMAT_METHOD_NAME);
@@ -63,6 +65,7 @@ void generateAssignStmt(AssignKind kind, EXP *lhs, EXP *rhs) {
 void generateSTMT(STMT *s) {
     if (s == NULL) return;
     generateSTMT(s->next);
+
     switch (s->kind) {
         case k_stmtKindEmpty:
             // do nothing, can be removed
@@ -259,7 +262,6 @@ void generateEXP(EXP *e, bool recurse)
             fprintf(outputFile, "%d", e->val.intLiteral);
             break;
         case k_expKindFloatLiteral:
-            //  TODO format floats; print(0.12) should output //~+1.200000e-001
             fprintf(outputFile, "%f", e->val.floatLiteral);
             break;
         case k_expKindBoolLiteral:
