@@ -845,10 +845,11 @@ void typeEXP(EXP *e) {
         case k_expKindAppend:
             typeEXP(e->val.append.slice);
             typeEXP(e->val.append.addend);
-            if (!resolvesToSlice(e->val.append.slice->type)) {
+            TYPE *sliceRt = resolveType(e->val.append.slice->type);
+            if (sliceRt->kind != k_typeSlice) {
                 throwError("The first expression in an append call must resolve to a slice type.", e->lineno);
             }
-            if (!isEqualType(e->val.append.slice->type->val.sliceType.type, e->val.append.addend->type)) {
+            if (!isEqualType(sliceRt->val.sliceType.type, e->val.append.addend->type)) {
                 throwError("The expression types in this append call do not match.", e->lineno);
             }
             e->type = e->val.append.slice->type;

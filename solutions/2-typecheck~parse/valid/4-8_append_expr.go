@@ -34,5 +34,6 @@ func main() {
 	var a [5][]int
 
 	s.a = append(s.a, 1)
+	// Error: (line 37) The first expression in an append call must resolve to a slice type. [fail]
 	a[0] = append(a[0], 1)
 }
