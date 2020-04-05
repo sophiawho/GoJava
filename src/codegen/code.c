@@ -32,8 +32,9 @@ void generatePROG(PROG *root, char *filename) {
 
     char *basec = strdup(filename);
     char *className = basename(basec);
-    void generateImports();
+
     generateHeader(className);
+
     generateTOPLEVELDECL(root->rootTopLevelDecl);
     // Use `prepend` to prepend __golite__ to all function and identifier names, ie: main() becomes __golite__main()
     // Special case for init functions: Since there may be multiple, append a unique counter to the function name in lexical order, ie __golite__init_0, __golite__init_1, etc
@@ -76,12 +77,12 @@ void generateFUNC(FUNC *f) {
     fprintf(outputFile, "\t}\n");
 }
 
-void generateImports()
-{
-    fprintf(outputFile, "org.apache.commons.lang3.ArrayUtils;\n");
-}
-
+// Generate any necessary boilerplate code for the program. Including built-in 
+// classes and helper methods
 void generateHeader(char *className) {
+    
+    generateImports();
+
     // Copy over helper Slice.java
     FILE *sliceClass = fopen("helpers/Slice.java", "r");
     if (sliceClass) {
@@ -94,7 +95,34 @@ void generateHeader(char *className) {
         printf("Helper class Slice.java not in project.\n");
         exit(1);
     }
+
+    fprintf(outputFile, "\n");
+    FILE *floatFormatClass = fopen("helpers/FloatFormat.java", "r");
+    if (floatFormatClass) 
+    {
+        char *line = (char*)malloc(1024);
+        while (fgets(line, sizeof(line), floatFormatClass))
+        {
+            fputs(line, outputFile);
+        }
+        fclose(floatFormatClass);
+    } 
+    else 
+    {
+        printf("Helper class FloatFormat.java not in project.\n");
+        exit(EXIT_FAILURE);
+    }
+
     fprintf(outputFile, "\n\npublic class %s {\n", className);
+
+// Generate any necessary Java package imports
+void generateImports()
+{   
+    // For formatting printin of float64 into scientific notation
+    fprintf(outputFile, "import java.text.DecimalFormat;\n");
+    fprintf(outputFile, "import java.text.DecimalFormatSymbols;\n");
+    fprintf(outputFile, "import java.util.Locale;\n");
+}
 }
 
 void generateFooter() {

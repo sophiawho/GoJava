@@ -11,9 +11,22 @@
 void traverseExpForPrint(EXP *e, bool newLine, bool last) {
     if (e == NULL) return;
     traverseExpForPrint(e->next, newLine, false);
+
     generateINDENT(indent); fprintf(outputFile, "System.out.print(");
-    generateEXP(e, false);
+
+    if (e->type->kind == k_typeFloat) 
+    {
+        fprintf(outputFile, "%s(", FLOAT_FORMAT_METHOD_NAME);
+        generateEXP(e, false);
+        fprintf(outputFile, ")");
+    }
+    else 
+    {
+        generateEXP(e, false);
+    }
+
     fprintf(outputFile, ");\n");
+
     if (newLine && !last) {
         generateINDENT(indent); fprintf(outputFile, "System.out.print(\" \");\n");
     } 
