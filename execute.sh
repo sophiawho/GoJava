@@ -24,14 +24,19 @@ rm ${1%.*}.class 2> /dev/null
 # stdout is redirected to /dev/null
 FILEPATH="$(dirname ${1%.*})"
 FILENAME="$(basename ${1%.*})"
+OUTPUT_DIR="output/"
+
+if [ ! -d $OUTPUT_DIR ] ; then
+    mkdir $OUTPUT_DIR
+fi
 
 cd $FILEPATH
-javac $FILENAME.java
+javac -d $OUTPUT_DIR $FILENAME.java 
 
 # You MUST replace the following line with the command to execute your compiled code
 # Note the bash replacement which changes:
 #   programs/3-semantics+codegen/valid/test.min -> programs/3-semantics+codegen/valid/test.out
-java $FILENAME
+java -cp $OUTPUT_DIR $FILENAME
 EXITCODE="${?}"
 
 # Lastly, we propagate the exit code
