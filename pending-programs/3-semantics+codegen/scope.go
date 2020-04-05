@@ -9,7 +9,7 @@ func main() {
 	{
 		var b int = a
 		var a int = a
-		fmt.Println(a)
-		fmt.Println(b)	
+		println(a)
+		println(b)
 	}
 }

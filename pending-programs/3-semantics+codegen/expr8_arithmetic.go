@@ -10,7 +10,7 @@
 //~-0.500000e+000
 //~1
 //~2
-//~0
+//~1
 
 package main
 
@@ -40,6 +40,9 @@ func main() {
 	println(1 % 2)
 	
 	// k_expKindIncDec
-	println(1++)
-	println(1--)
+	var a = 1
+	a++
+	println(a)
+	a--
+	println(a)
 }

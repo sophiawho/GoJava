@@ -1,5 +1,6 @@
 //~420
 //~42
+package main
 
 func blazeIt() {
 	println(420)
