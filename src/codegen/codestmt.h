@@ -11,6 +11,7 @@ void generateSTRUCTSPEC(STRUCTSPEC *ss);
 void generateVarDecl(VARSPEC *vs);
 void generateEXP(EXP *e, bool recurse);
 void generateEXP_binary(EXP *e, int recurse, char *operator);
+void generateEXP_stringCompare(EXP *e, int recurse, char *operator);
 char *getStringFromType(TYPE *t, bool isPrimitive);
 
 #endif

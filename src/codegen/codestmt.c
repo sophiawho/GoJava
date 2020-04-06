@@ -294,6 +294,7 @@ void generateEXP(EXP *e, bool recurse)
                 generateEXP(e->val.binary.rhs, recurse);
                 fprintf(outputFile, ")");
             }
+            else if (e->val.binary.lhs->type->kind == k_typeString && e->val.binary.rhs->type->kind == k_typeString) generateEXP_stringCompare(e, recurse, "==");
             else generateEXP_binary(e, recurse, "==");
             break;
         case k_expKindNotEq:
@@ -305,19 +306,24 @@ void generateEXP(EXP *e, bool recurse)
                 generateEXP(e->val.binary.rhs, recurse);
                 fprintf(outputFile, "))");
             }
+            else if (e->val.binary.lhs->type->kind == k_typeString && e->val.binary.rhs->type->kind == k_typeString) generateEXP_stringCompare(e, recurse, "!=");
             else generateEXP_binary(e, recurse, "!=");
             break;
         case k_expKindLess:
-            generateEXP_binary(e, recurse, "<");
+            if (e->val.binary.lhs->type->kind == k_typeString && e->val.binary.rhs->type->kind == k_typeString) generateEXP_stringCompare(e, recurse, "<");
+            else generateEXP_binary(e, recurse, "<");
             break;
         case k_expKindLessEq:
-            generateEXP_binary(e, recurse, "<=");
+            if (e->val.binary.lhs->type->kind == k_typeString && e->val.binary.rhs->type->kind == k_typeString) generateEXP_stringCompare(e, recurse, "<=");
+            else generateEXP_binary(e, recurse, "<=");
             break;
         case k_expKindGrtr:
-            generateEXP_binary(e, recurse, ">");
+            if (e->val.binary.lhs->type->kind == k_typeString && e->val.binary.rhs->type->kind == k_typeString) generateEXP_stringCompare(e, recurse, ">");
+            else generateEXP_binary(e, recurse, ">");
             break;
         case k_expKindGrtrEq:
-            generateEXP_binary(e, recurse, ">=");
+            if (e->val.binary.lhs->type->kind == k_typeString && e->val.binary.rhs->type->kind == k_typeString) generateEXP_stringCompare(e, recurse, ">=");
+            else generateEXP_binary(e, recurse, ">=");
             break;
         // Additive binary operators
         case k_expKindAdd:
@@ -456,6 +462,14 @@ void generateEXP_binary(EXP *e, int recurse, char *operator)
     generateEXP(e->val.binary.lhs, recurse);
     fprintf(outputFile, " %s ", operator);
     generateEXP(e->val.binary.rhs, recurse);
+}
+
+void generateEXP_stringCompare(EXP *e, int recurse, char *operator)
+{
+    generateEXP(e->val.binary.lhs, recurse);
+    fprintf(outputFile, ".compareTo(");
+    generateEXP(e->val.binary.rhs, recurse);
+    fprintf(outputFile, ") %s 0", operator);
 }
 
 char *getStringFromType(TYPE *t, bool isPrimitive){
