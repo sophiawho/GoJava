@@ -35,7 +35,7 @@ void traverseExpForPrint(EXP *e, bool newLine, bool last) {
     } 
 }
 
-void generateAssignStmt(AssignKind kind, EXP *lhs, EXP *rhs) {
+void generateAssignStmt(AssignKind kind, EXP *lhs, EXP *rhs, bool newLine) {
     if (kind == k_stmtAssign) {
         generateINDENT(indent);
         if (lhs->kind == k_expKindArrayAccess && lhs->val.arrayAccess.arrayReference->type->kind == k_typeSlice) {
@@ -52,20 +52,27 @@ void generateAssignStmt(AssignKind kind, EXP *lhs, EXP *rhs) {
             fprintf(outputFile, " = ");
             generateEXP(rhs, false);
         }
-        fprintf(outputFile, ";\n");
+        fprintf(outputFile, ";");
+        if (newLine) fprintf(outputFile, "\n");
     }
     else if (kind == k_stmtColonAssign)
     {
         // TODO
-        // IDENT *id = makeIDENT(lhs->val.identExp.ident);
-        // VARSPEC *vs = makeVarSpec(id, rhs, lhs->type);
-        // generateVarDecl(vs);
+        generateINDENT(indent);
+        
+        IDENT *id = makeIDENT(lhs->val.identExp.ident);
+        if (id != NULL && rhs != NULL && lhs->type != NULL) 
+        {
+            // fprintf(stdout, getStringFromType(lhs->type, true));
+            VARSPEC *vs = makeVarSpec(id, rhs, lhs->type);
+            generateVarDecl(vs);
+        }
     }
 }
 
-void generateSTMT(STMT *s) {
+void generateSTMT(STMT *s, bool newLine) {
     if (s == NULL) return;
-    generateSTMT(s->next);
+    generateSTMT(s->next, newLine);
 
     switch (s->kind) {
         case k_stmtKindEmpty:
@@ -74,16 +81,19 @@ void generateSTMT(STMT *s) {
         case k_stmtKindExpStmt:
             generateINDENT(indent);
             generateEXP(s->val.expStmt, true);
-            fprintf(outputFile, ";\n");
+            fprintf(outputFile, ";");
+            if (newLine) fprintf(outputFile, "\n");
             break;
         case k_stmtKindIncDec:
             generateINDENT(indent);
             generateEXP(s->val.incDecStmt.exp, false);
-            if (s->val.incDecStmt.amount == 1) fprintf(outputFile, "++;\n");
-            else fprintf(outputFile, "--;\n");
+            if (s->val.incDecStmt.amount == 1) fprintf(outputFile, "++;");
+            else fprintf(outputFile, "--;");
+            if (newLine) fprintf(outputFile, "\n");
             break;
         case k_stmtKindAssign:
-            generateAssignStmt(s->val.assignStmt.kind, s->val.assignStmt.lhs, s->val.assignStmt.rhs);
+            generateAssignStmt(s->val.assignStmt.kind, s->val.assignStmt.lhs, 
+                s->val.assignStmt.rhs, newLine);
             break;
         case k_stmtKindPrint: ;
             bool newline = s->val.printStmt.newLine;
@@ -94,12 +104,13 @@ void generateSTMT(STMT *s) {
             break;
         case k_stmtKindVarDecl:
             generateVarDecl(s->val.varDecl);
+            if (newLine) fprintf(outputFile, ";\n");
             break;
         case k_stmtKindTypeDecl:
             generateTYPESPEC(s->val.typeDecl);
             break;
         case k_stmtKindBlock:
-            generateSTMT(s->val.blockStmt);
+            generateSTMT(s->val.blockStmt, true);
             break;
         case k_stmtKindIfStmt:
             // TODO
@@ -109,15 +120,25 @@ void generateSTMT(STMT *s) {
             break;
         case k_stmtKindFor: 
             generateINDENT(indent);
-            generateSTMT(s->val.forLoop.initStmt);
-            fprintf(outputFile, "while (");
+
+            // Temporarily set indentation to 0 for a clean for-loop conditional
+            int tempIndent = indent;
+            indent = 0;
+
+            fprintf(outputFile, "for (");
+            generateSTMT(s->val.forLoop.initStmt, false);
+            fprintf(outputFile, "; ");
+
             if (s->val.forLoop.condition != NULL) generateEXP(s->val.forLoop.condition, false);
             else fprintf(outputFile, "true");
+            fprintf(outputFile, "; ");
+
+            generateSTMT(s->val.forLoop.postStmt, false);
             fprintf(outputFile, ") {\n");
 
+            indent = tempIndent;
             indent++;
-            generateSTMT(s->val.forLoop.body);
-            generateSTMT(s->val.forLoop.postStmt);
+            generateSTMT(s->val.forLoop.body, true);
             indent--;
 
             generateINDENT(indent);
@@ -149,16 +170,24 @@ void generateSTMT(STMT *s) {
 void generateVarDecl(VARSPEC *vs) {
     if (vs == NULL) return;
     generateVarDecl(vs->next);
+    
     if (vs->type != NULL) {
-        if (vs->type->kind == k_typeArray) {
+        if (vs->type->kind == k_typeArray) 
+        {
             char *type = getStringFromType(vs->type->val.arrayType.type, true);
             generateINDENT(indent); fprintf(outputFile, "%s[] %s = new %s[%d]", type, prepend(vs->ident->ident), type, vs->type->val.arrayType.size);
-        } else if (vs->type->kind == k_typeSlice) {
+        } 
+        else if (vs->type->kind == k_typeSlice) 
+        {
             char *type = getStringFromType(vs->type->val.sliceType.type, false);
             generateINDENT(indent); fprintf(outputFile, "Slice<%s> %s = ", type, prepend(vs->ident->ident));
-            if (vs->rhs != NULL && vs->rhs->kind == k_expKindAppend) {
+
+            if (vs->rhs != NULL && vs->rhs->kind == k_expKindAppend) 
+            {
                 generateEXP(vs->rhs, false);
-            } else {
+            }
+            else 
+            {
                 fprintf(outputFile, " new Slice<>()");
             }
         } 
@@ -171,18 +200,22 @@ void generateVarDecl(VARSPEC *vs) {
             // construct the variable
             fprintf(outputFile, "%s %s = new %s()", type, prepend(vs->ident->ident), type);
         }
-        else {
+        else 
+        {
             char *type = getStringFromType(vs->type, true);
             generateINDENT(indent); fprintf(outputFile, "%s %s", type, prepend(vs->ident->ident));
-            if (vs->rhs != NULL) {
+
+            if (vs->rhs != NULL) 
+            {
                 fprintf(outputFile, " = ");
                 generateEXP(vs->rhs, false);
             }
         }
-    } else {
+    } 
+    else 
+    {
         generateINDENT(indent); fprintf(outputFile, "Type has not been specified. This is not yet supported by codegen.");
     }
-    fprintf(outputFile, ";\n");
     // TODO: multiple identifiers and expressions
     // TODO: arrays, slices, etc
     // TODO: if outside of a function, must prepend "public static" 

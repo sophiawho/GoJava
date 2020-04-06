@@ -58,6 +58,7 @@ void generateTOPLEVELDECL(TOPLEVELDECL *tld) {
             indent--;
             break;
         case k_topLevelDeclVar:
+            generateVarDecl(tld->val.varDecl);
             break;
     }
 }
@@ -80,7 +81,7 @@ void generateFUNC(FUNC *f) {
         fprintf(outputFile, "\tpublic static %s %s() {\n", returnType, prepend(f->name));
     }
     indent=2;
-    generateSTMT(f->rootStmt->val.blockStmt);
+    generateSTMT(f->rootStmt->val.blockStmt, true);
     indent=0;
     // TODO print function parameters
     fprintf(outputFile, "\t}\n");
