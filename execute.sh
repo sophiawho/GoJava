@@ -26,11 +26,11 @@ FILEPATH="$(dirname ${1%.*})"
 FILENAME="$(basename ${1%.*})"
 OUTPUT_DIR="output/"
 
+cd $FILEPATH
 if [ ! -d $OUTPUT_DIR ] ; then
     mkdir $OUTPUT_DIR
 fi
 
-cd $FILEPATH
 javac -d $OUTPUT_DIR $FILENAME.java 
 
 # You MUST replace the following line with the command to execute your compiled code
