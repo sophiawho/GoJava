@@ -256,7 +256,7 @@ void checkUndeclared(EXP *lhs, SymbolTable *t)
 {
     bool oneUndeclared = false;
     for (EXP *cur = lhs; cur; cur = cur->next) {
-        if (!isIdentifierDeclared(cur, t)) oneUndeclared = true;
+        if (!isIdentifierDeclared(cur, t) && !isBlankId(cur->val.identExp.ident)) oneUndeclared = true;
     }
 
     if (!oneUndeclared) {
@@ -481,6 +481,11 @@ void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
     }
     if (vs->rhs != NULL) {
         symEXP(vs->rhs, scope);
+        SYMBOL *s = vs->rhs->val.identExp.symbol;
+        if (s != NULL)
+        {
+            if (s->kind == k_symbolKindType) throwError("Cannot assign a symbol of kind `type` to a variable", vs->lineno);
+        }
     }
 
     IDENT *ident = vs->ident;

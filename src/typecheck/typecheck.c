@@ -20,6 +20,7 @@
 * Returns: bool
 */
 TYPE *resolveType(TYPE *t) {
+    if (t== NULL) throwInternalError("Type is NULL in `resolveType`", 23);
     if (t->kind == k_typeInt ||
         t->kind == k_typeBool ||
         t->kind == k_typeFloat ||
@@ -45,6 +46,16 @@ TYPE *resolveType(TYPE *t) {
 bool isEqualType(TYPE *t1, TYPE *t2) {
     if (t1 == NULL || t2 == NULL) return false;
     if (t1->kind != t2->kind) return false;
+
+    // Sometimes typeName is null, so we need to check if it isn't first
+    if (t1->typeName != NULL && t2->typeName != NULL) 
+    {
+        if (strcmp(t1->typeName, t2->typeName) != 0)
+        {
+            return false;
+        }
+    }
+
     STRUCTSPEC *ss1;
     STRUCTSPEC *ss2;
     switch(t1->kind) {
@@ -82,24 +93,33 @@ bool isEqualType(TYPE *t1, TYPE *t2) {
 * Returns: bool
 */
 bool isComparable(TYPE *t) {
-    if (t->kind == k_typeInt ||
-        t->kind == k_typeBool ||
-        t->kind == k_typeFloat ||
-        t->kind == k_typeRune || 
-        t->kind == k_typeString ) return true;
+
+    switch (t->kind)
+    {
+    case k_typeInt:
+    case k_typeBool:
+    case k_typeFloat:
+    case k_typeRune:
+    case k_typeString:
+        return true;
 
     // Array type is comparable if values of array element are comparable
-    if (t->kind == k_typeArray) {
+    case k_typeArray:
+        // fprintf(stdout, "HERE\n");
         return isComparable(t->val.arrayType.type);
-    }
 
     // Struct values are comparable if all their fields are comparable
-    if (t->kind == k_typeStruct) {
+    case k_typeStruct:
         for (STRUCTSPEC *ss = t->val.structType; ss; ss = ss->next) {
             if (!isComparable(ss->type)) return false;
         }
         return true;
+        
+    case k_typeSlice:
+    case k_typeInfer:
+        return false;
     }
+
     return false;
 }
 
@@ -114,7 +134,6 @@ bool isComparable(TYPE *t) {
 */
 bool isOrdered(TYPE *t) {
     if (t->kind == k_typeInt ||
-        t->kind == k_typeBool ||
         t->kind == k_typeFloat ||
         t->kind == k_typeRune || 
         t->kind == k_typeString ) return true;
@@ -132,9 +151,12 @@ bool isAddressable(EXP *exp) {
             (strcmp(exp->val.identExp.ident, (char *) "true") == 0)) {
                 return false;
             }
-    case k_expKindArrayAccess:
-    case k_expKindFieldAccess:
         return true;
+        break;
+    case k_expKindArrayAccess:
+        return isAddressable(exp->val.arrayAccess.arrayReference);
+    case k_expKindFieldAccess:
+        return isAddressable(exp->val.fieldAccess.object);
     case k_expKindUParenthesized:
         return isAddressable(exp->val.unary.rhs);
     default:
@@ -355,6 +377,7 @@ void typeSTMT_colonAssign(EXP *lhs, EXP *rhs)
 {
     if (lhs == NULL && rhs == NULL) return;
     typeSTMT_colonAssign(lhs->next, rhs->next);
+
     typeEXP(rhs);
     if (rhs->type == NULL) {
         throwError("Void cannot be used as a value in short declaration.", lhs->lineno);
@@ -366,6 +389,7 @@ void typeSTMT_colonAssign(EXP *lhs, EXP *rhs)
             lhs->lineno);
         }
     }
+
     lhs->type = rhs->type;
     if (lhs->kind == k_expKindIdentifier) {
         if (lhs->val.identExp.symbol != NULL && lhs->val.identExp.symbol->kind == k_symbolKindVar) {
@@ -377,11 +401,19 @@ void typeSTMT_colonAssign(EXP *lhs, EXP *rhs)
 void typeSTMT_Assign(EXP *lhs, EXP *rhs, int lineno) {
     if (lhs == NULL && rhs == NULL) return;
     typeSTMT_Assign(lhs->next, rhs->next, lineno);
+
     typeEXP(lhs);
     typeEXP(rhs);
     if (rhs->type == NULL) {
         throwError("Void cannot be used as a value in an assignment declaration.", lhs->lineno);
     }
+
+    if (lhs->kind == k_expKindIdentifier)
+    {
+        // We do nothing if it's a blank identifier
+        if (isBlankId(lhs->val.identExp.ident)) return;
+    }
+
     // TODO (As per 3.7): Ensure expressions on LHS are lvalues (addressable):
     // Variables (non-constants), Slice indexing, Array indexing, Field selection
     if (!isAddressable(lhs)) {
@@ -519,15 +551,21 @@ void typeSTMT(STMT *s, TYPE *returnType) {
         case k_stmtKindIncDec:
             typeEXP(s->val.incDecStmt.exp);
             if (!resolveToNumbericBaseType(s->val.incDecStmt.exp->type)) {
-                throwError("Illegal increment/decerement statement. Operand must resolve to a numeric type.\n", s->lineno);
+                throwError("Illegal increment/decrement statement. Operand must resolve to a numeric type.\n", s->lineno);
             }
+            if (!isAddressable(s->val.incDecStmt.exp)) throwError("Expected an assignable expression in increment/decrement statement", s->lineno);
             break;
         case k_stmtKindAssign:
-            if (s->val.assignStmt.kind == k_stmtColonAssign) {
+            if (s->val.assignStmt.kind == k_stmtColonAssign) 
+            {
                 typeSTMT_colonAssign(s->val.assignStmt.lhs, s->val.assignStmt.rhs);
-            } else if (s->val.assignStmt.kind == k_stmtAssign) {
+            } 
+            else if (s->val.assignStmt.kind == k_stmtAssign) 
+            {
                 typeSTMT_Assign(s->val.assignStmt.lhs, s->val.assignStmt.rhs, s->lineno);
-            } else {
+            } 
+            else 
+            {
                 typeSTMT_opAssign(s->val.assignStmt.kind, s->val.assignStmt.lhs, s->val.assignStmt.rhs);
             }
             break;
@@ -675,6 +713,9 @@ void typeEXP(EXP *e) {
         case k_expKindOr:       // ||
             typeEXP(e->val.binary.lhs);
             typeEXP(e->val.binary.rhs);
+
+            if (!isEqualType(e->val.binary.lhs->type, e->val.binary.rhs->type)) throwError("Illegal binary expression. Operands must be of the same type", e->lineno);
+
             if (!resolveToBoolBaseType(e->val.binary.lhs->type) || !resolveToBoolBaseType(e->val.binary.rhs->type)) {
                 throwError("Illegal binary expression. Operands must resolve to a bool type.\n", e->lineno);
             }
@@ -825,6 +866,13 @@ void typeEXP(EXP *e) {
 
         case k_expKindFieldAccess:
             typeEXP(e->val.fieldAccess.object);
+
+            SYMBOL *s = getSymbolFromExp(e->val.fieldAccess.object);
+            if (s != NULL)
+            {
+                if (s->kind != k_symbolKindVar) throwError("Illegal field access. Object must be of a variable of struct type", e->lineno);
+            }
+
             if (!resolveToStructBaseType(e->val.fieldAccess.object->type)) {
                 throwError("Illegal field access. Expecting a struct type", e->lineno);
             }
@@ -869,6 +917,8 @@ void typeEXP(EXP *e) {
             e->type->kind = k_typeInt;
             break;
         case k_expKindCast:
+            if (e->val.cast.exp == NULL) throwError("Missing argument in type cast", e->lineno);
+            if (e->val.cast.exp->next != NULL) throwError("Too many arguments in type cast", e->lineno);
             if (!resolveToBaseType(e->val.cast.type)) {
                 throwError("Illegal typecast operation. Type must resolve to a base type", e->lineno);
             }
