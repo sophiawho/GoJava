@@ -19,7 +19,7 @@ void traverseExpForPrint(EXP *e, bool newLine, bool last) {
     if (e->type->kind == k_typeFloat) 
     {
         fprintf(outputFile, "System.out.printf(");
-        fprintf(outputFile, "\"%%\+\.6e\", ");
+        fprintf(outputFile, "\"%%+.6e\", ");
         generateEXP(e, false);
     }
     else 
