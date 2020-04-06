@@ -3,10 +3,6 @@
 
 package main
 
-import (
-	"fmt"
-)
-
 var a [5] int
 var b []int
 var c struct { f int; }
@@ -21,5 +17,5 @@ func baz() struct{ f int; } { return c; }
 func main () {
 	var d, e, f = foo(), bar(), baz()
 	d[0], e[0], f.f = 1, 1, 1 
-	fmt.Println(a[0], b[0], c.f)
+	println(a[0], b[0], c.f)
 }

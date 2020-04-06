@@ -32,7 +32,9 @@ void generatePROG(PROG *root, char *filename) {
 
     char *basec = strdup(filename);
     char *className = basename(basec);
+
     generateHeader(className);
+
     generateTOPLEVELDECL(root->rootTopLevelDecl);
     // Use `prepend` to prepend __golite__ to all function and identifier names, ie: main() becomes __golite__main()
     // Special case for init functions: Since there may be multiple, append a unique counter to the function name in lexical order, ie __golite__init_0, __golite__init_1, etc
@@ -49,6 +51,11 @@ void generateTOPLEVELDECL(TOPLEVELDECL *tld) {
             generateFUNC(tld->val.funcDecl);
             break;
         case k_topLevelDeclType:
+            // Anything in top level needs to be static
+            fprintf(outputFile, "\tstatic ");
+            indent++;
+            generateTYPESPEC(tld->val.typeDecl);
+            indent--;
             break;
         case k_topLevelDeclVar:
             break;
@@ -64,9 +71,13 @@ void generateFUNC(FUNC *f) {
         fprintf(outputFile, "\tpublic static void %s_%d() {\n", prepend(f->name), initFuncCounter);
         initFuncCounter++;
     } else {
-        // TODO print return type instead of void
         fprintf(outputFile, "\n\t@SuppressWarnings({\"unchecked\", \"deprecation\"})\n");
-        fprintf(outputFile, "\tpublic static void %s() {\n", prepend(f->name));
+        
+        char *returnType = "";
+        if (f->returnType == NULL) returnType = "void";
+        else returnType = getStringFromType(f->returnType, true); // true or false?
+
+        fprintf(outputFile, "\tpublic static %s %s() {\n", returnType, prepend(f->name));
     }
     indent=2;
     generateSTMT(f->rootStmt->val.blockStmt);
@@ -75,7 +86,12 @@ void generateFUNC(FUNC *f) {
     fprintf(outputFile, "\t}\n");
 }
 
+// Generate any necessary boilerplate code for the program. Including built-in 
+// classes and helper methods
 void generateHeader(char *className) {
+    
+    generateImports();
+
     // Copy over helper Slice.java
     FILE *sliceClass = fopen("helpers/Slice.java", "r");
     if (sliceClass) {
@@ -88,15 +104,44 @@ void generateHeader(char *className) {
         printf("Helper class Slice.java not in project.\n");
         exit(1);
     }
+
     fprintf(outputFile, "\n\npublic class %s {\n", className);
+    generateGlobalVariables();
+}
+
+// Generate any necessary Java package imports
+void generateImports()
+{   
+    // For array comparisons
+    fprintf(outputFile, "import java.util.Arrays;\n");
+
+    // For Boolean global variables
+    fprintf(outputFile, "import java.lang.Boolean;\n");
+}
+
+// Generate any necessary variables to be used within the class
+void generateGlobalVariables()
+{
+    // Generate variables for `true` and `false` boolean literals within the global 
+    // scope. GoLite doesn't reserve boolean literals as keywords, so they can be 
+    // changed by the programmer, hence why we need to generate variables for the 
+    // literals in Java. Use these variables anytime a boolean literal is emitted
+    indent++;
+    generateINDENT(indent);
+    fprintf(outputFile, "static Boolean %s = Boolean.valueOf(true);\n", prepend("true"));
+    generateINDENT(indent);
+    fprintf(outputFile, "static Boolean %s = Boolean.valueOf(false);\n", prepend("false"));
+    indent--;
 }
 
 void generateFooter() {
     fprintf(outputFile, "\n\t@SuppressWarnings({\"unchecked\", \"deprecation\"})\n");
     fprintf(outputFile, "\tpublic static void main(String[] args) {\n");
+
     for (int i = 0; i < initFuncCounter; i++) {
         fprintf(outputFile, "\t\t__golite__init_%d();\n", i);
     }
+
     fprintf(outputFile, "\t\t__golite__main();\n");
     fprintf(outputFile, "\t}\n");
     fprintf(outputFile, "}\n");
@@ -104,7 +149,7 @@ void generateFooter() {
 
 // Helper function to open file pointer for writing generated Java code
 void openOutputFile(char *filename) {
-    char *outputFileName = malloc((strlen(filename)+5)*sizeof(char));
+    char *outputFileName = malloc((strlen(filename)+6) * sizeof(char));
     for (int i=0; filename[i]; i++) {
         outputFileName[i] = filename[i];
     }

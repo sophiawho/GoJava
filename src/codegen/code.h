@@ -15,6 +15,8 @@ void generatePROG(PROG *root, char *filename);
 void generateTOPLEVELDECL(TOPLEVELDECL *tld);
 void generateFUNC(FUNC *f);
 void generateHeader(char *classname);
+void generateImports();
+void generateGlobalVariables();
 void generateFooter();
 char *prepend(char *str);
 void openOutputFile(char *filename);
