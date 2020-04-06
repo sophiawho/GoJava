@@ -15,10 +15,34 @@ package test
 
 func main() {
 	var a []int
-	for i:=0; i<10; i++ {
-		println("Cap:", cap(a), ", len:", len(a))
-		a = append(a, 0)
-	}
+	println("Cap:", cap(a), ", len:", len(a))
+
+	a = append(a, 0)
+	println("Cap:", cap(a), ", len:", len(a))
+
+	a = append(a, 0)
+	println("Cap:", cap(a), ", len:", len(a))
+	
+	a = append(a, 0)
+	println("Cap:", cap(a), ", len:", len(a))
+	
+	a = append(a, 0)
+	println("Cap:", cap(a), ", len:", len(a))
+	
+	a = append(a, 0)
+	println("Cap:", cap(a), ", len:", len(a))
+	
+	a = append(a, 0)
+	println("Cap:", cap(a), ", len:", len(a))
+	
+	a = append(a, 0)
+	println("Cap:", cap(a), ", len:", len(a))
+	
+	a = append(a, 0)
+	println("Cap:", cap(a), ", len:", len(a))
+	
+	a = append(a, 0)
+	println("Cap:", cap(a), ", len:", len(a))
 
 	var b[5]int
 	println("Cap:", cap(b), ", len:", len(b))
