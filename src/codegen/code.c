@@ -105,23 +105,6 @@ void generateHeader(char *className) {
         exit(1);
     }
 
-    fprintf(outputFile, "\n");
-    FILE *floatFormatClass = fopen("helpers/FloatFormat.java", "r");
-    if (floatFormatClass) 
-    {
-        char *line = (char*)malloc(1024);
-        while (fgets(line, sizeof(line), floatFormatClass))
-        {
-            fputs(line, outputFile);
-        }
-        fclose(floatFormatClass);
-    } 
-    else 
-    {
-        printf("Helper class FloatFormat.java not in project.\n");
-        exit(EXIT_FAILURE);
-    }
-
     fprintf(outputFile, "\n\npublic class %s {\n", className);
     generateGlobalVariables();
 }
@@ -129,13 +112,11 @@ void generateHeader(char *className) {
 // Generate any necessary Java package imports
 void generateImports()
 {   
-    // For formatting printin of float64 into scientific notation
-    fprintf(outputFile, "import java.text.DecimalFormat;\n");
-    fprintf(outputFile, "import java.text.DecimalFormatSymbols;\n");
-    fprintf(outputFile, "import java.util.Locale;\n");
-
     // For array comparisons
     fprintf(outputFile, "import java.util.Arrays;\n");
+
+    // For Boolean global variables
+    fprintf(outputFile, "import java.lang.Boolean;\n");
 }
 
 // Generate any necessary variables to be used within the class
@@ -147,9 +128,9 @@ void generateGlobalVariables()
     // literals in Java. Use these variables anytime a boolean literal is emitted
     indent++;
     generateINDENT(indent);
-    fprintf(outputFile, "static boolean %s = true;\n", prepend("true"));
+    fprintf(outputFile, "static Boolean %s = Boolean.valueOf(true);\n", prepend("true"));
     generateINDENT(indent);
-    fprintf(outputFile, "static boolean %s = false;\n", prepend("false"));
+    fprintf(outputFile, "static Boolean %s = Boolean.valueOf(false);\n", prepend("false"));
     indent--;
 }
 

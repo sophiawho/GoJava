@@ -9,7 +9,6 @@
 
 FILE *outputFile;
 int indent;
-#define FLOAT_FORMAT_METHOD_NAME "FloatFormat.format"
 
 void generateINDENT(int indent);
 void generatePROG(PROG *root, char *filename);

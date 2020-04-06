@@ -3,7 +3,6 @@
 //~false
 //~false
 //~false
-//~false
 
 package main
 
@@ -17,9 +16,5 @@ func main() {
 
 	var a [3]int
 	var b [3]int
-	println(a != b)
-
-	var c []int
-	var d []int
 	println(a != b)
 }

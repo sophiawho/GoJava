@@ -12,18 +12,19 @@ void traverseExpForPrint(EXP *e, bool newLine, bool last) {
     if (e == NULL) return;
     traverseExpForPrint(e->next, newLine, false);
 
-    generateINDENT(indent); fprintf(outputFile, "System.out.print(");
+    generateINDENT(indent);
 
     // Format floats in scientific notation:
     // 6 decimal digits, 3 mantissa digits, positive or negative prefixes for base and mantissa
     if (e->type->kind == k_typeFloat) 
     {
-        fprintf(outputFile, "%s(", FLOAT_FORMAT_METHOD_NAME);
+        fprintf(outputFile, "System.out.printf(");
+        fprintf(outputFile, "\"%%\+\.6e\", ");
         generateEXP(e, false);
-        fprintf(outputFile, ")");
     }
     else 
     {
+        fprintf(outputFile, "System.out.print(");
         generateEXP(e, false);
     }
 
