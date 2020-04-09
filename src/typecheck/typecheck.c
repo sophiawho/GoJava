@@ -379,21 +379,42 @@ void typeSTMT_colonAssign(EXP *lhs, EXP *rhs)
     typeSTMT_colonAssign(lhs->next, rhs->next);
 
     typeEXP(rhs);
-    if (rhs->type == NULL) {
+    if (rhs->type == NULL) 
+    {
         throwError("Void cannot be used as a value in short declaration.", lhs->lineno);
     }
-    if (!isBlankId(lhs->val.identExp.ident)) {
+    if (!isBlankId(lhs->val.identExp.ident)) 
+    {
         typeEXP(lhs);
-        if (lhs->type->kind != k_typeInfer && !isEqualType(lhs->type, rhs->type)) {
+
+        if (lhs->type->kind != k_typeInfer && !isEqualType(lhs->type, rhs->type)) 
+        {
             throwError("Illegal variable declaration. LHS and RHS types don't match.\n",
             lhs->lineno);
+        }
+
+        if (lhs->val.identExp.symbol->kind != k_symbolKindVar) 
+        {
+            fprintf(stderr, "Error: (line %d) type %s is not an expression", lhs->lineno, lhs->val.identExp.ident);
+            exit(EXIT_FAILURE);
         }
     }
 
     lhs->type = rhs->type;
-    if (lhs->kind == k_expKindIdentifier) {
-        if (lhs->val.identExp.symbol != NULL && lhs->val.identExp.symbol->kind == k_symbolKindVar) {
+    if (lhs->kind == k_expKindIdentifier) 
+    {
+        if (lhs->val.identExp.symbol != NULL && lhs->val.identExp.symbol->kind == k_symbolKindVar) 
+        {
             lhs->val.identExp.symbol->val.varSpec->type = rhs->type;
+        }
+        
+        if (rhs->kind == k_expKindIdentifier)
+        {
+            if (rhs->val.identExp.symbol->kind == k_symbolKindType)
+            {
+                fprintf(stderr, "Error: (line %d) type %s is not an expression", rhs->lineno, rhs->val.identExp.ident);
+                exit(EXIT_FAILURE);
+            }
         }
     }
 }
@@ -533,6 +554,7 @@ void typeSTMT(STMT *s, TYPE *returnType) {
         // ie: foo(x,y) but not x-1
         case k_stmtKindExpStmt:
             typeEXP(s->val.expStmt);
+            if (s->val.expStmt->kind == k_expKindCast) throwError("Type conversion evaluated but not used", s->lineno);
             break;
         // 3.4 return is well typed if the enclosing function has no return type
         // return expr is well-typed if its expression is well-typed
@@ -573,6 +595,12 @@ void typeSTMT(STMT *s, TYPE *returnType) {
             typeEXP(s->val.printStmt.expList);
             EXP *printExp = s->val.printStmt.expList;
             while (printExp != NULL) {
+
+                if (printExp->type == NULL) throwError("Cannot print out symbol of type void", s->lineno);
+                if (printExp->kind == k_expKindIdentifier)
+                {
+                    if (printExp->val.identExp.symbol->kind == k_symbolKindType) throwError("Expecting expression that evalutes to a value, not a type", s->lineno);
+                }
                 if (!resolveToBaseType(printExp->type)) {
                     throwError("Expressions in a print statement must resolve to a base type.", s->lineno);
                 }
@@ -604,6 +632,10 @@ void typeSTMT(STMT *s, TYPE *returnType) {
             typeEXP(s->val.switchStmt.exp);
             TYPE *switchExprType;
             if (s->val.switchStmt.exp != NULL) {
+                if (s->val.switchStmt.exp->kind == k_expKindFuncCall)
+                {
+                    if (s->val.switchStmt.exp->val.funcCall.primaryExpr->val.identExp.symbol->val.funcSpec->returnType == NULL) throwError("Function returning void used as value", s->lineno);
+                }
                 switchExprType = s->val.switchStmt.exp->type;
             } else {
                 switchExprType = makeTYPE(k_typeBool);
@@ -640,8 +672,13 @@ void typeEXPRCASECLAUSE(EXPRCASECLAUSE *caseClause, TYPE *returnType, TYPE *expT
     if (caseClause->kind == k_defaultClause) return;
     EXP *currentExp = caseClause->expList;
     while (currentExp != NULL) {
-        if (!isEqualType(currentExp->type, expType)) {
+        if (!isEqualType(currentExp->type, expType)) 
+        {
             throwError("Switch statement clauses must match switch statement expression.", caseClause->lineno);
+        }
+        if (currentExp->type->kind == k_typeSlice) 
+        {
+            throwError("Invalid case in switch (can only compare slice to nil)", currentExp->lineno);
         }
         currentExp = currentExp->next;
     }
@@ -675,7 +712,21 @@ void typeEXP(EXP *e) {
         case k_expKindIdentifier:
             s = getSymbolFromExp(e);
             if (s == NULL) break;
-            e->type = s->val.varSpec->type;
+            switch (s->kind)
+            {
+            case k_symbolKindVar:
+            case k_symbolKindConstant:
+                e->type = s->val.varSpec->type;
+                break;
+            case k_symbolKindType:
+                e->type = s->val.type;
+                break;
+
+            case k_symbolKindFunc:
+                e->type = s->val.funcSpec->returnType;
+                break;
+            }
+            // e->type = s->val.varSpec->type;
             break;
 
         // ============= UNARY EXPRESSIONS ================
@@ -942,8 +993,20 @@ SYMBOL *getSymbolFromExp(EXP *e) {
     switch (e->kind) {
         case k_expKindIdentifier:
             return e->val.identExp.symbol;
+
+        case k_expKindUPlus:
+        case k_expKindUMinus:
+        case k_expKindBang:
+        case k_expKindUBitXOR:
         case k_expKindUParenthesized:
             return getSymbolFromExp(e->val.unary.rhs);
+
+        case k_expKindArrayAccess:
+            return getSymbolFromExp(e->val.arrayAccess.arrayReference);
+
+        case k_expKindFuncCall:
+            return getSymbolFromExp(e->val.funcCall.primaryExpr);
+
         default:
             return NULL;
     }
