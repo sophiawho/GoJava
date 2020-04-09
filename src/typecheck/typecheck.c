@@ -995,6 +995,15 @@ void typeEXP(EXP *e) {
             }
             
             for (STRUCTSPEC *ss = e->val.fieldAccess.object->type->val.structType; ss; ss = ss->next) {
+
+                TYPE *parentType = e->val.fieldAccess.object->type;
+                if (parentType->kind == k_typeInfer)
+                {
+                    // The structspec may be an alias for another one, so we need to fetch it
+                    while(parentType->kind == k_typeInfer) parentType = parentType->parent;
+                    ss = parentType->val.structType;
+                }
+
                 for (IDENT *ident = ss->attribute; ident; ident = ident->next) {
                     if (strcmp(ident->ident, e->val.fieldAccess.field) == 0) {
                         e->type = ss->type;
@@ -1040,7 +1049,7 @@ void typeEXP(EXP *e) {
                 throwError("Illegal typecast operation. Type must resolve to a base type", e->lineno);
             }
             typeEXP(e->val.cast.exp);
-            if (resolveType(e->val.cast.type) == resolveType(e->val.cast.exp->type)) {
+            if (isEqualType(resolveType(e->val.cast.type), resolveType(e->val.cast.exp->type))) {
                 e->type = e->val.cast.type;
             } else if (resolveToBoolBaseType(e->val.cast.type) && resolveToBoolBaseType(e->val.cast.exp->type)) {
                 e->type = e->val.cast.type;
