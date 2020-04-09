@@ -512,10 +512,22 @@ void associateVarWithType(VARSPEC *vs, SymbolTable *scope) {
     }
     if (vs->type->kind == k_typeSlice) {
         TYPE *t = findParentType(scope, vs->type);
-        vs->type->val.sliceType.type = t;
+        if (vs->type->val.sliceType.type->kind == k_typeInfer) {
+            vs->type->val.sliceType.type = t;
+        } else if (vs->type->val.sliceType.type->kind == k_typeArray) {
+            vs->type->val.sliceType.type->val.arrayType.type = t;
+        } else if (vs->type->val.sliceType.type->kind == k_typeSlice) {
+            vs->type->val.sliceType.type->val.sliceType.type = t;
+        }
     } else if (vs->type->kind == k_typeArray) {
         TYPE *t = findParentType(scope, vs->type);
-        vs->type->val.arrayType.type = t;
+        if (vs->type->val.arrayType.type->kind == k_typeInfer) {
+            vs->type->val.arrayType.type = t;
+        } else if (vs->type->val.arrayType.type->kind == k_typeArray) {
+            vs->type->val.arrayType.type->val.arrayType.type = t;
+        } else if (vs->type->val.arrayType.type->kind == k_typeSlice) {
+            vs->type->val.arrayType.type->val.sliceType.type = t;
+        }
     } else if (vs->type->kind == k_typeStruct) {
         for (STRUCTSPEC *ss = vs->type->val.structType; ss; ss = ss->next) {
             TYPE *t = findFieldTypeForStruct(scope, ss->type);
@@ -531,7 +543,11 @@ void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
 
     if (vs->type != NULL) {
         findParentType(scope, vs->type);
+        // fprintf(stdout, "type: %s\n", typeToString(vs->type));
+        // fprintf(stdout, "type: %s\n", typeToString(vs->type->val.arrayType.type));
         associateVarWithType(vs, scope);
+        // SLICE TYPE DISAPPEARS!!
+        // fprintf(stdout, "type: %s\n", typeToString(vs->type->val.arrayType.type));
     }
     if (vs->rhs != NULL) {
         symEXP(vs->rhs, scope);
