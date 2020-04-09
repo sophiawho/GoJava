@@ -24,8 +24,8 @@ func main() {
 	var e elem
 	var i index
 
-	a = ws[0]
-	a = xs[0] // Illegal assignment. The RHS and LHS do not match.
+	a = ws[0] // Illegal assignment. The RHS and LHS do not match.
+	a = xs[0] 
 	a = ys[0]
 	e = zs[0]
 
