@@ -1040,7 +1040,15 @@ void typeEXP(EXP *e) {
                 throwError("Illegal typecast operation. Type must resolve to a base type", e->lineno);
             }
             typeEXP(e->val.cast.exp);
+            // if (resolveToBoolBaseType(e->val.cast.type)) {
+            //     printf("cast type resolves to bool\n");
+            // } 
+            // if (resolveToBoolBaseType(e->val.cast.exp->type)) {
+            //     printf("exp type resolves to bool\n");
+            // }
             if (resolveType(e->val.cast.type) == resolveType(e->val.cast.exp->type)) {
+                e->type = e->val.cast.type;
+            } else if (resolveToBoolBaseType(e->val.cast.type) && resolveToBoolBaseType(e->val.cast.exp->type)) {
                 e->type = e->val.cast.type;
             } else if (resolveToNumbericBaseType(e->val.cast.type) && resolveToNumbericBaseType(e->val.cast.exp->type)) {
                 e->type = e->val.cast.type;

@@ -92,13 +92,13 @@ func logical() {
 
 	type boolean bool
 
-	var c boolean = boolean(true) // Illegal typecast operation. The expr is not compatible with the type.
+	var c boolean = boolean(true) // [fixed] Illegal typecast operation. The expr is not compatible with the type. [exp type bool]
 
 	println(c && c)
 	println(c || c)
 
 	c = c && c
-	c = c || c
+	c = c || c // Error: (line 101) Illegal assignment. LHS and RHS types don't match.
 }
 
 func comparison() {
