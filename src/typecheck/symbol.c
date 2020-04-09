@@ -13,6 +13,8 @@
 extern int print_sym_table;
 int indent_level = 0;
 
+void associateVarWithType(VARSPEC *vs, SymbolTable *scope);
+
 bool isSpecialFunction(char *identifier)
 {
     return strcmp((char *) "init", identifier) == 0 || strcmp((char*) "main", identifier) == 0;
