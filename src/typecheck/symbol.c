@@ -431,6 +431,7 @@ void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
     switch (ts->kind)
     {
         case k_typeSpecKindTypeDeclaration: ;
+            if (isBlankId(ident)) return;
             TYPE *t = ts->type;
             t->typeName = ident;
             if (t->kind == k_typeInfer) {

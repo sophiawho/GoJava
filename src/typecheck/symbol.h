@@ -43,6 +43,7 @@ void putBaseTypeSpec(SymbolTable *symTable, char *typeName, TypeKind typeKind);
 
 TYPE *findParentType(SymbolTable *symTable, TYPE *t);
 TYPE *findFieldTypeForStruct(SymbolTable *symTable, TYPE *t);
+void associateVarWithType(VARSPEC *vs, SymbolTable *scope);
 
 void printIndent();
 void openScope();
