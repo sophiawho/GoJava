@@ -95,12 +95,41 @@ void symTOPLEVELDECL(TOPLEVELDECL *tld, SymbolTable *symTable)
 
 }
 
+void symFUNC_inputParams_putSymbols(TYPESPEC *ts, SymbolTable *scope)
+{
+    if (ts == NULL) return;
+    symFUNC_inputParams_putSymbols(ts->next, scope);
+
+    VARSPEC *vs = makeVarSpec(ts->ident, NULL, ts->type);
+    associateVarWithType(vs, scope);
+    ts->type = vs->type;
+
+    for (IDENT *ident = ts->ident; ident; ident = ident->next)
+    {
+        putSymbol_Var(scope, ident->ident, vs, ts->lineno);
+    }
+}
+
+void symFUNC_inputParams_findParentTypes(TYPESPEC *ts, SymbolTable *scope)
+{
+    if (ts == NULL) return;
+    symFUNC_inputParams_findParentTypes(ts->next, scope);
+
+    findParentType(scope, ts->type);
+}
+
 void symFUNC_inputParams(TYPESPEC *ts, SymbolTable *scope) {
     if (ts == NULL) return;
-    symFUNC_inputParams(ts->next, scope);
-    VARSPEC *vs = makeVarSpec(ts->ident, NULL, ts->type);
-    symVARSPEC(vs, scope);
-    ts->type = vs->type;
+
+    // Need to first find the parent types to make sure they are declared within the scope
+    symFUNC_inputParams_findParentTypes(ts, scope);
+
+    // Then we iterate over all typespecs again and start putting symbols. We do this because otherwise
+    // we might add a type's symbol as a variable into the scope, which leads to an error.
+    // For example: `f(a int, int int, b int)`. Once we put `int` as a variable into the scope, trying
+    // to get type for b will result in an error.
+    // Additionally, we need to traverse from tail to head, therwise function parameters get reversed
+    symFUNC_inputParams_putSymbols(ts, scope);
 }
 
 void symFUNC(FUNC *f, SymbolTable *scope)
@@ -264,6 +293,15 @@ void checkUndeclared(EXP *lhs, SymbolTable *t)
     }
 }
 
+void checkAllUnique(EXP *e)
+{
+    SymbolTable *scope = initSymbolTable();
+    for (EXP *current = e; current; current = current->next)
+    {
+        putSymbol(scope, current->val.identExp.ident, k_symbolKindVar, current->lineno);
+    }
+}
+
 void symSTMT_assign_colonAssign(EXP *lhs, EXP *rhs, SymbolTable *scope)
 {
     if (lhs == NULL && rhs == NULL) return;
@@ -277,6 +315,14 @@ void symSTMT_assign_colonAssign(EXP *lhs, EXP *rhs, SymbolTable *scope)
         VARSPEC *vs = makeVarSpec(i, rhs, t);
         putSymbol_Var(scope, lhs->val.identExp.ident, vs, lhs->lineno);
     }
+    else
+    {
+        // Symbol already exists so we need to overwrite its VARSPEC by changing it manually, otherwise putting the symbol
+        // throws a redeclared error
+        SYMBOL *s = getSymbol(scope, lhs->val.identExp.ident, lhs->lineno);
+        s->val.varSpec->rhs = rhs;
+        printSymbol(s);
+    }
 
     symEXP(lhs, scope);
 }
@@ -288,6 +334,7 @@ void symSTMT_assign(STMT *s, SymbolTable *scope)
     case k_stmtColonAssign:
         // Need to recursively call on each identifier and expression on LHS and RHS
         checkUndeclared(s->val.assignStmt.lhs, scope);
+        checkAllUnique(s->val.assignStmt.lhs);
         symSTMT_assign_colonAssign(s->val.assignStmt.lhs, s->val.assignStmt.rhs, scope);
         break;
 
@@ -425,6 +472,11 @@ TYPE *findParentType(SymbolTable *symTable, TYPE *t) {
     SYMBOL *s = getSymbol(symTable, t->val.identifier, t->lineno);
     if (s == NULL ) {
         throwErrorUndefinedId(t->lineno, t->val.identifier);
+    }
+    if (s->kind != k_symbolKindType) 
+    {
+        fprintf(stderr, "Error: (line %d) %s is not a type", t->lineno, s->name);
+        exit(EXIT_FAILURE);
     }
     return s->val.type;
 }
