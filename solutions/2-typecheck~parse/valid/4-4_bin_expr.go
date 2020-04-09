@@ -97,8 +97,8 @@ func logical() {
 	println(c && c)
 	println(c || c)
 
-	c = c && c
-	c = c || c // Error: (line 101) Illegal assignment. LHS and RHS types don't match.
+	c = c && c // [fixed] Error: (line 101) Illegal assignment. LHS and RHS types don't match.
+	c = c || c 
 }
 
 func comparison() {

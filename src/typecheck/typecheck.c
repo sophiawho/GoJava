@@ -836,7 +836,7 @@ void typeEXP(EXP *e) {
             if (!resolveToBoolBaseType(e->val.binary.lhs->type) || !resolveToBoolBaseType(e->val.binary.rhs->type)) {
                 throwError("Illegal binary expression. Operands must resolve to a bool type.\n", e->lineno);
             }
-            e->type = makeTYPE(k_typeBool);
+            e->type = e->val.binary.lhs->type;
             break;
 
         // TODO: As per 4.4, what do expressions being "comparable/ordered" mean?
