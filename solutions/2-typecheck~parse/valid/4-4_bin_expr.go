@@ -92,7 +92,7 @@ func logical() {
 
 	type boolean bool
 
-	var c boolean = boolean(true)
+	var c boolean = boolean(true) // Illegal typecast operation. The expr is not compatible with the type.
 
 	println(c && c)
 	println(c || c)
