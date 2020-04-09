@@ -20,6 +20,8 @@ type rec4 struct {
 	}
 }
 
+type rec5 []rec5
+
 type _ int
 
 type _ struct {

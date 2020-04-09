@@ -40,6 +40,7 @@ void symEXPRCASECLAUSE(EXPRCASECLAUSE *cc, SymbolTable *scope);
 void putBaseTypeSymbols(SymbolTable *symTable);
 void putBaseConstants(SymbolTable *sym, char *ident, int boolValue);
 void putBaseTypeSpec(SymbolTable *symTable, char *typeName, TypeKind typeKind);
+bool isRecursive(TYPE *type);
 
 TYPE *findParentType(SymbolTable *symTable, TYPE *t);
 TYPE *findFieldTypeForStruct(SymbolTable *symTable, TYPE *t);

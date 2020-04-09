@@ -399,21 +399,39 @@ void symSTMT_forLoop(STMT *s, SymbolTable *scope)
     closeScope();
 }
 
-void symSTRUCTSPEC(STRUCTSPEC *ss, SymbolTable *scope, SymbolTable *structScope)
+void symSTRUCTSPEC(STRUCTSPEC *ss, char *structIdentifier, SymbolTable *scope, SymbolTable *structScope)
 {
     if (ss == NULL) return;
-    symSTRUCTSPEC(ss->next, scope, structScope);
+    symSTRUCTSPEC(ss->next, structIdentifier, scope, structScope);
 
     // Check if the STRUCTSPEC type is defined in the scope
     // Associate ss->type with parent type
-    TYPE *t = findFieldTypeForStruct(scope, ss->type);
-    ss->type = t;
+    if (isRecursive(ss->type)) {
+        SYMBOL *s = putSymbol(scope, structIdentifier, k_symbolKindType, ss->lineno);
+        SymbolTable *recursiveScope = scopeSymbolTable(scope);
+        TYPE *t = findFieldTypeForStruct(recursiveScope, ss->type);
+        free(s);
+        ss->type=t;
+    } else {
+        TYPE *t = findFieldTypeForStruct(scope, ss->type);
+        ss->type = t;
+    }
 
     // Will help check to see if attribute has already been declared or not
     for (IDENT *i = ss->attribute; i; i = i->next) {
         if (!isBlankId(ss->attribute->ident)) putSymbol(structScope, i->ident, 
             k_symbolKindVar, ss->lineno);
     }
+}
+
+// A type is allowed to be recursive if, along the path of recursion, there is a slice. All other cases are disallowed
+bool isRecursive(TYPE *type) {
+    if (type->kind == k_typeSlice || type->kind == k_typeStruct) {
+        return true;
+    } else if (type->kind == k_typeArray) {
+        return isRecursive(type->val.arrayType.type);
+    }
+    return false;
 }
 
 void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
@@ -440,17 +458,21 @@ void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
                 putSymbol_Type(symTable, ident, t, ts->lineno);
                 return;
             }
-            // Recursive type - Use inner scope
-            SYMBOL *s = putSymbol(symTable, ident, k_symbolKindType, ts->lineno);
-            s->val.type = t;
-            SymbolTable *innerScope = scopeSymbolTable(symTable);
-            findParentType(innerScope, t);
             if (t->kind == k_typeStruct) {
                 structScope = initSymbolTable();
-                symSTRUCTSPEC(t->val.structType, innerScope, structScope); // Inner scope
+                symSTRUCTSPEC(t->val.structType, ident, symTable, structScope);
                 free(structScope);
+                putSymbol_Type(symTable, ident, t, ts->lineno);
+            } else if (isRecursive(t)) { // If type is recursive, use inner scope
+                SYMBOL *s = putSymbol(symTable, ident, k_symbolKindType, ts->lineno);
+                s->val.type = t;
+                SymbolTable *innerScope = scopeSymbolTable(symTable);
+                findParentType(innerScope, t);
+                putSymbol_Type(innerScope, ident, t, ts->lineno);
+            } else {
+                findParentType(symTable, t);
+                putSymbol_Type(symTable, ident, t, ts->lineno);
             }
-            putSymbol_Type(innerScope, ident, t, ts->lineno); // Inner scope
             break;
         default:
             break;
