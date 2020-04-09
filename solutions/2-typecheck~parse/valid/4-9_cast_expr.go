@@ -24,7 +24,7 @@ func cast_rune() {
 func cast_bool() {
 	type num bool
 	var x bool = true
-	var y num = num(x)
+	var y num = num(x) // Illegal typecast operation. The expr is not compatible with the type
 	x = bool(y)
 }
 

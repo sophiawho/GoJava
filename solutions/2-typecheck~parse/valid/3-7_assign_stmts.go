@@ -85,7 +85,8 @@ func assign_struct() {
 		x int
 		y int
 	}
-	var f struct {
+	var f struct { // Error: (line 92) Illegal assignment. LHS and RHS types don't match.
+	// e and f are not equal due to f having multiple identifiers; requires changing either isEqualType or AST
 		x, y int
 	}
 	f = e
@@ -108,7 +109,7 @@ func slice() []int {
 	return a
 }
 
-func assign_lvalue() {
+func assign_lvalue() { // Error: (line 115) Illegal assignment. LHS must be addressable. requires changing isAddressable
 	slice()[0] = 5
 }
 
