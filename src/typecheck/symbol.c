@@ -604,6 +604,7 @@ void symTYPECAST(EXP *e, EXP *typeExpr, EXP *exprToCast) {
     e->kind = k_expKindCast;
     e->val.cast.type = s->val.type;
     e->val.cast.exp = exprToCast;
+    if (!exprToCast) return;
     s = getSymbolFromExp(exprToCast);
     if (s != NULL && s->kind == k_symbolKindConstant) {
         e->val.cast.exp->type = s->val.varSpec->type;
