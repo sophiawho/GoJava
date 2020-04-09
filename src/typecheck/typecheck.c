@@ -67,14 +67,66 @@ bool isEqualType(TYPE *t1, TYPE *t2) {
         case k_typeStruct:
             ss1 = t1->val.structType;
             ss2 = t2->val.structType;
-            while (ss1 != NULL && ss2 != NULL) {
-                if (strcmp(ss1->attribute->ident, ss2->attribute->ident) != 0) return false;
-                if (!isEqualType(ss1->type, ss2->type)) return false;
-                ss1 = ss1->next;
-                ss2 = ss2->next;
+
+            // Obviously, if two struct types don't have any fields, they're equal
+            if (ss1 == NULL && ss2 == NULL) return true;
+
+            IDENT *attribute1 = ss1->attribute;
+            IDENT *attribute2 = ss2->attribute;
+
+            // We need to iterate over all attributes in every struct spec
+            // However, some structspecs contain multiple attributes whereas another equivalent one may
+            // contain less. So we might need to iterate over one list of attributes in one struct type,
+            // but iterate to the next structspec in the other struct type. Basically, equal attributes may
+            // be in different struct specs, so we need to accomodate for that.
+            while (attribute1 != NULL && attribute2 != NULL)
+            {
+                if (strcmp(attribute1->ident, attribute2->ident) != 0) return false;
+
+                if (attribute1->next != NULL && attribute2->next != NULL)
+                {
+                    attribute1 = attribute1->next;
+                    attribute2 = attribute2->next;
+                }
+                else if (attribute1->next != NULL && attribute2->next == NULL)
+                {
+                    attribute1 = attribute1->next;
+
+                    ss2 = ss2->next;
+                    if (ss2 != NULL) attribute2 = ss2->attribute;
+                    else return false;
+                }
+                else if (attribute1->next == NULL && attribute2->next != NULL)
+                {
+                    ss1 = ss1->next;
+                    if (ss1 != NULL) attribute1 = ss1->attribute;
+                    else return false;
+
+                    attribute2 = attribute2->next;
+                }
+                else
+                {
+                    ss1 = ss1->next;
+                    ss2 = ss2->next;
+                    if ((ss1 != NULL && ss2 == NULL) || (ss1 == NULL && ss2 != NULL))
+                    {
+                        return false;
+                    }
+                    else if (ss1 != NULL && ss2 != NULL)
+                    {
+                        if (!isEqualType(ss1->type, ss2->type)) return false;
+                        attribute1 = ss1->attribute;
+                        attribute2 = ss2->attribute;
+                    }
+                    else 
+                    {   
+                        // This means we've checked all attributes and struct specs, in which no combination   
+                        // returned false, so these two struct types must be equal
+                        return true;
+                    }
+                }
             }
-            if (ss1 != NULL || ss2 != NULL) return false;
-            return true;
+            break;
         case k_typeInfer:
             return strcmp(t1->val.identifier, t2->val.identifier) == 0;
         default:
@@ -159,6 +211,20 @@ bool isAddressable(EXP *exp) {
         return isAddressable(exp->val.fieldAccess.object);
     case k_expKindUParenthesized:
         return isAddressable(exp->val.unary.rhs);
+    case k_expKindFuncCall: ;
+        FUNC *funcSpec = exp->val.funcCall.primaryExpr->val.identExp.symbol->val.funcSpec;
+        if (funcSpec->returnType == NULL) return false;
+        switch (funcSpec->returnType->kind)
+        {
+        case k_typeSlice:
+            // The only function call expression that is addressable is one that returns a slice
+            return true;
+        
+        default:
+            return false;
+        }
+        //break
+        
     default:
         return false;
     }
