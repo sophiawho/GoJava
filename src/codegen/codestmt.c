@@ -57,15 +57,14 @@ void generateAssignStmt(AssignKind kind, EXP *lhs, EXP *rhs, bool newLine) {
     }
     else if (kind == k_stmtColonAssign)
     {
-        // TODO
-        generateINDENT(indent);
-        
         IDENT *id = makeIDENT(lhs->val.identExp.ident);
         if (id != NULL && rhs != NULL && lhs->type != NULL) 
         {
             VARSPEC *vs = makeVarSpec(id, rhs, lhs->type);
             generateVarDecl(vs);
         }
+
+        if (newLine) fprintf(outputFile, ";\n");
     }
 }
 
@@ -113,7 +112,34 @@ void generateSTMT(STMT *s, bool newLine) {
             break;
         case k_stmtKindIfStmt:
             // TODO
+            if (s->val.ifStmt.simpleStmt != NULL) generateSTMT(s->val.ifStmt.simpleStmt, true);
+
+            generateINDENT(indent);
+
+            fprintf(outputFile, "if (");
+            generateEXP(s->val.ifStmt.condition, false);
+            fprintf(outputFile, ") {\n");
+
+            indent++;
+            generateSTMT(s->val.ifStmt.trueBody, true);
+            indent--;
+            generateINDENT(indent);
+            fprintf(outputFile, "}\n");
+
+            if (s->val.ifStmt.falseBody != NULL)
+            {
+                generateINDENT(indent);
+                fprintf(outputFile, "else {\n");
+
+                indent++;
+                generateSTMT(s->val.ifStmt.falseBody, true);
+                indent--;
+
+                generateINDENT(indent);
+                fprintf(outputFile, "}\n");
+            }
             break;
+            
         case k_stmtKindSwitch:
             // TODO
             break;
