@@ -144,10 +144,14 @@ void generateSTMT(STMT *s, bool newLine) {
             fprintf(outputFile, "}\n");
             break;
         case k_stmtKindBreak:
-            // TODO
+            generateINDENT(indent);
+            fprintf(outputFile, "break;");
+            if (newLine) fprintf(outputFile, "\n");
             break;
         case k_stmtKindContinue:
-            // TODO
+            generateINDENT(indent);
+            fprintf(outputFile, "continue;");
+            if (newLine) fprintf(outputFile, "\n");
             break;
         case k_stmtKindReturn:
             if (s->val.returnExp != NULL)
