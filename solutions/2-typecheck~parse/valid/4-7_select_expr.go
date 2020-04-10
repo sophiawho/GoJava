@@ -57,7 +57,7 @@ func main() {
 	z = q.z
 
 	var v vector
-	v.i = q
+	v.i = q // Error: Illegal assignment. LHS and RHS types don't match.
 	v.j = q
 
 	v.i.x = 2.0
