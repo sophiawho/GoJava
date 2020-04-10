@@ -424,8 +424,11 @@ void generateEXP(EXP *e, bool recurse)
             if (e->val.lenExp->type->kind == k_typeSlice) {
                 fprintf(outputFile, "%s.len", prepend(lenIdent));
             } else if (e->val.lenExp->type->kind == k_typeArray) {
-                // TODO ARRAY
                 fprintf(outputFile, "%s.length", prepend(lenIdent));
+            } else if (e->val.lenExp->type->kind == k_typeString) { 
+                // may have to change condition to resolveToStringBaseType - not sure
+                generateEXP(e->val.lenExp, recurse);
+                fprintf(outputFile, ".length()"); 
             }
             break;
         case k_expKindCap: ;
