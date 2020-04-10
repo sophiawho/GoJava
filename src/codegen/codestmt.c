@@ -240,7 +240,7 @@ void generateTYPESPEC(TYPESPEC *ts)
         // Need to write as a loop for commas
         for (IDENT *id = ts->ident; id; id = id->next)
         {
-            fprintf(outputFile, "%s ", getStringFromType(ts->type, true)); //not sure if is_primitive=True
+            fprintf(outputFile, "%s ", getStringFromType(ts->type, true)); 
             if (id->next != NULL) fprintf(outputFile, "%s, ", id->ident);
             else fprintf(outputFile, "%s;\n", id->ident);
         }
@@ -258,7 +258,7 @@ void generateSTRUCTSPEC(STRUCTSPEC *ss)
     generateINDENT(indent);
 
     // There is only 1 TYPE per STRUCTSPEC
-    fprintf(outputFile, "%s ", getStringFromType(ss->type, false)); // Cannot be certain it is primitive
+    fprintf(outputFile, "%s ", getStringFromType(ss->type, true));
 
     for (IDENT *id = ss->attribute; id; id=id->next)
     {
