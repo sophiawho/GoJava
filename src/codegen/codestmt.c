@@ -108,7 +108,13 @@ void generateSTMT(STMT *s, bool newLine) {
             generateTYPESPEC(s->val.typeDecl);
             break;
         case k_stmtKindBlock:
+            generateINDENT(indent);
+            fprintf(outputFile, "{\n");
+            indent++;
             generateSTMT(s->val.blockStmt, true);
+            indent--;
+            generateINDENT(indent);
+            fprintf(outputFile, "}\n");
             break;
         case k_stmtKindIfStmt:
             if (s->val.ifStmt.simpleStmt != NULL) 
@@ -124,25 +130,18 @@ void generateSTMT(STMT *s, bool newLine) {
 
             fprintf(outputFile, "if (");
             generateEXP(s->val.ifStmt.condition, false);
-            fprintf(outputFile, ") {\n");
+            fprintf(outputFile, ") \n");
 
-            indent++;
+            // Block Statment generation takes care of curly brackets, indentation
+            // and new lines
             generateSTMT(s->val.ifStmt.trueBody, true);
-            indent--;
-            generateINDENT(indent);
-            fprintf(outputFile, "}\n");
 
             if (s->val.ifStmt.falseBody != NULL)
             {
                 generateINDENT(indent);
-                fprintf(outputFile, "else {\n");
+                fprintf(outputFile, "else \n");
 
-                indent++;
                 generateSTMT(s->val.ifStmt.falseBody, true);
-                indent--;
-
-                generateINDENT(indent);
-                fprintf(outputFile, "}\n");
             }
 
             if (s->val.ifStmt.simpleStmt != NULL) 
@@ -172,15 +171,13 @@ void generateSTMT(STMT *s, bool newLine) {
             fprintf(outputFile, "; ");
 
             generateSTMT(s->val.forLoop.postStmt, false);
-            fprintf(outputFile, ") {\n");
+            fprintf(outputFile, ") \n");
 
             indent = tempIndent;
-            indent++;
             generateSTMT(s->val.forLoop.body, true);
-            indent--;
 
             generateINDENT(indent);
-            fprintf(outputFile, "}\n");
+            fprintf(outputFile, "\n");
             break;
         case k_stmtKindBreak:
             generateINDENT(indent);
