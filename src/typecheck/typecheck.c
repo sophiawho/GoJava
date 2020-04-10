@@ -168,8 +168,9 @@ bool isComparable(TYPE *t) {
         return true;
         
     case k_typeSlice:
-    case k_typeInfer:
         return false;
+    case k_typeInfer:
+        return isComparable(resolveType(t));
     }
 
     return false;
@@ -189,6 +190,9 @@ bool isOrdered(TYPE *t) {
         t->kind == k_typeFloat ||
         t->kind == k_typeRune || 
         t->kind == k_typeString ) return true;
+    else if (t->kind == k_typeInfer) {
+        return isOrdered(resolveType(t));
+    }
     return false;
 }
 
@@ -763,7 +767,6 @@ void typeEXP(EXP *e) {
     if (e == NULL) return;
     typeEXP(e->next);
 
-    TYPE *t;
     SYMBOL *s;
     switch (e->kind) {
 
@@ -836,7 +839,7 @@ void typeEXP(EXP *e) {
             if (!resolveToBoolBaseType(e->val.binary.lhs->type) || !resolveToBoolBaseType(e->val.binary.rhs->type)) {
                 throwError("Illegal binary expression. Operands must resolve to a bool type.\n", e->lineno);
             }
-            e->type = makeTYPE(k_typeBool);
+            e->type = e->val.binary.lhs->type;
             break;
 
         // TODO: As per 4.4, what do expressions being "comparable/ordered" mean?
@@ -901,8 +904,7 @@ void typeEXP(EXP *e) {
                 e->lineno);
             }
 
-            t = resolveType(e->val.binary.lhs->type);
-            e->type = makeTYPE(t->kind);
+            e->type = e->val.binary.lhs->type;
             break;
 
         case k_expKindMinus:    // -

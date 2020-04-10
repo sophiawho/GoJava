@@ -97,8 +97,8 @@ func logical() {
 	println(c && c)
 	println(c || c)
 
-	c = c && c
-	c = c || c // Error: (line 101) Illegal assignment. LHS and RHS types don't match.
+	c = c && c // [fixed] Error: (line 101) Illegal assignment. LHS and RHS types don't match.
+	c = c || c 
 }
 
 func comparison() {
@@ -174,8 +174,8 @@ func type_aliases() {
 	println(x / y)
 	println(x % y)
 
-	x = x + y
-	x = x - y
+	x = x + y // [fixed] Error: (line 178) Illegal assignment. LHS and RHS types don't match.
+	x = x - y 
 	x = x * y
 	x = x / y
 	x = x % y
@@ -196,9 +196,9 @@ func type_aliases() {
 	x = x >> y
 
 	// Comparison ops
-	println(x == y)
+	println(x == y) // [fixed] Error: (line 199) Illegal binary comparison. Operands must resolve to comparable types.
 	println(x != y)
-	println(x < y)
+	println(x < y) // [fixed] Error: (line 201) Illegal binary comparison. Operands must resolve to ordered types.
 	println(x <= y)
 	println(x >= y)
 	println(x > y)
