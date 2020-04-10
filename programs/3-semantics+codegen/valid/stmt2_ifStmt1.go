@@ -4,6 +4,7 @@
 //~d equals 0
 //~Hello
 //~Something
+//~World
 //~f() called
 //~b == 2
 //~b = 10
@@ -51,6 +52,9 @@ func main() {
 			println("Something")
 		}
 	}
+
+	c := "World"
+	println(c)
 
 	// EmptyStmt
 	if ; false {

@@ -111,8 +111,14 @@ void generateSTMT(STMT *s, bool newLine) {
             generateSTMT(s->val.blockStmt, true);
             break;
         case k_stmtKindIfStmt:
-            // TODO
-            if (s->val.ifStmt.simpleStmt != NULL) generateSTMT(s->val.ifStmt.simpleStmt, true);
+            if (s->val.ifStmt.simpleStmt != NULL) 
+            {
+                generateINDENT(indent);
+                fprintf(outputFile, "{\n");
+                indent++;
+
+                generateSTMT(s->val.ifStmt.simpleStmt, true);
+            }
 
             generateINDENT(indent);
 
@@ -135,6 +141,13 @@ void generateSTMT(STMT *s, bool newLine) {
                 generateSTMT(s->val.ifStmt.falseBody, true);
                 indent--;
 
+                generateINDENT(indent);
+                fprintf(outputFile, "}\n");
+            }
+
+            if (s->val.ifStmt.simpleStmt != NULL) 
+            {
+                indent--;
                 generateINDENT(indent);
                 fprintf(outputFile, "}\n");
             }
