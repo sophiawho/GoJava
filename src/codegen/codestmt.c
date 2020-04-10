@@ -63,7 +63,6 @@ void generateAssignStmt(AssignKind kind, EXP *lhs, EXP *rhs, bool newLine) {
         IDENT *id = makeIDENT(lhs->val.identExp.ident);
         if (id != NULL && rhs != NULL && lhs->type != NULL) 
         {
-            // fprintf(stdout, getStringFromType(lhs->type, true));
             VARSPEC *vs = makeVarSpec(id, rhs, lhs->type);
             generateVarDecl(vs);
         }
@@ -87,9 +86,9 @@ void generateSTMT(STMT *s, bool newLine) {
         case k_stmtKindIncDec:
             generateINDENT(indent);
             generateEXP(s->val.incDecStmt.exp, false);
-            if (s->val.incDecStmt.amount == 1) fprintf(outputFile, "++;");
-            else fprintf(outputFile, "--;");
-            if (newLine) fprintf(outputFile, "\n");
+            if (s->val.incDecStmt.amount == 1) fprintf(outputFile, "++");
+            else fprintf(outputFile, "--");
+            if (newLine) fprintf(outputFile, ";\n");
             break;
         case k_stmtKindAssign:
             generateAssignStmt(s->val.assignStmt.kind, s->val.assignStmt.lhs, 

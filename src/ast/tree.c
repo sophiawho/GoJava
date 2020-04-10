@@ -193,6 +193,7 @@ VARSPEC *makeVarSpec(IDENT *ident, EXP *rhs, TYPE *type) {
     vs->ident = ident;
     vs->rhs = rhs;
     vs->type = type;
+	vs->next = NULL;
     return vs;
 }
 
