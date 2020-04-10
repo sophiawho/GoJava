@@ -1,0 +1,26 @@
+//~Cap: 0 , len: 0
+//~Cap: 2 , len: 1
+//~Cap: 2 , len: 2
+//~Cap: 4 , len: 3
+//~Cap: 4 , len: 4
+//~Cap: 8 , len: 5
+//~Cap: 8 , len: 6
+//~Cap: 8 , len: 7
+//~Cap: 8 , len: 8
+//~Cap: 16 , len: 9
+//~Cap: 5 , len: 5
+//~
+
+package test
+
+func main() {
+    // k_loopKindThreePart
+	var a []int
+	for i:=0; i<10; i++ {
+		println("Cap:", cap(a), ", len:", len(a))
+		a = append(a, 0)
+	}
+
+	var b[5]int
+	println("Cap:", cap(b), ", len:", len(b))
+}
