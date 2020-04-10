@@ -127,6 +127,14 @@ void weedSTMT(STMT *s)
     int countRhs = 0;
     if (s != NULL) 
     {
+        // Remember: The AST is built from tail to head! So the first statement being weeded is actually 
+        // the last statement within the given block of code. So if the next statement is a return statement
+        // that means there's at least one unreachable line of code
+        if (s->next != NULL)
+        {
+            if (s->next->kind == k_stmtKindReturn) throwError("Unreachable code", s->lineno);
+        }
+
         switch (s->kind)
         {
         case k_stmtKindExpStmt:
@@ -512,7 +520,7 @@ void weedEXP_nonEval(EXP *e, bool allowBlankId)
             break;
 
         case k_expKindFuncCall:
-            throwError("cannot use function call in an expression that doesn't evaluate to a value", e->lineno);
+            // throwError("cannot use function call in an expression that doesn't evaluate to a value", e->lineno);
             break;
 
         case k_expKindArrayAccess:

@@ -24,10 +24,10 @@ func main() {
 	var e elem
 	var i index
 
-	a = ws[0]
-	a = xs[0]
+	a = ws[0] // [fixed] Illegal assignment. The RHS and LHS do not match.
+	a = xs[0] 
 	a = ys[0]
-	e = zs[0]
+	e = zs[0] // [fixed] Segmentation fault
 
 	a = ws[i]
 	a = xs[i]

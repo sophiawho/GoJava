@@ -11,15 +11,6 @@ func main() {
 	yoyoma *= n
 	a, b, c := 1, 3, "sdfsdf"
 
-	return 
-	return a * a
-
-	// block
-	{
-		a++
-		return 0
-	}
-
 	print("sdfsdf", a, b, c)
 	println("sdfsdf", a, b, c)
 
@@ -64,4 +55,20 @@ func main() {
 	var x__3 = some_func(3, 4);
 	some_func_2(4, 3, 0);
 
+}
+
+func f1() {
+	return 
+}
+
+func f2() int {
+	// block
+	{
+		a++
+		return 0
+	}
+}
+
+func f3() int {
+	return a * a
 }
