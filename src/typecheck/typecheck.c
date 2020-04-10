@@ -981,10 +981,8 @@ void typeEXP(EXP *e) {
                 TYPE *arrayType = resolveType(arrayReference->type);
                 e->type = arrayType->val.arrayType.type;
             }
-            if (e->type->kind == k_typeInfer) {
-                if (e->type->symbol) {
-                    e->type = e->type->symbol->val.type;
-                }
+            if (e->type->kind == k_typeInfer && e->type->symbol) {
+                e->type = e->type->symbol->val.type;
             }
             break;
 
