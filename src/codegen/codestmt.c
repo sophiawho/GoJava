@@ -2,6 +2,7 @@
 #include "../ast/stmt.h"
 #include "codestmt.h"
 #include "code.h"
+#include "../typecheck/typecheck.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -144,49 +145,69 @@ void generateSTMT(STMT *s) {
     }
 }
 
-// var a int = 3 becomes:
-// Integer __golite__a = new Integer(3);
+void generateZeroValue(TYPE *t) {
+    switch (t->kind) {
+        case k_typeBool:
+            fprintf(outputFile, "false");
+            break;
+        case k_typeString:
+            fprintf(outputFile, "\"\"");
+            break;
+        case k_typeInt:
+            fprintf(outputFile, "0");
+            break;
+        case k_typeFloat:
+            fprintf(outputFile, "0.0");
+            break;
+        default:
+            break;
+    }
+}
+
+// TODO: if outside of a function, must prepend "public static" [check indent level]
+// TODO: blank identifers
 void generateVarDecl(VARSPEC *vs) {
     if (vs == NULL) return;
     generateVarDecl(vs->next);
-    if (vs->type != NULL) {
+    if (vs->type == NULL) {
+        generateINDENT(indent); fprintf(outputFile, "Type has not been specified. There was an error in typecheck.");
+        return;
+    }
+    IDENT *curIdent = vs->ident;
+    EXP *e = vs->rhs == NULL ? NULL : vs->rhs; // Refactor
+    while (curIdent != NULL) {
         if (vs->type->kind == k_typeArray) {
             char *type = getStringFromType(vs->type->val.arrayType.type, true);
-            generateINDENT(indent); fprintf(outputFile, "%s[] %s = new %s[%d]", type, prepend(vs->ident->ident), type, vs->type->val.arrayType.size);
+            generateINDENT(indent); fprintf(outputFile, "%s[] %s = new %s[%d]", type, prepend(curIdent->ident), type, vs->type->val.arrayType.size);
         } else if (vs->type->kind == k_typeSlice) {
             char *type = getStringFromType(vs->type->val.sliceType.type, false);
-            generateINDENT(indent); fprintf(outputFile, "Slice<%s> %s = ", type, prepend(vs->ident->ident));
+            generateINDENT(indent); fprintf(outputFile, "Slice<%s> %s = ", type, prepend(curIdent->ident));
             if (vs->rhs != NULL && vs->rhs->kind == k_expKindAppend) {
                 generateEXP(vs->rhs, false);
             } else {
                 fprintf(outputFile, " new Slice<>()");
             }
-        } 
-        else if (vs->type->kind == k_typeStruct)
-        {
+        } else if (vs->type->kind == k_typeStruct) {
             char *type = getStringFromType(vs->type, true);
             generateINDENT(indent); 
 
             // Structs are implemented as Classes in Java, so we need to allocate memory with `new` and
             // construct the variable
-            fprintf(outputFile, "%s %s = new %s()", type, prepend(vs->ident->ident), type);
-        }
-        else {
+            fprintf(outputFile, "%s %s = new %s()", type, prepend(curIdent->ident), type);
+        } else {
             char *type = getStringFromType(vs->type, true);
-            generateINDENT(indent); fprintf(outputFile, "%s %s", type, prepend(vs->ident->ident));
-            if (vs->rhs != NULL) {
-                fprintf(outputFile, " = ");
-                generateEXP(vs->rhs, false);
+            generateINDENT(indent); fprintf(outputFile, "%s %s", type, prepend(curIdent->ident));
+            fprintf(outputFile, " = ");
+            if (e != NULL) {
+                generateEXP(e, false);
+                e = e->next;
+            } else {
+                generateZeroValue(resolveType(vs->type));
             }
         }
-    } else {
-        generateINDENT(indent); fprintf(outputFile, "Type has not been specified. This is not yet supported by codegen.");
+        fprintf(outputFile, ";\n");
+        curIdent = curIdent->next;
     }
-    fprintf(outputFile, ";\n");
-    // TODO: multiple identifiers and expressions
-    // TODO: arrays, slices, etc
-    // TODO: if outside of a function, must prepend "public static" 
-    // TODO: type is optional, right now we assume type is given
 }
 
 // Generate type declarations (NOTE: only for struct types!) and input parameters
@@ -219,7 +240,7 @@ void generateTYPESPEC(TYPESPEC *ts)
         // Need to write as a loop for commas
         for (IDENT *id = ts->ident; id; id = id->next)
         {
-            fprintf(outputFile, "%s ", getStringFromType(ts->type, true)); //not sure if is_primitive=True
+            fprintf(outputFile, "%s ", getStringFromType(ts->type, true)); 
             if (id->next != NULL) fprintf(outputFile, "%s, ", id->ident);
             else fprintf(outputFile, "%s;\n", id->ident);
         }
@@ -237,7 +258,7 @@ void generateSTRUCTSPEC(STRUCTSPEC *ss)
     generateINDENT(indent);
 
     // There is only 1 TYPE per STRUCTSPEC
-    fprintf(outputFile, "%s ", getStringFromType(ss->type, false)); // Cannot be certain it is primitive
+    fprintf(outputFile, "%s ", getStringFromType(ss->type, true));
 
     for (IDENT *id = ss->attribute; id; id=id->next)
     {
@@ -483,7 +504,7 @@ char *getStringFromType(TYPE *t, bool isPrimitive){
             case k_typeRune:
                 return isPrimitive ? "int" : "Integer";
             case k_typeBool:
-                return isPrimitive ? "bool" : "Boolean";
+                return isPrimitive ? "boolean" : "Boolean";
             case k_typeString:
                 return "String";
             case k_typeFloat:
