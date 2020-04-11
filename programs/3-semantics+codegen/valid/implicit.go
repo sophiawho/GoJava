@@ -4,6 +4,6 @@
 package test
 
 func main() {
-	var a int = 0
+	var a int
 	println(a)
 }

@@ -1,8 +1,19 @@
+//~false
+//~false
+//~false
 //~true
 //~true
 //~true
 
 package main
+
+func init() {
+
+	// k_expKindGrtrEq
+	println(1 >= 2)
+	println(1.0 >= 2.0)
+	println("ABC" >= "DEF")
+}
 
 func main() {
 	
