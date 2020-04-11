@@ -4,6 +4,15 @@
 //~1
 //~1
 //~0
+//~1
+//~2
+//~0
+//~1
+//~2
+//~1
+//~2
+//~2
+//~0
 //~Continued
 //~Broke
 
@@ -28,6 +37,23 @@ func main() {
     }
     // x2 doesn't increment after a break
     println(x2)
+
+    for x3 := 0; x3 < 3; x3++ {
+
+        for x4 := x3; x4 < 3; x4++ {
+            println(x4)
+
+            for ; ; {
+                if x4 >= 0 {
+                    break
+                }
+            }
+            continue
+        }
+
+        println(x3)
+        continue
+    }
 
     for a:=0; a < 1; a++ {
         println(a)

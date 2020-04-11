@@ -115,6 +115,10 @@ void generateForLoop(STMT *s)
     generateINDENT(indent);
     fprintf(outputFile, "boolean continue_loop_%d = true;\n", labelId);
     generateINDENT(indent);
+    // Need a variable to be used a true literal for infinite loops, otherwise we can get 
+    // unreachable statement errors
+    fprintf(outputFile, "boolean true_literal_%d = true;\n", labelId);
+    generateINDENT(indent);
     fprintf(outputFile, "Loop_%d:\n", labelId);
     generateINDENT(indent);
     fprintf(outputFile, "while(continue_loop_%d)\n", labelId);
@@ -139,7 +143,7 @@ void generateForLoop(STMT *s)
     generateINDENT(indent);
     fprintf(outputFile, "while (");
     if (s->val.forLoop.condition != NULL) generateEXP(s->val.forLoop.condition, false);
-    else fprintf(outputFile, "true");
+    else fprintf(outputFile, "true_literal_%d", labelId);
     fprintf(outputFile, ") \n");
 
     // Create the body of the for loop by extending the post statements
@@ -271,24 +275,15 @@ void generateSTMT(STMT *s) {
             break;
 
         case k_stmtKindBreak:
+            // Need to create an if statement to avoid getting unreachable statement errors
             generateINDENT(indent);
-            fprintf(outputFile, "break;\n");
+            fprintf(outputFile, "if (true) {break Loop_%d;}\n", labelId);
             break;
 
         case k_stmtKindContinue:
             // Need to create an if statement to avoid getting unreachable statement errors
             generateINDENT(indent);
-            fprintf(outputFile, "if (true)\n");
-            generateINDENT(indent);
-            fprintf(outputFile, "{\n");
-            indent++;
-            generateINDENT(indent);
-            fprintf(outputFile, "do_post_loop_%d = true;\n", labelId);
-            generateINDENT(indent);
-            fprintf(outputFile, "continue Loop_%d;\n", labelId);
-            indent--;
-            generateINDENT(indent);
-            fprintf(outputFile, "}\n");
+            fprintf(outputFile, "if (true) {do_post_loop_%d = true; continue Loop_%d;}\n", labelId, labelId);
             break;
 
         case k_stmtKindReturn:
