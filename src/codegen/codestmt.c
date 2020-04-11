@@ -10,6 +10,8 @@
 #include <string.h>
 #include <stdbool.h>
 
+int labelId = -1;
+
 void traverseExpForPrint(EXP *e, bool newLine, bool last) {
     if (e == NULL) return;
     traverseExpForPrint(e->next, newLine, false);
@@ -71,8 +73,6 @@ void generateAssignStmt(AssignKind kind, EXP *lhs, EXP *rhs) {
     case k_stmtColonAssign:
         while(lhs != NULL)
         {
-            // We output one identifier at a time
-            // TODO This needs to be fixed
             IDENT *id = makeIDENT(lhs->val.identExp.ident);
             id->next = NULL;
 
@@ -91,6 +91,94 @@ void generateAssignStmt(AssignKind kind, EXP *lhs, EXP *rhs) {
         throwInternalError("Not implemented yet", 0);
         break;
     }
+}
+
+void generateForLoop(STMT *s)
+{
+    labelId++;
+
+    // Keep all for loop init and post statements in a new scope
+    generateINDENT(indent);
+    fprintf(outputFile, "{\n");
+    indent++;
+    if (s->val.forLoop.initStmt != NULL)
+    {
+        generateINDENT(indent);
+        fprintf(outputFile, "//Init statements\n");
+        generateSTMT(s->val.forLoop.initStmt);
+    }
+
+    // We assume there's a continue statement, so we need to duplicate the 
+    // post statements before the while loop
+    generateINDENT(indent);
+    fprintf(outputFile, "boolean do_post_loop_%d = false;\n", labelId);
+    generateINDENT(indent);
+    fprintf(outputFile, "boolean continue_loop_%d = true;\n", labelId);
+    generateINDENT(indent);
+    fprintf(outputFile, "Loop_%d:\n", labelId);
+    generateINDENT(indent);
+    fprintf(outputFile, "while(continue_loop_%d)\n", labelId);
+    generateINDENT(indent);
+    fprintf(outputFile, "{\n");
+
+    // Duplicate post statements needed for continue statement
+    // We add an if statement to avoid running any post statements before the loop's first
+    // iteration
+    indent++;
+    generateINDENT(indent);
+    fprintf(outputFile, "if (do_post_loop_%d)\n", labelId);
+    generateINDENT(indent);
+    fprintf(outputFile, "{\n");
+    indent++;
+    generateSTMT(s->val.forLoop.postStmt);
+    indent--;
+    generateINDENT(indent);
+    fprintf(outputFile, "}\n");
+
+    // While statement with condition
+    generateINDENT(indent);
+    fprintf(outputFile, "while (");
+    if (s->val.forLoop.condition != NULL) generateEXP(s->val.forLoop.condition, false);
+    else fprintf(outputFile, "true");
+    fprintf(outputFile, ") \n");
+
+    // Create the body of the for loop by extending the post statements
+    if (s->val.forLoop.postStmt != NULL)
+    {
+        STMT *body = s->val.forLoop.postStmt;
+        STMT *next = body;
+        while (next->next != NULL) next = next->next;
+        next->next = s->val.forLoop.body->val.blockStmt;
+
+        generateINDENT(indent);
+        fprintf(outputFile, "{\n");
+
+        indent++;
+        generateSTMT(body);
+        indent--;
+
+        generateINDENT(indent);
+        fprintf(outputFile, "}\n");
+    }
+    else
+    {
+        generateSTMT(s->val.forLoop.body);
+    }
+
+    generateINDENT(indent);
+    fprintf(outputFile, "continue_loop_%d = false;\n", labelId);
+
+   // Close the Loop
+    indent--;
+    generateINDENT(indent);
+    fprintf(outputFile, "}\n");
+    
+    // Close the scope
+    indent--;
+    generateINDENT(indent);
+    fprintf(outputFile, "}\n");
+
+    labelId--;
 }
 
 void generateSTMT(STMT *s) {
@@ -179,64 +267,30 @@ void generateSTMT(STMT *s) {
             break;
 
         case k_stmtKindFor: 
-
-            if (s->val.forLoop.initStmt != NULL)
-            {
-                generateINDENT(indent);
-                fprintf(outputFile, "{\n");
-                indent++;
-                generateINDENT(indent);
-                fprintf(outputFile, "//Init statements\n");
-                generateSTMT(s->val.forLoop.initStmt);
-                
-            }
-
-            generateINDENT(indent);
-            fprintf(outputFile, "while (");
-
-            if (s->val.forLoop.condition != NULL) generateEXP(s->val.forLoop.condition, false);
-            else fprintf(outputFile, "true");
-
-            fprintf(outputFile, ") \n");
-
-            if (s->val.forLoop.postStmt != NULL)
-            {
-                STMT *body = s->val.forLoop.postStmt;
-                STMT *next = body;
-                while (next->next != NULL) next = next->next;
-                next->next = s->val.forLoop.body->val.blockStmt;
-
-                generateINDENT(indent);
-                fprintf(outputFile, "{\n");
-
-                indent++;
-                generateSTMT(body);
-                indent--;
-
-                generateINDENT(indent);
-                fprintf(outputFile, "}\n");
-            }
-            else
-            {
-                generateSTMT(s->val.forLoop.body);
-            }
-
-            if (s->val.forLoop.initStmt != NULL)
-            {
-                indent--;
-                generateINDENT(indent);
-                fprintf(outputFile, "}\n");
-            }
+            generateForLoop(s);
             break;
 
         case k_stmtKindBreak:
             generateINDENT(indent);
             fprintf(outputFile, "break;\n");
             break;
+
         case k_stmtKindContinue:
+            // Need to create an if statement to avoid getting unreachable statement errors
             generateINDENT(indent);
-            fprintf(outputFile, "continue;\n");
+            fprintf(outputFile, "if (true)\n");
+            generateINDENT(indent);
+            fprintf(outputFile, "{\n");
+            indent++;
+            generateINDENT(indent);
+            fprintf(outputFile, "do_post_loop_%d = true;\n", labelId);
+            generateINDENT(indent);
+            fprintf(outputFile, "continue Loop_%d;\n", labelId);
+            indent--;
+            generateINDENT(indent);
+            fprintf(outputFile, "}\n");
             break;
+
         case k_stmtKindReturn:
             if (s->val.returnExp != NULL)
             {
