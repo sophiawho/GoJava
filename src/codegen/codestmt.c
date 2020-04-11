@@ -3,6 +3,7 @@
 #include "codestmt.h"
 #include "code.h"
 #include "../typecheck/typecheck.h"
+#include "../error.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,30 +38,58 @@ void traverseExpForPrint(EXP *e, bool newLine, bool last) {
 }
 
 void generateAssignStmt(AssignKind kind, EXP *lhs, EXP *rhs) {
-    if (kind == k_stmtAssign) {
-        generateINDENT(indent);
-        if (lhs->kind == k_expKindArrayAccess && lhs->val.arrayAccess.arrayReference->type->kind == k_typeSlice) {
-            char *arrayIdent = lhs->val.arrayAccess.arrayReference->val.identExp.ident;
-            EXP *indexExp = lhs->val.arrayAccess.indexExp;  
-            fprintf(outputFile, "%s.put(", prepend(arrayIdent));
-            generateEXP(indexExp, false);
-            fprintf(outputFile, ", ");
-            generateEXP(rhs, false);
-            fprintf(outputFile, ")");
-        } else {
-            // If regular assign stmt: [indendation] lhs = rhs
-            generateEXP(lhs, false);
-            fprintf(outputFile, " = ");
-            generateEXP(rhs, false);
-        }
-        fprintf(outputFile, ";\n");
-    }
-    else if (kind == k_stmtColonAssign)
+
+    switch (kind)
     {
-        // TODO
-        // IDENT *id = makeIDENT(lhs->val.identExp.ident);
-        // VARSPEC *vs = makeVarSpec(id, rhs, lhs->type);
-        // generateVarDecl(vs);
+    case k_stmtAssign:
+        while (lhs != NULL)
+        {
+            generateINDENT(indent);
+            if (lhs->kind == k_expKindArrayAccess && lhs->val.arrayAccess.arrayReference->type->kind == k_typeSlice) 
+            {
+                char *arrayIdent = lhs->val.arrayAccess.arrayReference->val.identExp.ident;
+                EXP *indexExp = lhs->val.arrayAccess.indexExp;  
+                fprintf(outputFile, "%s.put(", prepend(arrayIdent));
+                generateEXP(indexExp, false);
+                fprintf(outputFile, ", ");
+                generateEXP(rhs, false);
+                fprintf(outputFile, ")");
+            } 
+            else 
+            {
+                // If regular assign stmt: [indendation] lhs = rhs
+                generateEXP(lhs, false);
+                fprintf(outputFile, " = ");
+                generateEXP(rhs, false);
+            }
+            fprintf(outputFile, ";\n");
+            lhs = lhs->next;
+            rhs = rhs->next;
+        }
+        break;
+    
+    case k_stmtColonAssign:
+        while(lhs != NULL)
+        {
+            // We output one identifier at a time
+            // TODO This needs to be fixed
+            IDENT *id = makeIDENT(lhs->val.identExp.ident);
+            id->next = NULL;
+
+            if (id != NULL && rhs != NULL && lhs->type != NULL) 
+            {
+                VARSPEC *vs = makeVarSpec(id, rhs, lhs->type);
+                vs->next = NULL;
+                generateVarDecl(vs);
+            }
+            lhs = lhs->next;
+            rhs = rhs->next;
+        }
+        break;
+    
+    default:
+        throwInternalError("Not implemented yet", 0);
+        break;
     }
 }
 
@@ -84,7 +113,8 @@ void generateSTMT(STMT *s) {
             else fprintf(outputFile, "--;\n");
             break;
         case k_stmtKindAssign:
-            generateAssignStmt(s->val.assignStmt.kind, s->val.assignStmt.lhs, s->val.assignStmt.rhs);
+            generateAssignStmt(s->val.assignStmt.kind, s->val.assignStmt.lhs, 
+                s->val.assignStmt.rhs);
             break;
         case k_stmtKindPrint: ;
             bool newline = s->val.printStmt.newLine;
@@ -100,35 +130,112 @@ void generateSTMT(STMT *s) {
             generateTYPESPEC(s->val.typeDecl);
             break;
         case k_stmtKindBlock:
-            generateSTMT(s->val.blockStmt);
-            break;
-        case k_stmtKindIfStmt:
-            // TODO
-            break;
-        case k_stmtKindSwitch:
-            // TODO
-            break;
-        case k_stmtKindFor: 
             generateINDENT(indent);
-            generateSTMT(s->val.forLoop.initStmt);
-            fprintf(outputFile, "while (");
-            if (s->val.forLoop.condition != NULL) generateEXP(s->val.forLoop.condition, false);
-            else fprintf(outputFile, "true");
-            fprintf(outputFile, ") {\n");
-
+            fprintf(outputFile, "{\n");
             indent++;
-            generateSTMT(s->val.forLoop.body);
-            generateSTMT(s->val.forLoop.postStmt);
+            generateSTMT(s->val.blockStmt);
             indent--;
-
             generateINDENT(indent);
             fprintf(outputFile, "}\n");
             break;
-        case k_stmtKindBreak:
+        case k_stmtKindIfStmt:
+            if (s->val.ifStmt.simpleStmt != NULL) 
+            {
+                generateINDENT(indent);
+                fprintf(outputFile, "{\n");
+                indent++;
+
+                generateSTMT(s->val.ifStmt.simpleStmt);
+            }
+
+            generateINDENT(indent);
+
+            fprintf(outputFile, "if (");
+            generateEXP(s->val.ifStmt.condition, false);
+            fprintf(outputFile, ") \n");
+
+            // Block Statment generation takes care of curly brackets, indentation
+            // and new lines
+            generateSTMT(s->val.ifStmt.trueBody);
+
+            if (s->val.ifStmt.falseBody != NULL)
+            {
+                generateINDENT(indent);
+                fprintf(outputFile, "else \n");
+
+                generateSTMT(s->val.ifStmt.falseBody);
+            }
+
+            if (s->val.ifStmt.simpleStmt != NULL) 
+            {
+                indent--;
+                generateINDENT(indent);
+                fprintf(outputFile, "}\n");
+            }
+            break;
+            
+        case k_stmtKindSwitch:
             // TODO
             break;
+
+        case k_stmtKindFor: 
+
+            if (s->val.forLoop.initStmt != NULL)
+            {
+                generateINDENT(indent);
+                fprintf(outputFile, "{\n");
+                indent++;
+                generateINDENT(indent);
+                fprintf(outputFile, "//Init statements\n");
+                generateSTMT(s->val.forLoop.initStmt);
+                
+            }
+
+            generateINDENT(indent);
+            fprintf(outputFile, "while (");
+
+            if (s->val.forLoop.condition != NULL) generateEXP(s->val.forLoop.condition, false);
+            else fprintf(outputFile, "true");
+
+            fprintf(outputFile, ") \n");
+
+            if (s->val.forLoop.postStmt != NULL)
+            {
+                STMT *body = s->val.forLoop.postStmt;
+                STMT *next = body;
+                while (next->next != NULL) next = next->next;
+                next->next = s->val.forLoop.body->val.blockStmt;
+
+                generateINDENT(indent);
+                fprintf(outputFile, "{\n");
+
+                indent++;
+                generateSTMT(body);
+                indent--;
+
+                generateINDENT(indent);
+                fprintf(outputFile, "}\n");
+            }
+            else
+            {
+                generateSTMT(s->val.forLoop.body);
+            }
+
+            if (s->val.forLoop.initStmt != NULL)
+            {
+                indent--;
+                generateINDENT(indent);
+                fprintf(outputFile, "}\n");
+            }
+            break;
+
+        case k_stmtKindBreak:
+            generateINDENT(indent);
+            fprintf(outputFile, "break;\n");
+            break;
         case k_stmtKindContinue:
-            // TODO
+            generateINDENT(indent);
+            fprintf(outputFile, "continue;\n");
             break;
         case k_stmtKindReturn:
             if (s->val.returnExp != NULL)
@@ -184,7 +291,9 @@ void generateVarDecl(VARSPEC *vs) {
             generateINDENT(indent); fprintf(outputFile, "Slice<%s> %s = ", type, prepend(curIdent->ident));
             if (vs->rhs != NULL && vs->rhs->kind == k_expKindAppend) {
                 generateEXP(vs->rhs, false);
-            } else {
+            }
+            else 
+            {
                 fprintf(outputFile, " new Slice<>()");
             }
         } else if (vs->type->kind == k_typeStruct) {

@@ -12,11 +12,12 @@ src/*.output
 .idea
 solutions/2-typecheck/*
 programs/3-semantics+codegen/valid/*.class
-programs/3-semantics+codegen/valid/*.java
-programs/3-semantics+codegen/valid/output/
+programs/3-semantics+codegen/valid/**/*.java
+programs/3-semantics+codegen/valid/**/output/
 programs/3-benchmarks+codegen/valid/*.class
 programs/3-benchmarks+codegen/valid/*.java
-programs/3-benchmarks+codegen/valid/output/
+programs/3-benchmarks+codegen/valid/**/output/
+programs/3-benchmarks+codegen/valid/**/*.java
 pending-programs/*.java
 pending-programs/3-semantics+codegen/*.java
 *.class
