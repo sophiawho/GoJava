@@ -16,7 +16,7 @@ func main() {
 	d = c // Copies the *header* of 'c'
 	c[0] = 1 // Does change d
 	
-	var e, f struct {f int;}
+	var e, f struct {f int;} // Segmentation fault
 	
 	f=e // Copies the contents of 'e'
 	e.f=1 // Does not change f

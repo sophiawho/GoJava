@@ -260,6 +260,7 @@ void generateZeroValue(TYPE *t) {
         case k_typeString:
             fprintf(outputFile, "\"\"");
             break;
+        case k_typeRune:
         case k_typeInt:
             fprintf(outputFile, "0");
             break;
