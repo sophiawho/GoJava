@@ -43,31 +43,42 @@ void generateAssignStmt(AssignKind kind, EXP *lhs, EXP *rhs) {
 
     switch (kind)
     {
-    case k_stmtAssign:
-        while (lhs != NULL)
-        {
+    case k_stmtAssign: ;
+        int temp_counter_start = temp_counter;
+        char temp_variable[80];
+        while (rhs != NULL) {
+            char *type = getStringFromType(rhs->type, rhs->type->kind != k_typeSlice);
+            sprintf(temp_variable, "__golite__tmp_%d", temp_counter++);
+            generateINDENT(indent); 
+            fprintf(outputFile, "%s %s = ", type, temp_variable);
+            generateEXP(rhs, false);
+            rhs = rhs->next;
+            fprintf(outputFile, ";\n");
+        }
+        while (lhs != NULL) {
+            sprintf(temp_variable, "__golite__tmp_%d", temp_counter_start++);
+            if (lhs->kind == k_expKindIdentifier && strcmp(lhs->val.identExp.ident, "_") == 0) {
+                lhs = lhs->next;
+                continue;
+            }
             generateINDENT(indent);
-            if (lhs->kind == k_expKindArrayAccess && lhs->val.arrayAccess.arrayReference->type->kind == k_typeSlice) 
-            {
+            if (lhs->kind == k_expKindArrayAccess && lhs->val.arrayAccess.arrayReference->type->kind == k_typeSlice) {
                 char *arrayIdent = lhs->val.arrayAccess.arrayReference->val.identExp.ident;
                 EXP *indexExp = lhs->val.arrayAccess.indexExp;  
                 fprintf(outputFile, "%s.put(", prepend(arrayIdent));
                 generateEXP(indexExp, false);
                 fprintf(outputFile, ", ");
-                generateEXP(rhs, false);
+                fprintf(outputFile, "%s", temp_variable);
                 fprintf(outputFile, ")");
-            } 
-            else 
-            {
-                // If regular assign stmt: [indendation] lhs = rhs
+            } else {
                 generateEXP(lhs, false);
                 fprintf(outputFile, " = ");
-                generateEXP(rhs, false);
+                fprintf(outputFile, "%s", temp_variable);
             }
-            fprintf(outputFile, ";\n");
             lhs = lhs->next;
-            rhs = rhs->next;
+            fprintf(outputFile, ";\n");
         }
+        fprintf(outputFile, "\n");
         break;
     
     case k_stmtColonAssign:
@@ -309,6 +320,7 @@ void generateZeroValue(TYPE *t) {
         case k_typeString:
             fprintf(outputFile, "\"\"");
             break;
+        case k_typeRune:
         case k_typeInt:
             fprintf(outputFile, "0");
             break;
@@ -332,30 +344,24 @@ void generateVarDecl(VARSPEC *vs) {
     IDENT *curIdent = vs->ident;
     EXP *e = vs->rhs == NULL ? NULL : vs->rhs; // Refactor
     while (curIdent != NULL) {
+        // We need to initialize slices with their object type (ie: new Slice<Integer> instead of new Slice<int>)
+        char *type = getStringFromType(vs->type, vs->type->kind != k_typeSlice);
+        generateINDENT(indent); 
+        fprintf(outputFile, "%s %s = ", type, prepend(curIdent->ident));
         if (vs->type->kind == k_typeArray) {
-            char *type = getStringFromType(vs->type->val.arrayType.type, true);
-            generateINDENT(indent); fprintf(outputFile, "%s[] %s = new %s[%d]", type, prepend(curIdent->ident), type, vs->type->val.arrayType.size);
+            char *arrayType = getStringFromType(vs->type->val.arrayType.type, true);
+            fprintf(outputFile, "new %s[%d]", arrayType, vs->type->val.arrayType.size);
         } else if (vs->type->kind == k_typeSlice) {
-            char *type = getStringFromType(vs->type->val.sliceType.type, false);
-            generateINDENT(indent); fprintf(outputFile, "Slice<%s> %s = ", type, prepend(curIdent->ident));
             if (vs->rhs != NULL && vs->rhs->kind == k_expKindAppend) {
                 generateEXP(vs->rhs, false);
-            }
-            else 
-            {
-                fprintf(outputFile, " new Slice<>()");
+            } else {
+                fprintf(outputFile, "new Slice<>()");
             }
         } else if (vs->type->kind == k_typeStruct) {
-            char *type = getStringFromType(vs->type, true);
-            generateINDENT(indent); 
-
             // Structs are implemented as Classes in Java, so we need to allocate memory with `new` and
             // construct the variable
-            fprintf(outputFile, "%s %s = new %s()", type, prepend(curIdent->ident), type);
+            fprintf(outputFile, "new %s()", type);
         } else {
-            char *type = getStringFromType(vs->type, true);
-            generateINDENT(indent); fprintf(outputFile, "%s %s", type, prepend(curIdent->ident));
-            fprintf(outputFile, " = ");
             if (e != NULL) {
                 generateEXP(e, false);
                 e = e->next;
@@ -670,6 +676,14 @@ char *getStringFromType(TYPE *t, bool isPrimitive){
             case k_typeStruct:
                 // Structs are implemented as Classes in Java so we need their declared type name
                 return prepend(t->typeName);
+            case k_typeSlice: ;
+                char slice[100];
+                sprintf(slice, "Slice<%s>", getStringFromType(t->val.sliceType.type, isPrimitive));
+                return strdup(slice);
+            case k_typeArray: ;
+                char array[100];
+                sprintf(array, "%s[]", getStringFromType(t->val.arrayType.type, isPrimitive));
+                return strdup(array);
             default:
                 return "Currently unsupported in `getStringFromType` func.";
         }

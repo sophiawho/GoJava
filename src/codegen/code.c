@@ -26,6 +26,7 @@ char *prepend(char *str) {
 
 void generatePROG(PROG *root, char *filename) {
     if (root == NULL) return;
+    temp_counter = 0;
     indent = 0; 
     initFuncCounter = 0;
     openOutputFile(filename);
