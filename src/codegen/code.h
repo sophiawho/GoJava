@@ -9,6 +9,7 @@
 
 FILE *outputFile;
 int indent;
+int temp_counter;
 
 void generateINDENT(int indent);
 void generatePROG(PROG *root, char *filename);

@@ -41,31 +41,54 @@ void generateAssignStmt(AssignKind kind, EXP *lhs, EXP *rhs) {
 
     switch (kind)
     {
-    case k_stmtAssign:
-        while (lhs != NULL)
-        {
+    case k_stmtAssign: ;
+        int temp_counter_start = temp_counter;
+        char temp_variable[80];
+        while (rhs != NULL) {
+            sprintf(temp_variable, "__golite__tmp_%d", temp_counter++);
+            // print LHS of temp variable expression
             generateINDENT(indent);
-            if (lhs->kind == k_expKindArrayAccess && lhs->val.arrayAccess.arrayReference->type->kind == k_typeSlice) 
-            {
+            if (rhs->type->kind == k_typeArray) {
+                char *type = getStringFromType(rhs->type->val.arrayType.type, true);
+                fprintf(outputFile, "%s[] %s = ", type, temp_variable);
+            } else if (rhs->type->kind == k_typeSlice) {
+                char *type = getStringFromType(rhs->type->val.sliceType.type, false);
+                fprintf(outputFile, "Slice<%s> %s = ", type, temp_variable);
+            } else if (rhs->type->kind == k_typeStruct) {
+                char *type = getStringFromType(rhs->type, true);
+                fprintf(outputFile, "%s %s = ", type, temp_variable);
+            } else {
+                char *type = getStringFromType(rhs->type, true);
+                fprintf(outputFile, "%s %s = ", type, temp_variable);
+            }
+            generateEXP(rhs, false);
+            rhs = rhs->next;
+            fprintf(outputFile, ";\n");
+        }
+        while (lhs != NULL) {
+            sprintf(temp_variable, "__golite__tmp_%d", temp_counter_start++);
+            if (lhs->kind == k_expKindIdentifier && strcmp(lhs->val.identExp.ident, "_") == 0) {
+                lhs = lhs->next;
+                continue;
+            }
+            generateINDENT(indent);
+            if (lhs->kind == k_expKindArrayAccess && lhs->val.arrayAccess.arrayReference->type->kind == k_typeSlice) {
                 char *arrayIdent = lhs->val.arrayAccess.arrayReference->val.identExp.ident;
                 EXP *indexExp = lhs->val.arrayAccess.indexExp;  
                 fprintf(outputFile, "%s.put(", prepend(arrayIdent));
                 generateEXP(indexExp, false);
                 fprintf(outputFile, ", ");
-                generateEXP(rhs, false);
+                fprintf(outputFile, "%s", temp_variable);
                 fprintf(outputFile, ")");
-            } 
-            else 
-            {
-                // If regular assign stmt: [indendation] lhs = rhs
+            } else {
                 generateEXP(lhs, false);
                 fprintf(outputFile, " = ");
-                generateEXP(rhs, false);
+                fprintf(outputFile, "%s", temp_variable);
             }
-            fprintf(outputFile, ";\n");
             lhs = lhs->next;
-            rhs = rhs->next;
+            fprintf(outputFile, ";\n");
         }
+        fprintf(outputFile, "\n");
         break;
     
     case k_stmtColonAssign:
