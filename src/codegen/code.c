@@ -81,7 +81,7 @@ void generateFUNC(FUNC *f) {
         fprintf(outputFile, "\tpublic static %s %s() {\n", returnType, prepend(f->name));
     }
     indent=2;
-    generateSTMT(f->rootStmt->val.blockStmt, true);
+    generateSTMT(f->rootStmt->val.blockStmt);
     indent=0;
     // TODO print function parameters
     fprintf(outputFile, "\t}\n");

@@ -5,7 +5,7 @@
 #include "../ast/stmt.h"
 #include <stdbool.h>
 
-void generateSTMT(STMT *s, bool newLine);
+void generateSTMT(STMT *s);
 void generateTYPESPEC(TYPESPEC *ts);
 void generateSTRUCTSPEC(STRUCTSPEC *ss);
 void generateVarDecl(VARSPEC *vs);

@@ -3,6 +3,7 @@
 #include "codestmt.h"
 #include "code.h"
 #include "../typecheck/typecheck.h"
+#include "../error.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,42 +37,65 @@ void traverseExpForPrint(EXP *e, bool newLine, bool last) {
     } 
 }
 
-void generateAssignStmt(AssignKind kind, EXP *lhs, EXP *rhs, bool newLine) {
-    if (kind == k_stmtAssign) {
-        generateINDENT(indent);
-        if (lhs->kind == k_expKindArrayAccess && lhs->val.arrayAccess.arrayReference->type->kind == k_typeSlice) {
-            char *arrayIdent = lhs->val.arrayAccess.arrayReference->val.identExp.ident;
-            EXP *indexExp = lhs->val.arrayAccess.indexExp;  
-            fprintf(outputFile, "%s.put(", prepend(arrayIdent));
-            generateEXP(indexExp, false);
-            fprintf(outputFile, ", ");
-            generateEXP(rhs, false);
-            fprintf(outputFile, ")");
-        } else {
-            // If regular assign stmt: [indendation] lhs = rhs
-            generateEXP(lhs, false);
-            fprintf(outputFile, " = ");
-            generateEXP(rhs, false);
-        }
-        fprintf(outputFile, ";");
-        if (newLine) fprintf(outputFile, "\n");
-    }
-    else if (kind == k_stmtColonAssign)
-    {
-        IDENT *id = makeIDENT(lhs->val.identExp.ident);
-        if (id != NULL && rhs != NULL && lhs->type != NULL) 
-        {
-            VARSPEC *vs = makeVarSpec(id, rhs, lhs->type);
-            generateVarDecl(vs);
-        }
+void generateAssignStmt(AssignKind kind, EXP *lhs, EXP *rhs) {
 
-        if (newLine) fprintf(outputFile, ";\n");
+    switch (kind)
+    {
+    case k_stmtAssign:
+        while (lhs != NULL)
+        {
+            generateINDENT(indent);
+            if (lhs->kind == k_expKindArrayAccess && lhs->val.arrayAccess.arrayReference->type->kind == k_typeSlice) 
+            {
+                char *arrayIdent = lhs->val.arrayAccess.arrayReference->val.identExp.ident;
+                EXP *indexExp = lhs->val.arrayAccess.indexExp;  
+                fprintf(outputFile, "%s.put(", prepend(arrayIdent));
+                generateEXP(indexExp, false);
+                fprintf(outputFile, ", ");
+                generateEXP(rhs, false);
+                fprintf(outputFile, ")");
+            } 
+            else 
+            {
+                // If regular assign stmt: [indendation] lhs = rhs
+                generateEXP(lhs, false);
+                fprintf(outputFile, " = ");
+                generateEXP(rhs, false);
+            }
+            fprintf(outputFile, ";\n");
+            lhs = lhs->next;
+            rhs = rhs->next;
+        }
+        break;
+    
+    case k_stmtColonAssign:
+        while(lhs != NULL)
+        {
+            // We output one identifier at a time
+            // TODO This needs to be fixed
+            IDENT *id = makeIDENT(lhs->val.identExp.ident);
+            id->next = NULL;
+
+            if (id != NULL && rhs != NULL && lhs->type != NULL) 
+            {
+                VARSPEC *vs = makeVarSpec(id, rhs, lhs->type);
+                vs->next = NULL;
+                generateVarDecl(vs);
+            }
+            lhs = lhs->next;
+            rhs = rhs->next;
+        }
+        break;
+    
+    default:
+        throwInternalError("Not implemented yet", 0);
+        break;
     }
 }
 
-void generateSTMT(STMT *s, bool newLine) {
+void generateSTMT(STMT *s) {
     if (s == NULL) return;
-    generateSTMT(s->next, newLine);
+    generateSTMT(s->next);
 
     switch (s->kind) {
         case k_stmtKindEmpty:
@@ -80,19 +104,17 @@ void generateSTMT(STMT *s, bool newLine) {
         case k_stmtKindExpStmt:
             generateINDENT(indent);
             generateEXP(s->val.expStmt, true);
-            fprintf(outputFile, ";");
-            if (newLine) fprintf(outputFile, "\n");
+            fprintf(outputFile, ";\n");
             break;
         case k_stmtKindIncDec:
             generateINDENT(indent);
             generateEXP(s->val.incDecStmt.exp, false);
-            if (s->val.incDecStmt.amount == 1) fprintf(outputFile, "++");
-            else fprintf(outputFile, "--");
-            if (newLine) fprintf(outputFile, ";\n");
+            if (s->val.incDecStmt.amount == 1) fprintf(outputFile, "++;\n");
+            else fprintf(outputFile, "--;\n");
             break;
         case k_stmtKindAssign:
             generateAssignStmt(s->val.assignStmt.kind, s->val.assignStmt.lhs, 
-                s->val.assignStmt.rhs, newLine);
+                s->val.assignStmt.rhs);
             break;
         case k_stmtKindPrint: ;
             bool newline = s->val.printStmt.newLine;
@@ -103,7 +125,6 @@ void generateSTMT(STMT *s, bool newLine) {
             break;
         case k_stmtKindVarDecl:
             generateVarDecl(s->val.varDecl);
-            if (newLine) fprintf(outputFile, ";\n");
             break;
         case k_stmtKindTypeDecl:
             generateTYPESPEC(s->val.typeDecl);
@@ -112,7 +133,7 @@ void generateSTMT(STMT *s, bool newLine) {
             generateINDENT(indent);
             fprintf(outputFile, "{\n");
             indent++;
-            generateSTMT(s->val.blockStmt, true);
+            generateSTMT(s->val.blockStmt);
             indent--;
             generateINDENT(indent);
             fprintf(outputFile, "}\n");
@@ -124,7 +145,7 @@ void generateSTMT(STMT *s, bool newLine) {
                 fprintf(outputFile, "{\n");
                 indent++;
 
-                generateSTMT(s->val.ifStmt.simpleStmt, true);
+                generateSTMT(s->val.ifStmt.simpleStmt);
             }
 
             generateINDENT(indent);
@@ -135,14 +156,14 @@ void generateSTMT(STMT *s, bool newLine) {
 
             // Block Statment generation takes care of curly brackets, indentation
             // and new lines
-            generateSTMT(s->val.ifStmt.trueBody, true);
+            generateSTMT(s->val.ifStmt.trueBody);
 
             if (s->val.ifStmt.falseBody != NULL)
             {
                 generateINDENT(indent);
                 fprintf(outputFile, "else \n");
 
-                generateSTMT(s->val.ifStmt.falseBody, true);
+                generateSTMT(s->val.ifStmt.falseBody);
             }
 
             if (s->val.ifStmt.simpleStmt != NULL) 
@@ -156,39 +177,65 @@ void generateSTMT(STMT *s, bool newLine) {
         case k_stmtKindSwitch:
             // TODO
             break;
+
         case k_stmtKindFor: 
+
+            if (s->val.forLoop.initStmt != NULL)
+            {
+                generateINDENT(indent);
+                fprintf(outputFile, "{\n");
+                indent++;
+                generateINDENT(indent);
+                fprintf(outputFile, "//Init statements\n");
+                generateSTMT(s->val.forLoop.initStmt);
+                
+            }
+
             generateINDENT(indent);
-
-            // Temporarily set indentation to 0 for a clean for-loop conditional
-            int tempIndent = indent;
-            indent = 0;
-
-            fprintf(outputFile, "for (");
-            generateSTMT(s->val.forLoop.initStmt, false);
-            fprintf(outputFile, "; ");
+            fprintf(outputFile, "while (");
 
             if (s->val.forLoop.condition != NULL) generateEXP(s->val.forLoop.condition, false);
             else fprintf(outputFile, "true");
-            fprintf(outputFile, "; ");
 
-            generateSTMT(s->val.forLoop.postStmt, false);
             fprintf(outputFile, ") \n");
 
-            indent = tempIndent;
-            generateSTMT(s->val.forLoop.body, true);
+            if (s->val.forLoop.postStmt != NULL)
+            {
+                STMT *body = s->val.forLoop.postStmt;
+                STMT *next = body;
+                while (next->next != NULL) next = next->next;
+                next->next = s->val.forLoop.body->val.blockStmt;
 
-            generateINDENT(indent);
-            fprintf(outputFile, "\n");
+                generateINDENT(indent);
+                fprintf(outputFile, "{\n");
+
+                indent++;
+                generateSTMT(body);
+                indent--;
+
+                generateINDENT(indent);
+                fprintf(outputFile, "}\n");
+            }
+            else
+            {
+                generateSTMT(s->val.forLoop.body);
+            }
+
+            if (s->val.forLoop.initStmt != NULL)
+            {
+                indent--;
+                generateINDENT(indent);
+                fprintf(outputFile, "}\n");
+            }
             break;
+
         case k_stmtKindBreak:
             generateINDENT(indent);
-            fprintf(outputFile, "break;");
-            if (newLine) fprintf(outputFile, "\n");
+            fprintf(outputFile, "break;\n");
             break;
         case k_stmtKindContinue:
             generateINDENT(indent);
-            fprintf(outputFile, "continue;");
-            if (newLine) fprintf(outputFile, "\n");
+            fprintf(outputFile, "continue;\n");
             break;
         case k_stmtKindReturn:
             if (s->val.returnExp != NULL)

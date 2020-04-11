@@ -8,7 +8,9 @@
 //~Cap: 8 , len: 7
 //~Cap: 8 , len: 8
 //~Cap: 16 , len: 9
-//~Cap: 5 , len: 5
+//~2 3
+//~2 3
+//~2 3
 //~
 
 package test
@@ -21,6 +23,13 @@ func main() {
 		a = append(a, 0)
 	}
 
-	var b[5]int
-	println("Cap:", cap(b), ", len:", len(b))
+	for x1, x2, x3 := 1, 2, 3 ; x1 < 3 ; x1++ {
+		println(x2, x3)
+	}
+
+	for x1, x2, x3 := 1, 2, 3 ; x1 < 3 ; x1, x2, x3 = 3, 2, 1 {
+		println(x2, x3)
+	}
+	// x1, x2, x3 := 1, 2, 3
+	// x1, x2, x3 = 3, 2, 1
 }
