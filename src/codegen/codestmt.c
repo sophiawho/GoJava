@@ -11,6 +11,7 @@
 #include <stdbool.h>
 
 int labelId = -1;
+void generateSwitch(STMT *s);
 
 void traverseExpForPrint(EXP *e, bool newLine, bool last) {
     if (e == NULL) return;
@@ -278,7 +279,7 @@ void generateSTMT(STMT *s) {
             break;
             
         case k_stmtKindSwitch:
-            // TODO
+            generateSwitch(s);
             break;
 
         case k_stmtKindFor: 
@@ -288,13 +289,13 @@ void generateSTMT(STMT *s) {
         case k_stmtKindBreak:
             // Need to create an if statement to avoid getting unreachable statement errors
             generateINDENT(indent);
-            fprintf(outputFile, "if (true) {break Loop_%d;}\n", labelId);
+            if (labelId >= 0) fprintf(outputFile, "if (true) {break Loop_%d;}\n", labelId);
             break;
 
         case k_stmtKindContinue:
             // Need to create an if statement to avoid getting unreachable statement errors
             generateINDENT(indent);
-            fprintf(outputFile, "if (true) {do_post_loop_%d = true; continue Loop_%d;}\n", labelId, labelId);
+            if (labelId >= 0) fprintf(outputFile, "if (true) {do_post_loop_%d = true; continue Loop_%d;}\n", labelId, labelId);
             break;
 
         case k_stmtKindReturn:
@@ -309,6 +310,150 @@ void generateSTMT(STMT *s) {
 
         default:
             break;
+    }
+}
+
+// Generate a switch statement, its expression case clauses, and each expression 
+// case clause's list of statements
+void generateSwitch(STMT *s)
+{
+    labelId++;
+
+    // Need a new scope to contain any variable declarations (from intial statements) within
+    generateINDENT(indent);
+    fprintf(outputFile, "{\n");
+    indent++;
+    
+    generateINDENT(indent);
+    fprintf(outputFile, "// Switch statement\n");
+    generateSTMT(s->val.switchStmt.simpleStmt);
+    generateINDENT(indent);
+    fprintf(outputFile, "boolean continue_loop_%d = true;\n", labelId);
+
+    // Need a label to be able to use switch break statements
+    generateINDENT(indent);
+    fprintf(outputFile, "Loop_%d:\n", labelId);
+
+    // Need a while loop to be able to use a label
+    generateINDENT(indent);
+    fprintf(outputFile, "while (continue_loop_%d) {\n", labelId);
+    indent++;
+
+    // Create a temporary variable for the switch tag, since we use if and else-if statements
+    // to recreate GoLite's switch statement behavior
+    generateINDENT(indent);
+    if (s->val.switchStmt.exp != NULL)
+    {
+        fprintf(outputFile, "%s switch_tag_%d = ", 
+            getStringFromType(s->val.switchStmt.exp->type, true), labelId);
+        generateEXP(s->val.switchStmt.exp, false);
+        fprintf(outputFile, ";\n");
+    }
+    else
+    {
+        fprintf(outputFile, "boolean switch_tag_%d = true;\n", labelId);
+    }
+
+    // Need an initial if statement that never occurs because for some reason ecc->next == NULL
+    // never passes in an if statement, so every expression case clause is an `else if` statement
+    generateINDENT(indent);
+    fprintf(outputFile, "if (false) {}\n");
+
+    generateEXPRCASECLAUSE(s->val.switchStmt.caseClauses);
+
+    generateINDENT(indent);
+    fprintf(outputFile, "continue_loop_%d = false;\n", labelId);
+
+    indent--;
+    generateINDENT(indent);
+    fprintf(outputFile, "}\n");
+
+    indent--;
+    generateINDENT(indent);
+    fprintf(outputFile, "}\n");
+
+    labelId--;
+}
+
+// Helper function to generate case clauses (no default cases)
+// To be used within the context of generating expression case clauses (generateEXPRCASECLAUSE)
+void generateEXPRCASECLAUSE_caseClauses(EXPRCASECLAUSE *ecc)
+{
+    if (ecc == NULL) return;
+    generateEXPRCASECLAUSE_caseClauses(ecc->next);
+
+    switch (ecc->kind)
+    {
+    case k_caseClause:
+        
+        generateINDENT(indent);
+        fprintf(outputFile, "else if (");
+        
+        EXP *e = ecc->expList;
+        while (e != NULL)
+        {
+            if (e->next != NULL) 
+            {   
+                fprintf(outputFile, "switch_tag_%d == (", labelId);
+                generateEXP(e, false);
+                fprintf(outputFile, ") || ");
+            }
+            else
+            {
+                fprintf(outputFile, "switch_tag_%d == (", labelId);
+                generateEXP(e, false);
+                fprintf(outputFile, "))\n");
+            }
+            e = e->next;
+        }
+        generateINDENT(indent);
+        fprintf(outputFile, "{\n");
+        indent++;
+
+        generateSTMT(ecc->stmtList);
+
+        indent--;
+        generateINDENT(indent);
+        fprintf(outputFile, "}\n");
+        break;
+
+    case k_defaultClause:
+        break;
+    }
+}
+
+// Generates switch's expression case clauses
+// To be used within the context of generating switch statements
+void generateEXPRCASECLAUSE(EXPRCASECLAUSE *ecc)
+{
+    EXPRCASECLAUSE *defaultEcc = NULL;
+    for (EXPRCASECLAUSE *current = ecc; current; current = current->next)
+    {
+        if (current->kind == k_defaultClause) 
+        {
+            defaultEcc = current;
+            break;
+        }
+    }
+    
+    // Need to recurse from tail to head to generate code in correct order
+    generateEXPRCASECLAUSE_caseClauses(ecc);
+
+    if (defaultEcc != NULL)
+    {
+        generateINDENT(indent);
+        fprintf(outputFile, "else\n");
+        generateINDENT(indent);
+        fprintf(outputFile, "{\n");
+        indent++;
+        
+        generateINDENT(indent);
+        fprintf(outputFile, "// Default case\n");
+        generateSTMT(defaultEcc->stmtList);
+
+        indent--;
+        generateINDENT(indent);
+        fprintf(outputFile, "}\n");
     }
 }
 
