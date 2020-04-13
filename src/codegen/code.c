@@ -66,25 +66,33 @@ void generateTOPLEVELDECL(TOPLEVELDECL *tld) {
 
 void generateFUNC(FUNC *f) {
     // Java function header
-    if (strcmp(f->name, "_") == 0) {
+    if (strcmp(f->name, "_") == 0) 
+    {
         return;
-    } else if (strcmp(f->name, "init") == 0) {
+    } 
+    else if (strcmp(f->name, "init") == 0) 
+    {
         fprintf(outputFile, "\n\t@SuppressWarnings({\"unchecked\", \"deprecation\"})\n");
         fprintf(outputFile, "\tpublic static void %s_%d() {\n", prepend(f->name), initFuncCounter);
         initFuncCounter++;
-    } else {
+    } 
+    else 
+    {
         fprintf(outputFile, "\n\t@SuppressWarnings({\"unchecked\", \"deprecation\"})\n");
         
         char *returnType = "";
         if (f->returnType == NULL) returnType = "void";
-        else returnType = getStringFromType(f->returnType, true); // true or false?
+        else returnType = getStringFromType(f->returnType, !containsSlice(f->returnType));
 
-        fprintf(outputFile, "\tpublic static %s %s() {\n", returnType, prepend(f->name));
+        fprintf(outputFile, "\tpublic static %s %s(", returnType, prepend(f->name));
+        generateTYPESPEC(f->inputParams);
+        fprintf(outputFile, ") {\n");
     }
+
     indent=2;
     generateSTMT(f->rootStmt->val.blockStmt);
     indent=0;
-    // TODO print function parameters
+
     fprintf(outputFile, "\t}\n");
 }
 

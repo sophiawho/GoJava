@@ -519,15 +519,40 @@ void generateVarDecl(VARSPEC *vs) {
     }
 }
 
+// Need to use a global variable to determine whether to add a comma at the end
+// of an input parameter 
+int generateTYPESPEC_paramCount = 0;
+
+// Generate the parameter list for a given typespec and identifier list.
+// Only use this in generateTYPESPEC
+void generateTYPESPEC_paramList(TYPESPEC *ts, IDENT *id)
+{
+    if (id == NULL) return;
+    generateTYPESPEC_paramList(ts, id->next);
+
+    generateTYPESPEC_paramCount--;
+    fprintf(outputFile, "%s ", getStringFromType(ts->type, !containsSlice(ts->type)));
+    if (isBlankId(id->ident))
+    {
+        if (generateTYPESPEC_paramCount > 0) fprintf(outputFile, "blank_id_%d, ", generateTYPESPEC_paramCount);
+        else fprintf(outputFile, "blank_id_%d", generateTYPESPEC_paramCount);
+    }
+    else
+    {
+        if (generateTYPESPEC_paramCount > 0) fprintf(outputFile, "%s, ", prepend(id->ident));
+        else fprintf(outputFile, "%s", prepend(id->ident));
+    }
+}
+
 // Generate type declarations (NOTE: only for struct types!) and input parameters
 void generateTYPESPEC(TYPESPEC *ts)
 {
     if (ts == NULL) return;
-    generateTYPESPEC(ts->next);
 
     switch (ts->kind)
     {
     case k_typeSpecKindTypeDeclaration:
+        generateTYPESPEC(ts->next);
         // The only type required to emit is struct types
         // TODO
         if (ts->type->kind == k_typeStruct)
@@ -546,13 +571,9 @@ void generateTYPESPEC(TYPESPEC *ts)
         break;
     
     case k_typeSpecKindParameterList:
-        // Need to write as a loop for commas
-        for (IDENT *id = ts->ident; id; id = id->next)
-        {
-            fprintf(outputFile, "%s ", getStringFromType(ts->type, true)); 
-            if (id->next != NULL) fprintf(outputFile, "%s, ", id->ident);
-            else fprintf(outputFile, "%s;\n", id->ident);
-        }
+        generateTYPESPEC_paramCount = generateTYPESPEC_paramCount + countIDENT(ts->ident);
+        generateTYPESPEC(ts->next);
+        generateTYPESPEC_paramList(ts, ts->ident);
         break;
     }
 }
@@ -574,6 +595,19 @@ void generateSTRUCTSPEC(STRUCTSPEC *ss)
         if (id->next != NULL) fprintf(outputFile, "%s, ", id->ident);
         else fprintf(outputFile, "%s;\n", id->ident);
     }
+}
+
+// Generate function call arguments in order
+// Set currArg = numArgs for proper behavior
+void generateFuncCallArgs(EXP *e, int numArgs, int currArg)
+{
+    if (e == NULL) return;
+    generateFuncCallArgs(e->next, numArgs, --currArg);
+
+    generateEXP(e, false);
+    // If the current argument isn't the last one, add a comma
+    if (numArgs != currArg + 1) fprintf(outputFile, ", ");
+    else fprintf(outputFile, ")");
 }
 
 // If recurse = false, only print out current expression and ignore the rest of the expression list
@@ -715,12 +749,9 @@ void generateEXP(EXP *e, bool recurse)
         case k_expKindFuncCall:
             generateEXP(e->val.funcCall.primaryExpr, recurse);
             fprintf(outputFile, "(");
-            for (EXP *f_e = e->val.funcCall.expList; f_e; f_e = f_e->next)
-            {
-                generateEXP(f_e, false);
-                if (f_e->next != NULL) fprintf(outputFile, ", ");
-            }
-            fprintf(outputFile, ")");
+            int numArgs = countEXP(e->val.funcCall.expList);
+            if (numArgs != 0) generateFuncCallArgs(e->val.funcCall.expList, numArgs, numArgs);
+            else fprintf(outputFile, ")");
             break;
         
         case k_expKindArrayAccess: ;
