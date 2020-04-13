@@ -1102,12 +1102,40 @@ SYMBOL *getSymbolFromExp(EXP *e) {
 
 void typeFUNCCALL(TYPESPEC *inputParams, EXP *args) {
     if (inputParams == NULL && args == NULL) return;
-    if (inputParams == NULL || args == NULL) {
-        throwError("Function called with incorrect number of arguments.", inputParams == NULL ? args->lineno : inputParams->lineno);
+
+    int paramCount = 0;
+    int argsCount = 0;
+
+    TYPESPEC *currParams = inputParams;
+    EXP *currArgs = args;
+
+    while (currParams != NULL && currArgs != NULL)
+    {
+        IDENT *id = currParams->ident;
+        while (id != NULL && currArgs != NULL) 
+        {
+            typeEXP(currArgs);
+            if (!isEqualType(currParams->type, currArgs->type)) {
+                throwError("Function called with incompatible argument types.", args->lineno);
+            }
+
+            paramCount++;
+            id = id->next;
+            argsCount++;
+            currArgs = currArgs->next;
+        }
+        currParams = currParams->next;
     }
-    typeFUNCCALL(inputParams->next, args->next);
-    typeEXP(args);
-    if (!isEqualType(args->type, inputParams->type)) {
-        throwError("Function called with incompatible argument types.", args->lineno);
+    while (currArgs != NULL)
+    {
+        argsCount++;
+        currArgs = currArgs->next;
     }
+    while(currParams != NULL)
+    {
+        paramCount++;
+        currParams = currParams->next;
+    }
+    
+    if (paramCount != argsCount) throwError("Function called with incorrect number of arguments.", inputParams == NULL ? args->lineno : inputParams->lineno);
 }
