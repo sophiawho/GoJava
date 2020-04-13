@@ -822,7 +822,7 @@ void generateEXP(EXP *e, bool recurse)
         
         // Type Cast
         case k_expKindCast: ;
-            TYPE *baseType = e->val.cast.exp->type;
+            TYPE *baseType = e->val.cast.type;
             while (baseType->parent != NULL) baseType = baseType->parent;
             fprintf(outputFile, "(%s)", getStringFromType(baseType, true));
             generateEXP(e->val.cast.exp, recurse);

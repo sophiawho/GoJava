@@ -53,23 +53,23 @@ type t_struct_base struct {
 	x15 []bool
 }
 
-// type t_struct_new struct {
-// 	x1 t_int
-// 	x2 t_float64
-// 	x3 t_rune
-// 	x4 t_string
-// 	x5 t_bool
-// 	x6 t_array_int 
-// 	x7 t_array_float64 
-// 	x8 t_array_rune
-// 	x9 t_array_string 
-// 	x10 t_array_bool
-// 	x11 t_slice_int 
-// 	x12 t_slice_float64 
-// 	x13 t_slice_rune 
-// 	x14 t_slice_string 
-// 	x15 t_slice_bool 
-// }
+type t_struct_new struct {
+	x1 t_int
+	x2 t_float64
+	x3 t_rune
+	x4 t_string
+	x5 t_bool
+	x6 t_array_int 
+	x7 t_array_float64 
+	x8 t_array_rune
+	x9 t_array_string 
+	x10 t_array_bool
+	x11 t_slice_int 
+	x12 t_slice_float64 
+	x13 t_slice_rune 
+	x14 t_slice_string 
+	x15 t_slice_bool 
+}
 
 // type t_struct_list struct {
 // 	x1a, x1b, _ int
@@ -120,17 +120,17 @@ func main() {
 	var x2d t_array_string
 	var x2e t_array_bool
 
-	x2a[1] = 2
-	x2b[1] = 2.0
-	x2c[1] = 'b'
-	x2d[1] = "b"
-	x2e[1] = true
+	x2a[0] = 2
+	x2b[0] = 2.0
+	x2c[0] = 'b'
+	x2d[0] = "b"
+	x2e[0] = true
 
-	println(x2a[0], x2a[1])
-	println(x2b[0], x2b[1])
-	println(x2c[0], x2c[1])
-	println(x2d[0], x2d[1])
-	println(x2e[0], x2e[1])
+	println(arr1[0], x2a[0])
+	println(arr2[0], x2b[0])
+	println(arr3[0], x2c[0])
+	println(arr4[0], x2d[0])
+	println(arr5[0], x2e[0])
 
 	var slice1 []int
 	var slice2 []float64
@@ -156,11 +156,11 @@ func main() {
 	x3d = append(x3d, "c")
 	x3e = append(x3e, true)
 
-	println(x3a[0], x3a[1])
-	println(x3b[0], x3b[1])
-	println(x3c[0], x3c[1])
-	println(x3d[0], x3d[1])
-	println(x3e[0], x3e[1])
+	println(slice1[0], x3a[0])
+	println(slice2[0], x3b[0])
+	println(slice3[0], x3c[0])
+	println(slice4[0], x3d[0])
+	println(slice5[0], x3e[0])
 
 	// var x4 t_struct_base
 	// X4.x1 = 4
