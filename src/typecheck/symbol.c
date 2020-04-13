@@ -749,6 +749,7 @@ SYMBOL *getSymbolOnlyFromScope(SymbolTable *t, char *name)
 
 SYMBOL *putSymbol(SymbolTable *t, char *name, SymbolKind kind, int lineno)
 {    
+    if (isBlankId(name)) return NULL;
     int hash = Hash(name);
     for (SYMBOL *s = t->table[hash]; s; s = s->next)
     {   
