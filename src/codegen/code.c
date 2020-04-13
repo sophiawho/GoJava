@@ -82,10 +82,9 @@ void generateFUNC(FUNC *f) {
         
         char *returnType = "";
         if (f->returnType == NULL) returnType = "void";
-        else returnType = getStringFromType(f->returnType, false);
+        else returnType = getStringFromType(f->returnType, !containsSlice(f->returnType));
 
         fprintf(outputFile, "\tpublic static %s %s(", returnType, prepend(f->name));
-        // TODO print function parameters
         generateTYPESPEC(f->inputParams);
         fprintf(outputFile, ") {\n");
     }

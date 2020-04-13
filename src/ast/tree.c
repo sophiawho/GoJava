@@ -231,6 +231,8 @@ bool isBlankId(char *identifier)
     return strcmp(BLANK_IDENTIFIER, identifier) == 0;
 }
 
+// Counts the number of expression nodes from the given expression node using 
+// its linked list structure
 int countEXP(EXP *e)
 {
     int count = 0;
@@ -243,6 +245,8 @@ int countEXP(EXP *e)
     return count;
 }
 
+// Counts the number of identifier nodes from the given identifier node using its 
+// linked list structure
 int countIDENT(IDENT *i)
 {
     int count = 0;
@@ -255,6 +259,7 @@ int countIDENT(IDENT *i)
     return count;
 }
 
+// Determines whether a type contains a slice type within its type hierarchy
 bool containsSlice(TYPE *t)
 {
 	bool containsSlice = false;
