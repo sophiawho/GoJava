@@ -52,8 +52,10 @@ void generateTOPLEVELDECL(TOPLEVELDECL *tld) {
             generateFUNC(tld->val.funcDecl);
             break;
         case k_topLevelDeclType:
+            // Anything in top level needs to be static
+            fprintf(outputFile, "\tstatic ");
             indent++;
-            generateTYPESPEC(tld->val.typeDecl, true);
+            generateTYPESPEC(tld->val.typeDecl);
             indent--;
             break;
         case k_topLevelDeclVar:
@@ -83,7 +85,7 @@ void generateFUNC(FUNC *f) {
         else returnType = getStringFromType(f->returnType, !containsSlice(f->returnType));
 
         fprintf(outputFile, "\tpublic static %s %s(", returnType, prepend(f->name));
-        generateTYPESPEC(f->inputParams, false);
+        generateTYPESPEC(f->inputParams);
         fprintf(outputFile, ") {\n");
     }
 

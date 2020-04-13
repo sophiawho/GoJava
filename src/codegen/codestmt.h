@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 void generateSTMT(STMT *s);
-void generateTYPESPEC(TYPESPEC *ts, bool isTopLevelTypeDecl);
+void generateTYPESPEC(TYPESPEC *ts);
 void generateSTRUCTSPEC(STRUCTSPEC *ss);
 void generateEXPRCASECLAUSE(EXPRCASECLAUSE *ecc);
 void generateVarDecl(VARSPEC *vs);
