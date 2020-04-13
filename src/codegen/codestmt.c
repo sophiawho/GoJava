@@ -27,6 +27,24 @@ void traverseExpForPrint(EXP *e, bool newLine, bool last) {
         fprintf(outputFile, "\"%%+.6e\", ");
         generateEXP(e, false);
     }
+    else if (e->type->kind == k_typeInfer)
+    {
+        // At typecheck, newly defined types remain as k_typeInfer because they 
+        // still need to be compared to one another. That's why the base type isn't stored.
+        // So now in codegen, we need to find the actual type. 
+        char *type = getStringFromType(e->type, !containsSlice(e->type));
+        if (strcmp(type, "double") == 0 || strcmp(type, "Double") == 0)
+        {
+            fprintf(outputFile, "System.out.printf(");
+            fprintf(outputFile, "\"%%+.6e\", ");
+            generateEXP(e, false);
+        }
+        else
+        {
+            fprintf(outputFile, "System.out.print(");
+            generateEXP(e, false);
+        }
+    }
     else 
     {
         fprintf(outputFile, "System.out.print(");
