@@ -615,16 +615,33 @@ void generateSTRUCTSPEC(STRUCTSPEC *ss)
     if (ss == NULL) return;
     generateSTRUCTSPEC(ss->next);
 
+    // If the field is only one blank identifier, ignore it
+    bool onlyBlankId = true;
+    for (IDENT *id = ss->attribute; id; id=id->next)
+    {
+        if (!isBlankId(id->ident)) onlyBlankId = false;
+    }
+    if (onlyBlankId) return;
+ 
     generateINDENT(indent);
 
     // There is only 1 TYPE per STRUCTSPEC
     fprintf(outputFile, "%s ", getStringFromType(ss->type, !containsSlice(ss->type)));
-
+    bool firstGenerated = false;
     for (IDENT *id = ss->attribute; id; id=id->next)
     {
-        if (id->next != NULL) fprintf(outputFile, "%s, ", id->ident);
-        else fprintf(outputFile, "%s;\n", id->ident);
+
+        if (!isBlankId(id->ident)) 
+        {
+            fprintf(outputFile, "%s", id->ident);
+            firstGenerated = true;
+        }
+        if (id->next != NULL && !isBlankId(id->next->ident) && firstGenerated)
+        {
+            fprintf(outputFile, ", ");
+        }
     }
+    fprintf(outputFile, ";\n");
 }
 
 // Generate function call arguments in order

@@ -71,23 +71,27 @@ type t_struct_new struct {
 	x15 t_slice_bool 
 }
 
-// type t_struct_list struct {
-// 	x1a, x1b, _ int
-// 	x2a, x2b, _ float64
-// 	x3a, x3b, _ rune
-// 	x4a, x4b, _ string
-// 	x5a, x5b, _ bool
-// 	x6a, x6b, _ [3]int
-// 	x7a, x7b, _ [3]float64
-// 	x8a, x8b, _ [3]rune
-// 	x9a, x9b, _ [3]string
-// 	x10a, x10b, _ [3]bool
-// 	x11a, x11b, _ []int
-// 	x12a, x12b, _ []float64
-// 	x13a, x13b, _ []rune
-// 	x14a, x14b, _ []string
-// 	x15a, x15b, _ []bool 
-// }
+type t_struct_blankId struct {
+	_ int
+	x1, _, x2 int
+	_, x3, _ int
+	_, _, _ int
+	x4, _, _ int
+	_, _, x5 int
+}
+
+type t_struct_list struct {
+	x1a, x1b int
+	x2a, x2b float64
+	x3a, x3b rune
+	x4a, x4b string
+	x5a, x5b bool
+	x6a, x6b [3]int
+	x7a, x7b [3]float64
+	x8a, x8b [3]rune
+	x9a, x9b [3]string
+	x10a, x10b [3]bool
+}
 
 func main() {
 	var x1a t_int = t_int(1)
@@ -162,20 +166,44 @@ func main() {
 	println(slice4[0], x3d[0])
 	println(slice5[0], x3e[0])
 
-	// var x4 t_struct_base
-	// X4.x1 = 4
-	// X4.x2 = 4.0
-	// X4.x3 = 'd'
-	// X4.x4 = "d"
-	// X4.x5 = true
-	// X4.x6 = arr1
-	// X4.x7 = arr2
-	// X4.x8 = arr3
-	// X4.x9 = arr4
-	// X4.x10 = arr5
-	// X4.x11 = slice1
-	// X4.x12 = slice2
-	// X4.x13 = slice3
-	// X4.x14 = slice4
-	// X4.x15 = slice5
+	var x4 t_struct_base
+	x4.x1 = 4
+	x4.x2 = 4.0
+	x4.x3 = 'd'
+	x4.x4 = "d"
+	x4.x5 = true
+	x4.x6 = arr1
+	x4.x7 = arr2
+	x4.x8 = arr3
+	x4.x9 = arr4
+	x4.x10 = arr5
+
+	var x5 t_struct_list
+	x5.x1a = 5
+	x5.x1b = 5
+	x5.x2a = 5.0
+	x5.x2b = 5.0
+	x5.x3a = 'e'
+	x5.x3b = 'e'
+	x5.x4a = "e"
+	x5.x4b = "e"
+	x5.x5a = true
+	x5.x5b = true
+	x5.x6a = arr1
+	x5.x6b = arr1
+	x5.x7a = arr2
+	x5.x7b = arr2
+	x5.x8a = arr3
+	x5.x8b = arr3
+	x5.x9a = arr4
+	x5.x9b = arr4
+	x5.x10a = arr5
+	x5.x10b = arr5
+
+	var x6 t_struct_blankId
+	x6.x1 = 6
+	x6.x2 = 6
+	x6.x3 = 6
+	x6.x4 = 6
+	x6.x5 = 6
 }
