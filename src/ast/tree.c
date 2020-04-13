@@ -225,3 +225,32 @@ STRUCTSPEC *makeStructSpec(IDENT *attribute, TYPE *type) {
 	ss->lineno = yylineno;
 	return ss;
 }
+
+bool isBlankId(char *identifier)
+{
+    return strcmp(BLANK_IDENTIFIER, identifier) == 0;
+}
+
+int countEXP(EXP *e)
+{
+    int count = 0;
+    EXP *temp = e;
+    while (temp != NULL)
+    {
+        count++;
+        temp = temp->next;
+    }
+    return count;
+}
+
+int countIDENT(IDENT *i)
+{
+    int count = 0;
+    IDENT *temp = i;
+    while (temp != NULL)
+    {
+        count++;
+        temp = temp->next;
+    }
+    return count;
+}

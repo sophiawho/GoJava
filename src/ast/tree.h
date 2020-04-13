@@ -1,5 +1,10 @@
+#include <stdbool.h>
+
 #ifndef TREE_H
 #define TREE_H
+
+#define BLANK_IDENTIFIER "_"
+bool isBlankId(char *identifier);
 
 // Main AST nodes
 typedef struct PROG PROG;
@@ -229,4 +234,6 @@ struct SYMBOL {
     struct SYMBOL *next;
 };
 
+int countEXP(EXP *e);
+int countIDENT(IDENT *i);
 #endif /* !TREE_H */

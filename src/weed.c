@@ -4,12 +4,6 @@
 #include "error.h"
 #include "weed.h"
 
-#define BLANK_IDENTIFIER "_"
-
-bool isBlankId(char *identifier);
-int countEXP(EXP *e);
-int countIDENT(IDENT *i);
-
 void weedPROG(PROG *p)
 {
     if (p != NULL)
@@ -545,31 +539,4 @@ void weedEXP_nonEval(EXP *e, bool allowBlankId)
         }
     }
     return;
-}
-
-bool isBlankId(char *identifier)
-{
-    return strcmp(BLANK_IDENTIFIER, identifier) == 0;
-}
-
-int countEXP(EXP *e)
-{
-    int count = 0;
-    while (e != NULL)
-    {
-        count++;
-        e = e->next;
-    }
-    return count;
-}
-
-int countIDENT(IDENT *i)
-{
-    int count = 0;
-    while (i != NULL)
-    {
-        count++;
-        i = i->next;
-    }
-    return count;
 }
