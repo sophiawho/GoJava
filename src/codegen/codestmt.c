@@ -27,6 +27,24 @@ void traverseExpForPrint(EXP *e, bool newLine, bool last) {
         fprintf(outputFile, "\"%%+.6e\", ");
         generateEXP(e, false);
     }
+    else if (e->type->kind == k_typeInfer)
+    {
+        // At typecheck, newly defined types remain as k_typeInfer because they 
+        // still need to be compared to one another. That's why the base type isn't stored.
+        // So now in codegen, we need to find the actual type. 
+        char *type = getStringFromType(e->type, !containsSlice(e->type));
+        if (strcmp(type, "double") == 0 || strcmp(type, "Double") == 0)
+        {
+            fprintf(outputFile, "System.out.printf(");
+            fprintf(outputFile, "\"%%+.6e\", ");
+            generateEXP(e, false);
+        }
+        else
+        {
+            fprintf(outputFile, "System.out.print(");
+            generateEXP(e, false);
+        }
+    }
     else 
     {
         fprintf(outputFile, "System.out.print(");
@@ -231,7 +249,7 @@ void generateSTMT(STMT *s) {
             generateVarDecl(s->val.varDecl);
             break;
         case k_stmtKindTypeDecl:
-            generateTYPESPEC(s->val.typeDecl);
+            generateTYPESPEC(s->val.typeDecl, false);
             break;
         case k_stmtKindBlock:
             generateINDENT(indent);
@@ -490,7 +508,7 @@ void generateVarDecl(VARSPEC *vs) {
     EXP *e = vs->rhs == NULL ? NULL : vs->rhs; // Refactor
     while (curIdent != NULL) {
         // We need to initialize slices with their object type (ie: new Slice<Integer> instead of new Slice<int>)
-        char *type = getStringFromType(vs->type, vs->type->kind != k_typeSlice);
+        char *type = getStringFromType(vs->type, !containsSlice(vs->type));
         generateINDENT(indent); 
         fprintf(outputFile, "%s %s = ", type, prepend(curIdent->ident));
         if (vs->type->kind == k_typeArray) {
@@ -545,19 +563,19 @@ void generateTYPESPEC_paramList(TYPESPEC *ts, IDENT *id)
 }
 
 // Generate type declarations (NOTE: only for struct types!) and input parameters
-void generateTYPESPEC(TYPESPEC *ts)
+void generateTYPESPEC(TYPESPEC *ts, bool isTopLevelTypeDecl)
 {
     if (ts == NULL) return;
 
     switch (ts->kind)
     {
     case k_typeSpecKindTypeDeclaration:
-        generateTYPESPEC(ts->next);
+        generateTYPESPEC(ts->next, isTopLevelTypeDecl);
         // The only type required to emit is struct types
-        // TODO
         if (ts->type->kind == k_typeStruct)
         {
             generateINDENT(indent);
+            if (isTopLevelTypeDecl) fprintf(outputFile, "static ");
             // Structs are implemented as Classes in Java
             fprintf(outputFile, "class %s {\n", prepend(ts->ident->ident));
             indent++;
@@ -568,11 +586,23 @@ void generateTYPESPEC(TYPESPEC *ts)
             generateINDENT(indent);
             fprintf(outputFile, "}\n");
         }
+        else if (ts->type->kind == k_typeArray)
+        {
+            // TODO ?
+            // generateINDENT(indent);
+            // fprintf(outputFile, "class ")
+        }
+        else 
+        {
+            // TODO type declaration?
+            // generateINDENT(indent);
+            // fprintf(outputFile, "class %s extends %s {}", prepend(ts->ident->ident), prepend(ts->type->typeName));
+        }
         break;
     
     case k_typeSpecKindParameterList:
         generateTYPESPEC_paramCount = generateTYPESPEC_paramCount + countIDENT(ts->ident);
-        generateTYPESPEC(ts->next);
+        generateTYPESPEC(ts->next, false);
         generateTYPESPEC_paramList(ts, ts->ident);
         break;
     }
@@ -585,16 +615,33 @@ void generateSTRUCTSPEC(STRUCTSPEC *ss)
     if (ss == NULL) return;
     generateSTRUCTSPEC(ss->next);
 
+    // If the field is only one blank identifier, ignore it
+    bool onlyBlankId = true;
+    for (IDENT *id = ss->attribute; id; id=id->next)
+    {
+        if (!isBlankId(id->ident)) onlyBlankId = false;
+    }
+    if (onlyBlankId) return;
+ 
     generateINDENT(indent);
 
     // There is only 1 TYPE per STRUCTSPEC
-    fprintf(outputFile, "%s ", getStringFromType(ss->type, true));
-
+    fprintf(outputFile, "%s ", getStringFromType(ss->type, !containsSlice(ss->type)));
+    bool firstGenerated = false;
     for (IDENT *id = ss->attribute; id; id=id->next)
     {
-        if (id->next != NULL) fprintf(outputFile, "%s, ", id->ident);
-        else fprintf(outputFile, "%s;\n", id->ident);
+
+        if (!isBlankId(id->ident)) 
+        {
+            fprintf(outputFile, "%s", id->ident);
+            firstGenerated = true;
+        }
+        if (id->next != NULL && !isBlankId(id->next->ident) && firstGenerated)
+        {
+            fprintf(outputFile, ", ");
+        }
     }
+    fprintf(outputFile, ";\n");
 }
 
 // Generate function call arguments in order
@@ -809,10 +856,11 @@ void generateEXP(EXP *e, bool recurse)
             break;
         
         // Type Cast
-        case k_expKindCast:
-            fprintf(outputFile, "%s(", getStringFromType(e->val.cast.type, true));
+        case k_expKindCast: ;
+            TYPE *baseType = e->val.cast.type;
+            while (baseType->parent != NULL) baseType = baseType->parent;
+            fprintf(outputFile, "(%s)", getStringFromType(baseType, true));
             generateEXP(e->val.cast.exp, recurse);
-            fprintf(outputFile, ")");
             break;
 
         default:
@@ -860,8 +908,11 @@ char *getStringFromType(TYPE *t, bool isPrimitive){
                 char array[100];
                 sprintf(array, "%s[]", getStringFromType(t->val.arrayType.type, isPrimitive));
                 return strdup(array);
+            case k_typeInfer:
+                return getStringFromType(t->parent, isPrimitive);
             default:
-                return "Currently unsupported in `getStringFromType` func.";
+                fprintf(stderr, "Unsupported %s\n", t->typeName);
+                throwInternalError("Currently unsupported in `getStringFromType` func.", t->lineno);
         }
     }
     return "";
