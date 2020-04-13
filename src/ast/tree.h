@@ -236,4 +236,5 @@ struct SYMBOL {
 
 int countEXP(EXP *e);
 int countIDENT(IDENT *i);
+bool containsSlice(TYPE *t);
 #endif /* !TREE_H */

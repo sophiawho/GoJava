@@ -254,3 +254,15 @@ int countIDENT(IDENT *i)
     }
     return count;
 }
+
+bool containsSlice(TYPE *t)
+{
+	bool containsSlice = false;
+	TYPE *temp = t;
+	while (temp != NULL)
+	{
+		if (temp->kind == k_typeSlice) containsSlice = true;
+		temp = temp->parent;
+	}
+	return containsSlice;
+}
