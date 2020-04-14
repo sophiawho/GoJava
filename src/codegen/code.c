@@ -115,6 +115,19 @@ void generateHeader(char *className) {
         exit(1);
     }
 
+    // Copy over helper Cast.java
+    FILE *castClass = fopen("helpers/Cast.java", "r");
+    if (castClass) {
+        char *line = (char*)malloc(1024);
+        while (fgets(line, sizeof(line), castClass)) {
+            fputs(line, outputFile);
+        }
+        fclose(castClass);
+    } else {
+        printf("Helper class Cast.java not in project.\n");
+        exit(1);
+    }
+
     fprintf(outputFile, "\n\npublic class %s {\n", className);
     generateGlobalVariables();
 }
