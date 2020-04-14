@@ -1,8 +1,15 @@
+//~0
 //~A
+//~
 
 package test
 
+var b int
+
 func main() {
-	var a int = 65
+	println(b) // add indent + static 
+	var a int = 65 // String.valueof
 	println(string(a))
+
+	// More cast
 }

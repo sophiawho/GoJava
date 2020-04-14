@@ -57,7 +57,9 @@ void generateTOPLEVELDECL(TOPLEVELDECL *tld) {
             indent--;
             break;
         case k_topLevelDeclVar:
+            indent++;
             generateVarDecl(tld->val.varDecl);
+            indent--;
             break;
     }
 }
