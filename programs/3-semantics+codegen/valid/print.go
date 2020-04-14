@@ -1,3 +1,5 @@
+//~255 255 +1.200000e-01 76
+//~
 //~
 //~65
 //~66
@@ -8,6 +10,10 @@
 //~hello\n
 
 package test
+
+func init() {
+	println(255, 0377, 0.12, 'L')
+}
 
 func init() {
 	println();
