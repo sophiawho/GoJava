@@ -859,25 +859,7 @@ void generateEXP(EXP *e, bool recurse)
         // Type Cast
         case k_expKindCast: ;
             TYPE *baseType = resolveType(e->val.cast.type);
-            switch (baseType->kind) {
-                case k_typeInt:
-                    fprintf(outputFile, "Cast.castToInteger(");
-                    break;
-                case k_typeFloat:
-                    fprintf(outputFile, "Cast.castToDouble(");
-                    break;
-                case k_typeBool:
-                    fprintf(outputFile, "Cast.castToBoolean(");
-                    break;
-                case k_typeRune:
-                    fprintf(outputFile, "Cast.castToInteger(");
-                    break;
-                case k_typeString:
-                    fprintf(outputFile, "Cast.castToString(");
-                    break;
-                default: 
-                    break;
-            }
+            fprintf(outputFile, "Cast.castTo%s(", getStringFromType(baseType, false));
             generateEXP(e->val.cast.exp, recurse);
             fprintf(outputFile, ")");
             break;
