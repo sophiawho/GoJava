@@ -57,7 +57,9 @@ void generateTOPLEVELDECL(TOPLEVELDECL *tld) {
             indent--;
             break;
         case k_topLevelDeclVar:
+            indent++;
             generateVarDecl(tld->val.varDecl);
+            indent--;
             break;
     }
 }
@@ -110,6 +112,19 @@ void generateHeader(char *className) {
         fclose(sliceClass);
     } else {
         printf("Helper class Slice.java not in project.\n");
+        exit(1);
+    }
+
+    // Copy over helper Cast.java
+    FILE *castClass = fopen("helpers/Cast.java", "r");
+    if (castClass) {
+        char *line = (char*)malloc(1024);
+        while (fgets(line, sizeof(line), castClass)) {
+            fputs(line, outputFile);
+        }
+        fclose(castClass);
+    } else {
+        printf("Helper class Cast.java not in project.\n");
         exit(1);
     }
 

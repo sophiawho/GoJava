@@ -510,6 +510,7 @@ void generateVarDecl(VARSPEC *vs) {
         // We need to initialize slices with their object type (ie: new Slice<Integer> instead of new Slice<int>)
         char *type = getStringFromType(vs->type, !containsSlice(vs->type));
         generateINDENT(indent); 
+        if (indent == 1) fprintf(outputFile, "static ");
         fprintf(outputFile, "%s %s = ", type, prepend(curIdent->ident));
         if (vs->type->kind == k_typeArray) {
             char *arrayType = getStringFromType(vs->type->val.arrayType.type, true);
@@ -857,10 +858,28 @@ void generateEXP(EXP *e, bool recurse)
         
         // Type Cast
         case k_expKindCast: ;
-            TYPE *baseType = e->val.cast.type;
-            while (baseType->parent != NULL) baseType = baseType->parent;
-            fprintf(outputFile, "(%s)", getStringFromType(baseType, true));
+            TYPE *baseType = resolveType(e->val.cast.type);
+            switch (baseType->kind) {
+                case k_typeInt:
+                    fprintf(outputFile, "Cast.castToInteger(");
+                    break;
+                case k_typeFloat:
+                    fprintf(outputFile, "Cast.castToDouble(");
+                    break;
+                case k_typeBool:
+                    fprintf(outputFile, "Cast.castToBoolean(");
+                    break;
+                case k_typeRune:
+                    fprintf(outputFile, "Cast.castToInteger(");
+                    break;
+                case k_typeString:
+                    fprintf(outputFile, "Cast.castToString(");
+                    break;
+                default: 
+                    break;
+            }
             generateEXP(e->val.cast.exp, recurse);
+            fprintf(outputFile, ")");
             break;
 
         default:
