@@ -172,7 +172,7 @@ func main() {
 	x4.x3 = 'd'
 	x4.x4 = "d"
 	x4.x5 = true
-	x4.x6 = arr1
+	x4.x6 = arr1 // Null pointer
 	x4.x7 = arr2
 	x4.x8 = arr3
 	x4.x9 = arr4

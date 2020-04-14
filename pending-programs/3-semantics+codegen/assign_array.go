@@ -15,8 +15,9 @@ func init() {
 	a[0] = "hello"
 
 	type struct1 struct {
-		x int
-		y int
+		x, y int
+		z string
+		aa, bb string
 	}
 
 	var c, d struct1

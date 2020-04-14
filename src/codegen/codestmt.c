@@ -21,29 +21,12 @@ void traverseExpForPrint(EXP *e, bool newLine, bool last) {
 
     // Format floats in scientific notation:
     // 6 decimal digits, 3 mantissa digits, positive or negative prefixes for base and mantissa
-    if (e->type->kind == k_typeFloat) 
+    TYPE *rt = resolveType(e->type);
+    if (rt->kind == k_typeFloat) 
     {
         fprintf(outputFile, "System.out.printf(");
         fprintf(outputFile, "\"%%+.6e\", ");
         generateEXP(e, false);
-    }
-    else if (e->type->kind == k_typeInfer)
-    {
-        // At typecheck, newly defined types remain as k_typeInfer because they 
-        // still need to be compared to one another. That's why the base type isn't stored.
-        // So now in codegen, we need to find the actual type. 
-        char *type = getStringFromType(e->type, !containsSlice(e->type));
-        if (strcmp(type, "double") == 0 || strcmp(type, "Double") == 0)
-        {
-            fprintf(outputFile, "System.out.printf(");
-            fprintf(outputFile, "\"%%+.6e\", ");
-            generateEXP(e, false);
-        }
-        else
-        {
-            fprintf(outputFile, "System.out.print(");
-            generateEXP(e, false);
-        }
     }
     else 
     {
@@ -90,9 +73,13 @@ void generateAssignStmt(AssignKind kind, EXP *lhs, EXP *rhs) {
                 fprintf(outputFile, "%s", temp_variable);
                 fprintf(outputFile, ")");
             } else if (lhs->type->kind == k_typeArray) { // Copy over the elements of the array
-                fprintf(outputFile, "for (int i=0; i<");
-                generateEXP(lhs, false);
-                fprintf(outputFile, ".length; i++) ");
+                // Edge case: If the array is of an undeclared length, like from a struct, initialize the array with the base type and needed length
+                // Example: programs/3-semantics+codegen/valid/typespec1.go (line 175) would otherwise result in a null pointer exception
+                generateEXP(lhs, false); 
+                fprintf(outputFile, " = new %s[%s.length];\n", getStringFromType(lhs->type->val.arrayType.type, true), temp_variable);
+
+                generateINDENT(indent);
+                fprintf(outputFile, "for (int i=0; i<%s.length; i++) ", temp_variable);
                 generateEXP(lhs, false);
                 fprintf(outputFile, "[i] = %s[i]", temp_variable);
             } else if (lhs->type->kind == k_typeStruct) {
@@ -527,6 +514,11 @@ void generateVarDecl(VARSPEC *vs) {
         if (vs->type->kind == k_typeArray) {
             char *arrayType = getStringFromType(vs->type->val.arrayType.type, true);
             fprintf(outputFile, "new %s[%d]", arrayType, vs->type->val.arrayType.size);
+            if (strcmp(arrayType, "String") == 0) { // Edge case: Set uninitialized value of strings to be ""
+                fprintf(outputFile, ";\n");
+                generateINDENT(indent);
+                fprintf(outputFile, "Arrays.fill(%s, \"\")", prepend(curIdent->ident));
+            }
         } else if (vs->type->kind == k_typeSlice) {
             if (vs->rhs != NULL && vs->rhs->kind == k_expKindAppend) {
                 generateEXP(vs->rhs, false);
@@ -653,6 +645,10 @@ void generateSTRUCTSPEC(STRUCTSPEC *ss)
         {
             fprintf(outputFile, ", ");
         }
+    }
+    // Edge case: Generate correct zero value for String (in Java it is null, in golite it is "")
+    if (strcmp(getStringFromType(ss->type, true), "String") == 0) {
+        fprintf(outputFile, " = \"\"");
     }
     fprintf(outputFile, ";\n");
 }
