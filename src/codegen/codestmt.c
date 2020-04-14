@@ -89,6 +89,20 @@ void generateAssignStmt(AssignKind kind, EXP *lhs, EXP *rhs) {
                 fprintf(outputFile, ", ");
                 fprintf(outputFile, "%s", temp_variable);
                 fprintf(outputFile, ")");
+            } else if (lhs->type->kind == k_typeArray) { // Copy over the elements of the array
+                fprintf(outputFile, "for (int i=0; i<");
+                generateEXP(lhs, false);
+                fprintf(outputFile, ".length; i++) ");
+                generateEXP(lhs, false);
+                fprintf(outputFile, "[i] = %s[i]", temp_variable);
+            } else if (lhs->type->kind == k_typeStruct) {
+                for (STRUCTSPEC *ss = lhs->type->val.structType; ss; ss=ss->next) {
+                    generateEXP(lhs, false);
+                    fprintf(outputFile, ".%s = %s.%s", ss->attribute->ident, temp_variable, ss->attribute->ident);
+                    if (ss->next) {
+                        fprintf(outputFile, ";\n"); generateINDENT(indent);
+                    }
+                }
             } else {
                 generateEXP(lhs, false);
                 fprintf(outputFile, " = ");
@@ -495,8 +509,6 @@ void generateZeroValue(TYPE *t) {
     }
 }
 
-// TODO: if outside of a function, must prepend "public static" [check indent level]
-// TODO: blank identifers
 void generateVarDecl(VARSPEC *vs) {
     if (vs == NULL) return;
     generateVarDecl(vs->next);
