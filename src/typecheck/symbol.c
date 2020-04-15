@@ -311,7 +311,10 @@ void symSTMT_assign_colonAssign(EXP *lhs, EXP *rhs, SymbolTable *scope)
 
     symEXP(rhs, scope);
 
-    if (!isIdentifierDeclared(lhs, scope)) {
+    bool declared = isIdentifierDeclared(lhs, scope);
+    lhs->val.identExp.colonAssignDeclared = declared;
+
+    if (!declared) {
         IDENT *i = makeIDENT(lhs->val.identExp.ident);
         TYPE *t = makeTYPE(k_typeInfer);
         VARSPEC *vs = makeVarSpec(i, rhs, t);
