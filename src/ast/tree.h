@@ -134,7 +134,7 @@ struct EXP {
     ExpressionKind kind;
     TYPE *type;
     union {
-        struct { char *ident; SYMBOL *symbol; } identExp;
+        struct { char *ident; SYMBOL *symbol; bool colonAssignDeclared; } identExp;
 		int intLiteral;
 		float floatLiteral;
 		int boolLiteral;
