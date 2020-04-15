@@ -320,14 +320,6 @@ void symSTMT_assign_colonAssign(EXP *lhs, EXP *rhs, SymbolTable *scope)
         VARSPEC *vs = makeVarSpec(i, rhs, t);
         putSymbol_Var(scope, lhs->val.identExp.ident, vs, lhs->lineno);
     }
-    else
-    {
-        // Symbol already exists so we need to overwrite its VARSPEC by changing it manually, otherwise putting the symbol
-        // throws a redeclared error
-        SYMBOL *s = getSymbol(scope, lhs->val.identExp.ident, lhs->lineno);
-        s->val.varSpec->rhs = rhs;
-        printSymbol(s);
-    }
 
     symEXP(lhs, scope);
 }
