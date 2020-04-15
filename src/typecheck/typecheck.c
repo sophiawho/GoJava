@@ -778,16 +778,9 @@ void typeEXP(EXP *e) {
 
         // ============= LITERAL EXPRESSIONS ================
         case k_expKindIntLiteral:
-            e->type = makeTYPE(k_typeInt);
-            break;
         case k_expKindFloatLiteral:
-            e->type = makeTYPE(k_typeFloat);
-            break;
         case k_expKindRuneLiteral:
-            e->type = makeTYPE(k_typeRune);
-            break;
         case k_expKindStringLiteral:
-            e->type = makeTYPE(k_typeString);
             break;
 
         // ============= IDENTIFIER EXPRESSION ================

@@ -575,25 +575,6 @@ void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
         associateVarWithType(vs, scope);
         // SLICE TYPE DISAPPEARS!!
         // fprintf(stdout, "type: %s\n", typeToString(vs->type->val.arrayType.type));
-    }  
-    else if (vs->rhs != NULL) {
-        // Hacky fix for programs/2-typecheck/valid/3-5-shortdecl.go
-        switch (vs->rhs->kind) {
-            case k_expKindIntLiteral:
-                vs->type = makeTYPE(k_typeInt);
-                break;
-            case k_expKindFloatLiteral:
-                vs->type = makeTYPE(k_typeFloat);
-                break;
-            case k_expKindRuneLiteral:
-                vs->type = makeTYPE(k_typeRune);
-                break;
-            case k_expKindStringLiteral:
-                vs->type = makeTYPE(k_typeString);
-                break;
-            default:
-                break;
-        }
     }
 
     EXP *rhs = vs->rhs;
