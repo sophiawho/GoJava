@@ -320,14 +320,6 @@ void symSTMT_assign_colonAssign(EXP *lhs, EXP *rhs, SymbolTable *scope)
         VARSPEC *vs = makeVarSpec(i, rhs, t);
         putSymbol_Var(scope, lhs->val.identExp.ident, vs, lhs->lineno);
     }
-    else
-    {
-        // Symbol already exists so we need to overwrite its VARSPEC by changing it manually, otherwise putting the symbol
-        // throws a redeclared error
-        SYMBOL *s = getSymbol(scope, lhs->val.identExp.ident, lhs->lineno);
-        s->val.varSpec->rhs = rhs;
-        printSymbol(s);
-    }
 
     symEXP(lhs, scope);
 }
@@ -583,25 +575,6 @@ void symVARSPEC(VARSPEC *vs, SymbolTable *scope)
         associateVarWithType(vs, scope);
         // SLICE TYPE DISAPPEARS!!
         // fprintf(stdout, "type: %s\n", typeToString(vs->type->val.arrayType.type));
-    }  
-    else if (vs->rhs != NULL) {
-        // Hacky fix for programs/2-typecheck/valid/3-5-shortdecl.go
-        switch (vs->rhs->kind) {
-            case k_expKindIntLiteral:
-                vs->type = makeTYPE(k_typeInt);
-                break;
-            case k_expKindFloatLiteral:
-                vs->type = makeTYPE(k_typeFloat);
-                break;
-            case k_expKindRuneLiteral:
-                vs->type = makeTYPE(k_typeRune);
-                break;
-            case k_expKindStringLiteral:
-                vs->type = makeTYPE(k_typeString);
-                break;
-            default:
-                break;
-        }
     }
 
     EXP *rhs = vs->rhs;

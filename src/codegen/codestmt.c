@@ -41,92 +41,81 @@ void traverseExpForPrint(EXP *e, bool newLine, bool last) {
     } 
 }
 
-void generateAssignStmt(AssignKind kind, EXP *lhs, EXP *rhs) {
-
-    switch (kind)
-    {
-    case k_stmtAssign: ;
-        int temp_counter_start = temp_counter;
-        char temp_variable[80];
-        while (rhs != NULL) {
-            char *type = getStringFromType(rhs->type, rhs->type->kind != k_typeSlice);
-            sprintf(temp_variable, "__golite__tmp_%d", temp_counter++);
-            generateINDENT(indent); 
-            fprintf(outputFile, "%s %s = ", type, temp_variable);
-            generateEXP(rhs, false);
-            rhs = rhs->next;
-            fprintf(outputFile, ";\n");
+void generateUndeclaredIdentifiers(EXP *lhs, EXP *rhs) {
+    for (EXP *e = lhs; e; e=e->next) {
+        if (e->kind != k_expKindIdentifier) {
+            fprintf(outputFile, "Undeclared LHS expressions so far only work for identifer type LHS expressions.");
+            continue;
         }
-        while (lhs != NULL) {
-            sprintf(temp_variable, "__golite__tmp_%d", temp_counter_start++);
-            if (lhs->kind == k_expKindIdentifier && strcmp(lhs->val.identExp.ident, "_") == 0) {
-                lhs = lhs->next;
-                continue;
-            }
-            generateINDENT(indent);
-            if (lhs->kind == k_expKindArrayAccess && lhs->val.arrayAccess.arrayReference->type->kind == k_typeSlice) {
-                char *arrayIdent = lhs->val.arrayAccess.arrayReference->val.identExp.ident;
-                EXP *indexExp = lhs->val.arrayAccess.indexExp;  
-                fprintf(outputFile, "%s.put(", prepend(arrayIdent));
-                generateEXP(indexExp, false);
-                fprintf(outputFile, ", ");
-                fprintf(outputFile, "%s", temp_variable);
-                fprintf(outputFile, ")");
-            } else if (lhs->type->kind == k_typeArray) { // Copy over the elements of the array
-                // Edge case: If the array is of an undeclared length, like from a struct, initialize the array with the base type and needed length
-                // Example: programs/3-semantics+codegen/valid/typespec1.go (line 175) would otherwise result in a null pointer exception
-                generateEXP(lhs, false); 
-                fprintf(outputFile, " = new %s[%s.length];\n", getStringFromType(lhs->type->val.arrayType.type, true), temp_variable);
+        // If LHS expression has been declared, no need to declare
+        if (e->val.identExp.colonAssignDeclared) continue;
+        // Else generate variable declaration
+        IDENT *id = makeIDENT(e->val.identExp.ident);
+        id->next = NULL;
+        VARSPEC *vs = makeVarSpec(id, NULL, e->type);
+        generateVarDecl(vs);
+    }
+}
 
-                generateINDENT(indent);
-                fprintf(outputFile, "for (int i=0; i<%s.length; i++) ", temp_variable);
-                generateEXP(lhs, false);
-                fprintf(outputFile, "[i] = %s[i]", temp_variable);
-            } else if (lhs->type->kind == k_typeStruct) {
-                for (STRUCTSPEC *ss = lhs->type->val.structType; ss; ss=ss->next) {
-                    for (IDENT *i = ss->attribute; i; i=i->next) {
-                        generateEXP(lhs, false);
-                        fprintf(outputFile, ".%s = %s.%s", i->ident, temp_variable, i->ident);
-                        if (i->next) {
-                            fprintf(outputFile, ";\n"); generateINDENT(indent);
-                        }
-                    }
-                    if (ss->next) {
+void generateAssignStmt(EXP *lhs, EXP *rhs) {
+    int temp_counter_start = temp_counter;
+    char temp_variable[80];
+    while (rhs != NULL) {
+        char *type = getStringFromType(rhs->type, rhs->type->kind != k_typeSlice);
+        sprintf(temp_variable, "__golite__tmp_%d", temp_counter++);
+        generateINDENT(indent); 
+        fprintf(outputFile, "%s %s = ", type, temp_variable);
+        generateEXP(rhs, false);
+        rhs = rhs->next;
+        fprintf(outputFile, ";\n");
+    }
+    while (lhs != NULL) {
+        sprintf(temp_variable, "__golite__tmp_%d", temp_counter_start++);
+        if (lhs->kind == k_expKindIdentifier && strcmp(lhs->val.identExp.ident, "_") == 0) {
+            lhs = lhs->next;
+            continue;
+        }
+        generateINDENT(indent);
+        if (lhs->kind == k_expKindArrayAccess && lhs->val.arrayAccess.arrayReference->type->kind == k_typeSlice) {
+            char *arrayIdent = lhs->val.arrayAccess.arrayReference->val.identExp.ident;
+            EXP *indexExp = lhs->val.arrayAccess.indexExp;  
+            fprintf(outputFile, "%s.put(", prepend(arrayIdent));
+            generateEXP(indexExp, false);
+            fprintf(outputFile, ", ");
+            fprintf(outputFile, "%s", temp_variable);
+            fprintf(outputFile, ")");
+        } else if (lhs->type->kind == k_typeArray) { // Copy over the elements of the array
+            // Edge case: If the array is of an undeclared length, like from a struct, initialize the array with the base type and needed length
+            // Example: programs/3-semantics+codegen/valid/typespec1.go (line 175) would otherwise result in a null pointer exception
+            generateEXP(lhs, false); 
+            fprintf(outputFile, " = new %s[%s.length];\n", getStringFromType(lhs->type->val.arrayType.type, true), temp_variable);
+
+            generateINDENT(indent);
+            fprintf(outputFile, "for (int i=0; i<%s.length; i++) ", temp_variable);
+            generateEXP(lhs, false);
+            fprintf(outputFile, "[i] = %s[i]", temp_variable);
+        } else if (lhs->type->kind == k_typeStruct) {
+            for (STRUCTSPEC *ss = lhs->type->val.structType; ss; ss=ss->next) {
+                for (IDENT *i = ss->attribute; i; i=i->next) {
+                    generateEXP(lhs, false);
+                    fprintf(outputFile, ".%s = %s.%s", i->ident, temp_variable, i->ident);
+                    if (i->next) {
                         fprintf(outputFile, ";\n"); generateINDENT(indent);
                     }
                 }
-            } else {
-                generateEXP(lhs, false);
-                fprintf(outputFile, " = ");
-                fprintf(outputFile, "%s", temp_variable);
+                if (ss->next) {
+                    fprintf(outputFile, ";\n"); generateINDENT(indent);
+                }
             }
-            lhs = lhs->next;
-            fprintf(outputFile, ";\n");
+        } else {
+            generateEXP(lhs, false);
+            fprintf(outputFile, " = ");
+            fprintf(outputFile, "%s", temp_variable);
         }
-        fprintf(outputFile, "\n");
-        break;
-    
-    case k_stmtColonAssign:
-        while(lhs != NULL)
-        {
-            IDENT *id = makeIDENT(lhs->val.identExp.ident);
-            id->next = NULL;
-
-            if (id != NULL && rhs != NULL && lhs->type != NULL) 
-            {
-                VARSPEC *vs = makeVarSpec(id, rhs, lhs->type);
-                vs->next = NULL;
-                generateVarDecl(vs);
-            }
-            lhs = lhs->next;
-            rhs = rhs->next;
-        }
-        break;
-    
-    default:
-        throwInternalError("Not implemented yet", 0);
-        break;
+        lhs = lhs->next;
+        fprintf(outputFile, ";\n");
     }
+    fprintf(outputFile, "\n");
 }
 
 void generateForLoop(STMT *s)
@@ -241,8 +230,18 @@ void generateSTMT(STMT *s) {
             else fprintf(outputFile, "--;\n");
             break;
         case k_stmtKindAssign:
-            generateAssignStmt(s->val.assignStmt.kind, s->val.assignStmt.lhs, 
-                s->val.assignStmt.rhs);
+            switch (s->val.assignStmt.kind) {
+                case k_stmtAssign:
+                    generateAssignStmt(s->val.assignStmt.lhs, s->val.assignStmt.rhs);
+                    break;
+                case k_stmtColonAssign:
+                    generateUndeclaredIdentifiers(s->val.assignStmt.lhs, s->val.assignStmt.rhs);
+                    generateAssignStmt(s->val.assignStmt.lhs, s->val.assignStmt.rhs);
+                    break;
+                default:
+                    throwInternalError("Not implemented yet", 0);
+                    break;
+            }
             break;
         case k_stmtKindPrint: ;
             bool newline = s->val.printStmt.newLine;
