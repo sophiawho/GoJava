@@ -45,12 +45,15 @@ func main() {
 	println(xx)
 	println(ww)
 
+	type some_struct struct {
+		f int
+	}
 
-	var e , f struct { f int ; } 	// pass by value
+	var e, f some_struct
 	f, tt := e, "hi"
 	e.f = 1
-	println(f.f)
-	println(tt)
+	println(f.f) // 0
+	println(tt) // hi
 
 	_, ss := foo(5), 2	// evaluate RHS even if result stored in blank id
 	println(ss)
