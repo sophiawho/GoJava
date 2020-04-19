@@ -95,7 +95,7 @@ void generateAssignStmt(EXP *lhs, EXP *rhs) {
             generateEXP(lhs, false);
             fprintf(outputFile, "[i] = %s[i]", temp_variable);
         } else if (lhs->type->kind == k_typeStruct) {
-            for (STRUCTSPEC *ss = lhs->type->val.structType; ss; ss=ss->next) {
+            for (STRUCTSPEC *ss = lhs->type->val.structType.structSpec; ss; ss=ss->next) {
                 for (IDENT *i = ss->attribute; i; i=i->next) {
                     generateEXP(lhs, false);
                     fprintf(outputFile, ".%s = %s.%s", i->ident, temp_variable, i->ident);
@@ -210,6 +210,50 @@ void generateForLoop(STMT *s)
     labelId--;
 }
 
+void generateOpAssignStmt(EXP *lhs, EXP* rhs, AssignKind kind) {
+    generateINDENT(indent);
+    generateEXP(lhs, false);
+    fprintf(outputFile, " = ");
+    switch (kind) {
+        case k_opAssignKindPlusEq:
+            generateEXP_binary(lhs, rhs, false, "+");
+            break;
+        case k_opAssignKindMinusEq:
+            generateEXP_binary(lhs, rhs, false, "-");
+            break;
+        case k_opAssignKindMultEq:
+            generateEXP_binary(lhs, rhs, false, "*");
+            break;
+        case k_opAssignKindDivEq:
+            generateEXP_binary(lhs, rhs, false, "/");
+            break;
+        case k_opAssignKindModEq:
+            generateEXP_binary(lhs, rhs, false, "\%");
+            break;
+        case k_opAssignKindBitAndEq:
+            generateEXP_binary(lhs, rhs, false, "&");
+            break;
+        case k_opAssignKindBitOrEq:
+            generateEXP_binary(lhs, rhs, false, "|");
+            break;
+        case k_opAssignKindBitXorEq:
+            generateEXP_binary(lhs, rhs, false, "^");
+            break;
+        case k_opAssignKindLeftShiftEq:
+            generateEXP_binary(lhs, rhs, false, "<<");
+            break;
+        case k_opAssignKindRightShiftEq:
+            generateEXP_binary(lhs, rhs, false, ">>");
+            break;
+        case k_opAssignKindBitClearEq:
+            generateEXP_binary(lhs, rhs, false, "& ~");
+            break;
+        default:
+            break;
+    }
+    fprintf(outputFile, ";\n");
+}
+
 void generateSTMT(STMT *s) {
     if (s == NULL) return;
     generateSTMT(s->next);
@@ -239,7 +283,7 @@ void generateSTMT(STMT *s) {
                     generateAssignStmt(s->val.assignStmt.lhs, s->val.assignStmt.rhs);
                     break;
                 default:
-                    throwInternalError("Not implemented yet", 0);
+                    generateOpAssignStmt(s->val.assignStmt.lhs, s->val.assignStmt.rhs, s->val.assignStmt.kind);
                     break;
             }
             break;
@@ -589,7 +633,7 @@ void generateTYPESPEC(TYPESPEC *ts, bool isTopLevelTypeDecl)
             fprintf(outputFile, "class %s {\n", prepend(ts->ident->ident));
             indent++;
             
-            generateSTRUCTSPEC(ts->type->val.structType);
+            generateSTRUCTSPEC(ts->type->val.structType.structSpec);
             
             indent--;
             generateINDENT(indent);
@@ -704,10 +748,10 @@ void generateEXP(EXP *e, bool recurse)
 
         // Binary operators
         case k_expKindAnd:
-            generateEXP_binary(e, recurse, "&&");
+            generateEXP_binary(e->val.binary.lhs, e->val.binary.rhs, recurse, "&&");
             break;
         case k_expKindOr:
-            generateEXP_binary(e, recurse, "||");
+            generateEXP_binary(e->val.binary.lhs, e->val.binary.rhs, recurse, "||");
             break;
         // Relational binary operators
         case k_expKindEq:
@@ -720,7 +764,7 @@ void generateEXP(EXP *e, bool recurse)
                 fprintf(outputFile, ")");
             }
             else if (e->val.binary.lhs->type->kind == k_typeString && e->val.binary.rhs->type->kind == k_typeString) generateEXP_stringCompare(e, recurse, "==");
-            else generateEXP_binary(e, recurse, "==");
+            else generateEXP_binary(e->val.binary.lhs, e->val.binary.rhs, recurse, "==");
             break;
         case k_expKindNotEq:
             if (e->val.binary.lhs->type->kind == k_typeArray && e->val.binary.rhs->type->kind == k_typeArray)
@@ -732,59 +776,59 @@ void generateEXP(EXP *e, bool recurse)
                 fprintf(outputFile, "))");
             }
             else if (e->val.binary.lhs->type->kind == k_typeString && e->val.binary.rhs->type->kind == k_typeString) generateEXP_stringCompare(e, recurse, "!=");
-            else generateEXP_binary(e, recurse, "!=");
+            else generateEXP_binary(e->val.binary.lhs, e->val.binary.rhs, recurse, "!=");
             break;
         case k_expKindLess:
             if (e->val.binary.lhs->type->kind == k_typeString && e->val.binary.rhs->type->kind == k_typeString) generateEXP_stringCompare(e, recurse, "<");
-            else generateEXP_binary(e, recurse, "<");
+            else generateEXP_binary(e->val.binary.lhs, e->val.binary.rhs, recurse, "<");
             break;
         case k_expKindLessEq:
             if (e->val.binary.lhs->type->kind == k_typeString && e->val.binary.rhs->type->kind == k_typeString) generateEXP_stringCompare(e, recurse, "<=");
-            else generateEXP_binary(e, recurse, "<=");
+            else generateEXP_binary(e->val.binary.lhs, e->val.binary.rhs, recurse, "<=");
             break;
         case k_expKindGrtr:
             if (e->val.binary.lhs->type->kind == k_typeString && e->val.binary.rhs->type->kind == k_typeString) generateEXP_stringCompare(e, recurse, ">");
-            else generateEXP_binary(e, recurse, ">");
+            else generateEXP_binary(e->val.binary.lhs, e->val.binary.rhs, recurse, ">");
             break;
         case k_expKindGrtrEq:
             if (e->val.binary.lhs->type->kind == k_typeString && e->val.binary.rhs->type->kind == k_typeString) generateEXP_stringCompare(e, recurse, ">=");
-            else generateEXP_binary(e, recurse, ">=");
+            else generateEXP_binary(e->val.binary.lhs, e->val.binary.rhs, recurse, ">=");
             break;
         // Additive binary operators
         case k_expKindAdd:
-            generateEXP_binary(e, recurse, "+");
+            generateEXP_binary(e->val.binary.lhs, e->val.binary.rhs, recurse, "+");
             break;
         case k_expKindMinus:
-            generateEXP_binary(e, recurse, "-");
+            generateEXP_binary(e->val.binary.lhs, e->val.binary.rhs, recurse, "-");
             break;
         case k_expKindBitOr:
-            generateEXP_binary(e, recurse, "|");
+            generateEXP_binary(e->val.binary.lhs, e->val.binary.rhs, recurse, "|");
             break;
         case k_expKindBitXOR:
-            generateEXP_binary(e, recurse, "^");
+            generateEXP_binary(e->val.binary.lhs, e->val.binary.rhs, recurse, "^");
             break;
         // Multiplicative binary operators
         case k_expKindMult:
-            generateEXP_binary(e, recurse, "*");
+            generateEXP_binary(e->val.binary.lhs, e->val.binary.rhs, recurse, "*");
             break;
         case k_expKindDiv:
-            generateEXP_binary(e, recurse, "/");
+            generateEXP_binary(e->val.binary.lhs, e->val.binary.rhs, recurse, "/");
             break;
         case k_expKindMod:
-            generateEXP_binary(e, recurse, "\%");
+            generateEXP_binary(e->val.binary.lhs, e->val.binary.rhs, recurse, "\%");
             break;
         case k_expKindLeftShift:
-            generateEXP_binary(e, recurse, "<<");
+            generateEXP_binary(e->val.binary.lhs, e->val.binary.rhs, recurse, "<<");
             break;
         case k_expKindRightShift:
-            generateEXP_binary(e, recurse, ">>");
+            generateEXP_binary(e->val.binary.lhs, e->val.binary.rhs, recurse, ">>");
             break;
         case k_expKindBitAnd:
-            generateEXP_binary(e, recurse, "&");
+            generateEXP_binary(e->val.binary.lhs, e->val.binary.rhs, recurse, "&");
             break;
         case k_expKindBitClear:
             // Bit clear is equivalent to `AND NOT` (Java: & ~)
-            generateEXP_binary(e, recurse, "& ~");
+            generateEXP_binary(e->val.binary.lhs, e->val.binary.rhs, recurse, "& ~");
             break;
             
         // Golite supports four unary operators
@@ -883,11 +927,11 @@ void generateEXP(EXP *e, bool recurse)
 
 // Generate a binary expression given a binary operator. To be used within the 
 // context of generateEXP for a binary expression kind
-void generateEXP_binary(EXP *e, int recurse, char *operator)
+void generateEXP_binary(EXP *lhs, EXP *rhs, int recurse, char *operator)
 {
-    generateEXP(e->val.binary.lhs, recurse);
+    generateEXP(lhs, recurse);
     fprintf(outputFile, " %s ", operator);
-    generateEXP(e->val.binary.rhs, recurse);
+    generateEXP(rhs, recurse);
 }
 
 void generateEXP_stringCompare(EXP *e, int recurse, char *operator)

@@ -56,17 +56,15 @@ bool isEqualType(TYPE *t1, TYPE *t2) {
         }
     }
 
-    STRUCTSPEC *ss1;
-    STRUCTSPEC *ss2;
     switch(t1->kind) {
         case k_typeSlice:
             return isEqualType(t1->val.sliceType.type, t2->val.sliceType.type);
         case k_typeArray:
             if (t1->val.arrayType.size != t2->val.arrayType.size) return false;
             return isEqualType(t1->val.arrayType.type, t2->val.arrayType.type);
-        case k_typeStruct:
-            ss1 = t1->val.structType;
-            ss2 = t2->val.structType;
+        case k_typeStruct: ;
+            STRUCTSPEC *ss1 = t1->val.structType.structSpec;
+            STRUCTSPEC *ss2 = t2->val.structType.structSpec;
 
             // Obviously, if two struct types don't have any fields, they're equal
             if (ss1 == NULL && ss2 == NULL) return true;
@@ -162,7 +160,7 @@ bool isComparable(TYPE *t) {
 
     // Struct values are comparable if all their fields are comparable
     case k_typeStruct:
-        for (STRUCTSPEC *ss = t->val.structType; ss; ss = ss->next) {
+        for (STRUCTSPEC *ss = t->val.structType.structSpec; ss; ss = ss->next) {
             if (!isComparable(ss->type)) return false;
         }
         return true;
@@ -1005,14 +1003,14 @@ void typeEXP(EXP *e) {
                 throwError("Illegal field access. Expecting a struct type", e->lineno);
             }
             
-            for (STRUCTSPEC *ss = e->val.fieldAccess.object->type->val.structType; ss; ss = ss->next) {
+            for (STRUCTSPEC *ss = e->val.fieldAccess.object->type->val.structType.structSpec; ss; ss = ss->next) {
 
                 TYPE *parentType = e->val.fieldAccess.object->type;
                 if (parentType->kind == k_typeInfer)
                 {
                     // The structspec may be an alias for another one, so we need to fetch it
                     while(parentType->kind == k_typeInfer) parentType = parentType->parent;
-                    ss = parentType->val.structType;
+                    ss = parentType->val.structType.structSpec;
                 }
 
                 for (IDENT *ident = ss->attribute; ident; ident = ident->next) {

@@ -337,7 +337,7 @@ void pretty_TYPE(TYPE *t)
         case k_typeStruct:
             printf("struct {\n");
             indentLevel++;
-            pretty_STRUCTSPEC(t->val.structType);
+            pretty_STRUCTSPEC(t->val.structType.structSpec);
             indentLevel--;
             pretty_INDENT(1);
             printf("}");

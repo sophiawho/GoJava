@@ -67,7 +67,7 @@ struct TYPE {
     int lineno;
     union {
         char *identifier;
-        STRUCTSPEC *structType;
+        struct { STRUCTSPEC *structSpec; int *codegenTag; } structType;
         struct { TYPE *type; } sliceType;
         struct { int size; TYPE *type; } arrayType;
     } val;
