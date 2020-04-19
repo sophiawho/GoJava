@@ -211,6 +211,7 @@ void generateForLoop(STMT *s)
 }
 
 void generateOpAssignStmt(EXP *lhs, EXP* rhs, AssignKind kind) {
+    generateINDENT(indent);
     generateEXP(lhs, false);
     fprintf(outputFile, " = ");
     switch (kind) {
