@@ -95,18 +95,8 @@ void generateAssignStmt(EXP *lhs, EXP *rhs) {
             generateEXP(lhs, false);
             fprintf(outputFile, "[i] = %s[i]", temp_variable);
         } else if (lhs->type->kind == k_typeStruct) {
-            for (STRUCTSPEC *ss = lhs->type->val.structType.structSpec; ss; ss=ss->next) {
-                for (IDENT *i = ss->attribute; i; i=i->next) {
-                    generateEXP(lhs, false);
-                    fprintf(outputFile, ".%s = %s.%s", i->ident, temp_variable, i->ident);
-                    if (i->next) {
-                        fprintf(outputFile, ";\n"); generateINDENT(indent);
-                    }
-                }
-                if (ss->next) {
-                    fprintf(outputFile, ";\n"); generateINDENT(indent);
-                }
-            }
+            generateEXP(lhs, false);
+            fprintf(outputFile, " = %s.copy()", temp_variable);
         } else {
             generateEXP(lhs, false);
             fprintf(outputFile, " = ");
@@ -659,7 +649,7 @@ void generateSTRUCTSPEC(STRUCTSPEC *ss)
 
         if (!isBlankId(id->ident)) 
         {
-            fprintf(outputFile, "%s", id->ident);
+            fprintf(outputFile, "%s", prepend(id->ident));
             firstGenerated = true;
         }
         if (id->next != NULL && !isBlankId(id->next->ident) && firstGenerated)
@@ -854,7 +844,7 @@ void generateEXP(EXP *e, bool recurse)
             break;
         case k_expKindFieldAccess:
             generateEXP(e->val.fieldAccess.object, recurse);
-            fprintf(outputFile, ".%s", e->val.fieldAccess.field);
+            fprintf(outputFile, ".%s", prepend(e->val.fieldAccess.field));
             break;
 
         // Builtins

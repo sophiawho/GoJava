@@ -3,6 +3,12 @@
 
 package main
 
+type ccc struct {
+	aa, bb int
+	cc int 
+	d rune
+}
+
 func foo(a [5]int, b []int, c struct{ f int; }) { 
 	a[0] = 1
 	b[0] = 1	
@@ -15,5 +21,5 @@ func main () {
 	b = append(b, 0) 
 	var c struct { f int; }
 	foo(a, b, c) 
-	println(a[0], b[0], c.f)
+	println(a[0], b[0], c.f) // 0 1 0
 }

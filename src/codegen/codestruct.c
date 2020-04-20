@@ -113,6 +113,38 @@ void generateStructStmt(STMT *s) {
     }
 }
 
+void generateCopyHelper(int codegenTag, STRUCTSPEC *structSpec) {
+    fprintf(outputFile, "\n\tpublic __golite__struct__%d copy(){\n", codegenTag);
+
+    indent = 2;
+
+    generateINDENT(indent);
+    fprintf(outputFile, "__golite__struct__%d copy = new __golite__struct__%d();\n", codegenTag, codegenTag);
+    generateINDENT(indent);
+
+    for (STRUCTSPEC *ss = structSpec; ss; ss=ss->next) {
+        bool generatedField = false;
+        for (IDENT *i = ss->attribute; i; i=i->next) {
+            if (isBlankId(i->ident)) continue;
+            generatedField = true;
+            fprintf(outputFile, "copy.%s = this.%s", prepend(i->ident), prepend(i->ident));
+            if (i->next) {
+                fprintf(outputFile, ";\n"); generateINDENT(indent);
+            }
+        }
+        if (ss->next && generatedField) {
+            fprintf(outputFile, ";\n"); generateINDENT(indent);
+        }
+    }
+    fprintf(outputFile, ";\n");
+
+    generateINDENT(indent); fprintf(outputFile, "return copy;\n");
+
+    indent = 0;
+
+    fprintf(outputFile, "\t}\n");
+}
+
 void addToStructList(TYPE *t) {
     int curTag = checkExists(t);
     // Check if struct was previously declared; if so, add tag number and exit
@@ -128,6 +160,12 @@ void addToStructList(TYPE *t) {
     indent++;
     generateSTRUCTSPEC(t->val.structType.structSpec);
     indent--;
+
+    // .copy function
+    generateCopyHelper(codegenTag, t->val.structType.structSpec);
+
+    // constructor function
+
     fprintf(outputFile, "}\n");
     codegenTag++;
 
