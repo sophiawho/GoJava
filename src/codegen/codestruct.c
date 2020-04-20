@@ -145,6 +145,25 @@ void generateCopyHelper(int codegenTag, STRUCTSPEC *structSpec) {
     fprintf(outputFile, "\t}\n");
 }
 
+// Edge case: Set uninitialized value of string arrays to be ""
+void generateConstructor(int codegenTag, STRUCTSPEC *structSpec) {
+    fprintf(outputFile, "\n\tpublic __golite__struct__%d(){\n", codegenTag);
+    indent = 2;
+    for (STRUCTSPEC *ss = structSpec; ss; ss=ss->next) {
+        if (ss->type->kind != k_typeArray) continue;
+        char *arrayType = getStringFromType(ss->type->val.arrayType.type, true);
+        if (strcmp(arrayType, "String") != 0) continue;
+        for (IDENT *i = ss->attribute; i; i=i->next) {
+            if (isBlankId(i->ident)) continue;
+            generateINDENT(indent);
+            fprintf(outputFile, "Arrays.fill(%s, \"\");\n", prepend(i->ident));
+        }
+    }
+
+    indent = 0;
+    fprintf(outputFile, "\t}\n");
+}
+
 void addToStructList(TYPE *t) {
     int curTag = checkExists(t);
     // Check if struct was previously declared; if so, add tag number and exit
@@ -165,6 +184,7 @@ void addToStructList(TYPE *t) {
     generateCopyHelper(codegenTag, t->val.structType.structSpec);
 
     // constructor function
+    generateConstructor(codegenTag, t->val.structType.structSpec);
 
     fprintf(outputFile, "}\n");
     codegenTag++;

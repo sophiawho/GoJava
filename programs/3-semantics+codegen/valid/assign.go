@@ -1,4 +1,4 @@
-//~0 Hey
+//~0 Hey 0
 //~0
 //~1
 //~0
@@ -10,10 +10,11 @@ func init() {
 	type e struct {
 		c string
 		b[1] int
+		cc[3] string
 	}
 	var c e
 	c.c = "Hey"
-	println(c.b[0], c.c) // 0 Hey
+	println(c.b[0], c.c, len(c.cc[0])) // 0 Hey 0
 }
 
 func main() {

@@ -663,7 +663,6 @@ void generateSTRUCTSPEC(STRUCTSPEC *ss)
     } else if (ss->type->kind == k_typeArray) {
         char *arrayType = getStringFromType(ss->type->val.arrayType.type, true);
         fprintf(outputFile, " = new %s[%d]", arrayType, ss->type->val.arrayType.size);
-        // TODO (Sophia) Edge case: Arrays.fill(%s, ""); -> Put in constructor function
     } else if (ss->type->kind == k_typeSlice) {
         fprintf(outputFile, " = new Slice<>()");
     }
