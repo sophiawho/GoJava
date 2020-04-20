@@ -107,19 +107,16 @@ void generateFUNC(FUNC *f) {
     } 
     else if (strcmp(f->name, "init") == 0) 
     {
-        fprintf(outputFile, "\n\t@SuppressWarnings({\"unchecked\", \"deprecation\"})\n");
-        fprintf(outputFile, "\tpublic static void %s_%d() {\n", prepend(f->name), initFuncCounter);
+        fprintf(outputFile, "\n\tpublic static void %s_%d() {\n", prepend(f->name), initFuncCounter);
         initFuncCounter++;
     } 
     else 
-    {
-        fprintf(outputFile, "\n\t@SuppressWarnings({\"unchecked\", \"deprecation\"})\n");
-        
+    {        
         char *returnType = "";
         if (f->returnType == NULL) returnType = "void";
         else returnType = getStringFromType(f->returnType, !containsSlice(f->returnType));
 
-        fprintf(outputFile, "\tpublic static %s %s(", returnType, prepend(f->name));
+        fprintf(outputFile, "\n\tpublic static %s %s(", returnType, prepend(f->name));
         generateTYPESPEC(f->inputParams, false);
         fprintf(outputFile, ") {\n");
     }
@@ -203,8 +200,7 @@ void generateGlobalVariables()
 }
 
 void generateFooter() {
-    fprintf(outputFile, "\n\t@SuppressWarnings({\"unchecked\", \"deprecation\"})\n");
-    fprintf(outputFile, "\tpublic static void main(String[] args) {\n");
+    fprintf(outputFile, "\n\tpublic static void main(String[] args) {\n");
 
     for (int i = 0; i < initFuncCounter; i++) {
         fprintf(outputFile, "\t\t__golite__init_%d();\n", i);
