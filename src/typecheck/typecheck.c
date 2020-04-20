@@ -434,6 +434,11 @@ void typeVARSPEC(VARSPEC *vs) {
                 vs->lineno);
             }
         }
+        // The issue is here
+        // There can be multiple RHS expressions
+        // We should store each of them in their corresponding list of identifiers
+        // However the type `IDENT` does not have its own type field
+        // Instead, we store it into vs->type which doesn't account for the multiple types
         vs->type = vs->rhs->type;
     }
 }

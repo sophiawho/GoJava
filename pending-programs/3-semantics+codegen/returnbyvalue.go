@@ -15,9 +15,12 @@ func bar() []int {
 func baz() struct{ f int; } { return c; }
 
 func main () {
-	var d, e, f = foo(), bar(), baz()
+	// var d, e, f = foo(), bar(), baz()
+	var d = foo()
+	var e = bar()
+	var f = baz()
 	d[0] = 1
 	e[0] = 1
-	f.f = 1 
+	f.f = 1 // Error: (line 25) Illegal assignment. LHS and RHS types don't match.
 	println(a[0], b[0], c.f)
 }
