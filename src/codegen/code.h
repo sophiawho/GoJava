@@ -4,6 +4,7 @@
 #include "../ast/tree.h"
 #include "../ast/stmt.h"
 #include <stdio.h>
+#include "codestruct.h"
 // #include "../typecheck/symbol.h"
 // #include "../pretty.h"
 
@@ -15,7 +16,7 @@ void generateINDENT(int indent);
 void generatePROG(PROG *root, char *filename);
 void generateTOPLEVELDECL(TOPLEVELDECL *tld);
 void generateFUNC(FUNC *f);
-void generateHeader(char *classname);
+void generateHeader(char *classname, TOPLEVELDECL *tld);
 void generateImports();
 void generateGlobalVariables();
 void generateFooter();

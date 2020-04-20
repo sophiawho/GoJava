@@ -34,9 +34,10 @@ void generatePROG(PROG *root, char *filename) {
     char *basec = strdup(filename);
     char *className = basename(basec);
 
-    generateHeader(className);
+    generateHeader(className, root->rootTopLevelDecl);
 
     generateTOPLEVELDECL(root->rootTopLevelDecl);
+
     // Use `prepend` to prepend __golite__ to all function and identifier names, ie: main() becomes __golite__main()
     // Special case for init functions: Since there may be multiple, append a unique counter to the function name in lexical order, ie __golite__init_0, __golite__init_1, etc
     generateFooter();
@@ -98,7 +99,7 @@ void generateFUNC(FUNC *f) {
 
 // Generate any necessary boilerplate code for the program. Including built-in 
 // classes and helper methods
-void generateHeader(char *className) {
+void generateHeader(char *className, TOPLEVELDECL *tld) {
     
     generateImports();
 
@@ -127,6 +128,8 @@ void generateHeader(char *className) {
         printf("Helper class Cast.java not in project.\n");
         exit(1);
     }
+
+    generateGlobalStructs(tld); 
 
     fprintf(outputFile, "\n\npublic class %s {\n", className);
     generateGlobalVariables();
