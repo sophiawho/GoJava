@@ -457,7 +457,7 @@ void symTYPESPEC(TYPESPEC *ts, SymbolTable *symTable)
             }
             if (t->kind == k_typeStruct) {
                 structScope = initSymbolTable();
-                symSTRUCTSPEC(t->val.structType, ident, symTable, structScope);
+                symSTRUCTSPEC(t->val.structType.structSpec, ident, symTable, structScope);
                 free(structScope);
                 putSymbol_Type(symTable, ident, t, ts->lineno);
             } else if (isRecursive(t)) { // If type is recursive, use inner scope
@@ -482,7 +482,7 @@ TYPE *findParentType(SymbolTable *symTable, TYPE *t) {
     } else if (t->kind == k_typeArray) {
         return findParentType(symTable, t->val.arrayType.type);
     } else if (t->kind == k_typeStruct) {
-        STRUCTSPEC *cur = t->val.structType;
+        STRUCTSPEC *cur = t->val.structType.structSpec;
         while (cur != NULL) {
             findParentType(symTable, cur->type);
             cur = cur->next;
@@ -513,7 +513,7 @@ TYPE *findFieldTypeForStruct(SymbolTable *symTable, TYPE *t) {
         arrayType->typeName = parent->typeName;
         return arrayType;
     } else if (t->kind == k_typeStruct) {
-        return findFieldTypeForStruct(symTable, t->val.structType->type);
+        return findFieldTypeForStruct(symTable, t->val.structType.structSpec->type);
     }
     SYMBOL *s = getSymbol(symTable, t->val.identifier, t->lineno);
     if (s == NULL ) {
@@ -556,7 +556,7 @@ void associateVarWithType(VARSPEC *vs, SymbolTable *scope) {
             vs->type->val.arrayType.type->val.sliceType.type = t;
         }
     } else if (vs->type->kind == k_typeStruct) {
-        for (STRUCTSPEC *ss = vs->type->val.structType; ss; ss = ss->next) {
+        for (STRUCTSPEC *ss = vs->type->val.structType.structSpec; ss; ss = ss->next) {
             TYPE *t = findFieldTypeForStruct(scope, ss->type);
             ss->type = t;
         }
@@ -913,7 +913,7 @@ void printType(TYPE *t) {
             break;
         case k_typeStruct:
             printf("struct { ");
-            printStructSpec(t->val.structType);
+            printStructSpec(t->val.structType.structSpec);
             printf(" } ");
             break;
         case k_typeInt:

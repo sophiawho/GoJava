@@ -23,5 +23,6 @@ TYPE *resolveType(TYPE *t);
 char *typeToString(TYPE *t);
 SYMBOL *getSymbolFromExp(EXP *e);
 void typeFUNCCALL(TYPESPEC *inputParams, EXP *args);
+bool isEqualType(TYPE *t1, TYPE *t2);
 
 #endif /* !TYPECHECK_H */

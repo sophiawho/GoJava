@@ -95,18 +95,8 @@ void generateAssignStmt(EXP *lhs, EXP *rhs) {
             generateEXP(lhs, false);
             fprintf(outputFile, "[i] = %s[i]", temp_variable);
         } else if (lhs->type->kind == k_typeStruct) {
-            for (STRUCTSPEC *ss = lhs->type->val.structType; ss; ss=ss->next) {
-                for (IDENT *i = ss->attribute; i; i=i->next) {
-                    generateEXP(lhs, false);
-                    fprintf(outputFile, ".%s = %s.%s", i->ident, temp_variable, i->ident);
-                    if (i->next) {
-                        fprintf(outputFile, ";\n"); generateINDENT(indent);
-                    }
-                }
-                if (ss->next) {
-                    fprintf(outputFile, ";\n"); generateINDENT(indent);
-                }
-            }
+            generateEXP(lhs, false);
+            fprintf(outputFile, " = %s.copy()", temp_variable);
         } else {
             generateEXP(lhs, false);
             fprintf(outputFile, " = ");
@@ -624,33 +614,6 @@ void generateTYPESPEC(TYPESPEC *ts, bool isTopLevelTypeDecl)
     {
     case k_typeSpecKindTypeDeclaration:
         generateTYPESPEC(ts->next, isTopLevelTypeDecl);
-        // The only type required to emit is struct types
-        if (ts->type->kind == k_typeStruct)
-        {
-            generateINDENT(indent);
-            if (isTopLevelTypeDecl) fprintf(outputFile, "static ");
-            // Structs are implemented as Classes in Java
-            fprintf(outputFile, "class %s {\n", prepend(ts->ident->ident));
-            indent++;
-            
-            generateSTRUCTSPEC(ts->type->val.structType);
-            
-            indent--;
-            generateINDENT(indent);
-            fprintf(outputFile, "}\n");
-        }
-        else if (ts->type->kind == k_typeArray)
-        {
-            // TODO ?
-            // generateINDENT(indent);
-            // fprintf(outputFile, "class ")
-        }
-        else 
-        {
-            // TODO type declaration?
-            // generateINDENT(indent);
-            // fprintf(outputFile, "class %s extends %s {}", prepend(ts->ident->ident), prepend(ts->type->typeName));
-        }
         break;
     
     case k_typeSpecKindParameterList:
@@ -668,37 +631,23 @@ void generateSTRUCTSPEC(STRUCTSPEC *ss)
     if (ss == NULL) return;
     generateSTRUCTSPEC(ss->next);
 
-    // If the field is only one blank identifier, ignore it
-    bool onlyBlankId = true;
+    char *type = getStringFromType(ss->type, !containsSlice(ss->type));
+
     for (IDENT *id = ss->attribute; id; id=id->next)
     {
-        if (!isBlankId(id->ident)) onlyBlankId = false;
-    }
-    if (onlyBlankId) return;
- 
-    generateINDENT(indent);
-
-    // There is only 1 TYPE per STRUCTSPEC
-    fprintf(outputFile, "%s ", getStringFromType(ss->type, !containsSlice(ss->type)));
-    bool firstGenerated = false;
-    for (IDENT *id = ss->attribute; id; id=id->next)
-    {
-
-        if (!isBlankId(id->ident)) 
-        {
-            fprintf(outputFile, "%s", id->ident);
-            firstGenerated = true;
+        if (isBlankId(id->ident)) continue;
+        generateINDENT(indent);
+        fprintf(outputFile, "%s %s", type, prepend(id->ident));
+        if (strcmp(getStringFromType(ss->type, true), "String") == 0) {
+            fprintf(outputFile, " = \"\"");
+        } else if (ss->type->kind == k_typeArray) {
+            char *arrayType = getStringFromType(ss->type->val.arrayType.type, true);
+            fprintf(outputFile, " = new %s[%d]", arrayType, ss->type->val.arrayType.size);
+        } else if (ss->type->kind == k_typeSlice) {
+            fprintf(outputFile, " = new Slice<>()");
         }
-        if (id->next != NULL && !isBlankId(id->next->ident) && firstGenerated)
-        {
-            fprintf(outputFile, ", ");
-        }
+        fprintf(outputFile, ";\n");
     }
-    // Edge case: Generate correct zero value for String (in Java it is null, in golite it is "")
-    if (strcmp(getStringFromType(ss->type, true), "String") == 0) {
-        fprintf(outputFile, " = \"\"");
-    }
-    fprintf(outputFile, ";\n");
 }
 
 // Generate function call arguments in order
@@ -859,21 +808,23 @@ void generateEXP(EXP *e, bool recurse)
             break;
         
         case k_expKindArrayAccess: ;
-            char *arrayIdent = e->val.arrayAccess.arrayReference->val.identExp.ident;
+            EXP *refExp = e->val.arrayAccess.arrayReference;
             EXP *indexExp = e->val.arrayAccess.indexExp;
-            if (e->val.arrayAccess.arrayReference->type->kind == k_typeSlice) {
-                fprintf(outputFile, "%s.get(", prepend(arrayIdent));
+            if (refExp->type->kind == k_typeSlice) {
+                generateEXP(refExp, false);
+                fprintf(outputFile, ".get(");
                 generateEXP(indexExp, false);
                 fprintf(outputFile, ")");
-            } else if (e->val.arrayAccess.arrayReference->type->kind == k_typeArray) {
-                fprintf(outputFile, "%s[", prepend(arrayIdent));
+            } else if (refExp->type->kind == k_typeArray) {
+                generateEXP(refExp, false);
+                fprintf(outputFile, "[");
                 generateEXP(indexExp, false);
                 fprintf(outputFile, "]");
             }
             break;
         case k_expKindFieldAccess:
             generateEXP(e->val.fieldAccess.object, recurse);
-            fprintf(outputFile, ".%s", e->val.fieldAccess.field);
+            fprintf(outputFile, ".%s", prepend(e->val.fieldAccess.field));
             break;
 
         // Builtins
@@ -954,9 +905,11 @@ char *getStringFromType(TYPE *t, bool isPrimitive){
                 return "String";
             case k_typeFloat:
                 return isPrimitive ? "double" : "Double";
-            case k_typeStruct:
+            case k_typeStruct: ;
                 // Structs are implemented as Classes in Java so we need their declared type name
-                return prepend(t->typeName);
+                char structname[100];
+                sprintf(structname, "__golite__struct__%d", t->val.structType.codegenTag);
+                return strdup(structname);
             case k_typeSlice: ;
                 char slice[100];
                 sprintf(slice, "Slice<%s>", getStringFromType(t->val.sliceType.type, isPrimitive));

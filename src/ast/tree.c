@@ -59,7 +59,7 @@ TYPE *makeTYPE_slice(TYPE *type) {
 TYPE *makeTYPE_struct(STRUCTSPEC *ss)
 {
 	TYPE *t = makeTYPE(k_typeStruct);
-	t->val.structType = ss;
+	t->val.structType.structSpec = ss;
 	return t;
 }
 
@@ -213,7 +213,7 @@ TYPESPEC *makeTypeSpec_struct(TypeSpecKind kind, IDENT *ident, STRUCTSPEC *ss) {
 	ts->kind = kind;
 	ts->ident = ident;
 	TYPE *t = makeTYPE(k_typeStruct);
-	t->val.structType = ss;
+	t->val.structType.structSpec = ss;
 	ts->type = t;
 	return ts;
 }

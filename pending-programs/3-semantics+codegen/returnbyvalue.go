@@ -16,6 +16,8 @@ func baz() struct{ f int; } { return c; }
 
 func main () {
 	var d, e, f = foo(), bar(), baz()
-	d[0], e[0], f.f = 1, 1, 1 
+	d[0] = 1
+	e[0] = 1
+	f.f = 1 
 	println(a[0], b[0], c.f)
 }

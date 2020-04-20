@@ -1,12 +1,31 @@
+//~0
 //~0 1 0
 //~
 
 package main
 
+type ccc struct {
+	aa, bb int
+	cc int 
+	d rune
+}
+
+func init() {
+	type s1 struct {
+		a int
+		b int
+		c int
+	}
+
+	var b s1
+
+	println(b.a)
+}
+
 func foo(a [5]int, b []int, c struct{ f int; }) { 
 	a[0] = 1
 	b[0] = 1	
-	c.f = 1 
+	c.f = 1
 }
 
 func main () {
@@ -15,5 +34,5 @@ func main () {
 	b = append(b, 0) 
 	var c struct { f int; }
 	foo(a, b, c) 
-	println(a[0], b[0], c.f)
+	println(a[0], b[0], c.f) // 0 1 0
 }
