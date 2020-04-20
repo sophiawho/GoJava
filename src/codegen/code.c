@@ -126,12 +126,13 @@ void generateFUNC(FUNC *f) {
 
     indent=2;
 
-    generateINDENT(indent);
-    fprintf(outputFile, "// Helper statements: Ensure input parameters of type struct and type array are pass-by value\n");
-    copyFuncParams(f->inputParams);
-    generateINDENT(indent);
-    fprintf(outputFile, "// Finish helper statements.\n\n");
-    
+    if (f->inputParams != NULL) {
+        generateINDENT(indent);
+        fprintf(outputFile, "// Helper statements: Ensure input parameters of type struct and type array are pass-by value\n");
+        copyFuncParams(f->inputParams);
+        generateINDENT(indent);
+        fprintf(outputFile, "// Finish helper statements.\n\n");
+    }
     generateSTMT(f->rootStmt->val.blockStmt);
     indent=0;
 
