@@ -65,6 +65,40 @@ void generateTOPLEVELDECL(TOPLEVELDECL *tld) {
     }
 }
 
+void copyFuncParams(TYPESPEC *param) {
+    int tmpArrayCounter = 0;
+
+    for (TYPESPEC *p = param; p; p=p->next) {
+        char *ident = prepend(p->ident->ident);
+        switch (p->type->kind) {
+        case k_typeArray: ;
+            char tmpArrayName[100];
+            sprintf(tmpArrayName, "__golite__tmpArray__%d", tmpArrayCounter);
+            char *tmp = strdup(tmpArrayName);
+            tmpArrayCounter++;
+            char *type = getStringFromType(p->type, true);
+
+            generateINDENT(indent);
+            fprintf(outputFile, "%s %s = new %s[%s.length];\n", type, tmp, getStringFromType(p->type->val.arrayType.type, true), ident);
+
+            generateINDENT(indent);
+            fprintf(outputFile, "for (int i=0; i<%s.length; i++) ", tmp);
+            fprintf(outputFile, "%s[i] = %s[i]", tmp, ident);
+            fprintf(outputFile, ";\n");
+
+            generateINDENT(indent);
+            fprintf(outputFile, "%s = %s;\n", ident, tmp);
+            break;
+        case k_typeStruct: ;
+            generateINDENT(indent);
+            fprintf(outputFile, "%s = %s.copy();\n", ident, ident);
+            break;
+        default:
+            break;
+        }
+    }
+}
+
 void generateFUNC(FUNC *f) {
     // Java function header
     if (strcmp(f->name, "_") == 0) 
@@ -91,6 +125,13 @@ void generateFUNC(FUNC *f) {
     }
 
     indent=2;
+
+    generateINDENT(indent);
+    fprintf(outputFile, "// Helper statements: Ensure input parameters of type struct and type array are pass-by value\n");
+    copyFuncParams(f->inputParams);
+    generateINDENT(indent);
+    fprintf(outputFile, "// Finish helper statements.\n\n");
+    
     generateSTMT(f->rootStmt->val.blockStmt);
     indent=0;
 

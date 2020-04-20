@@ -616,7 +616,7 @@ void generateTYPESPEC(TYPESPEC *ts, bool isTopLevelTypeDecl)
         generateTYPESPEC(ts->next, isTopLevelTypeDecl);
         break;
     
-    case k_typeSpecKindParameterList: // TODO (Sophia) Do stuff
+    case k_typeSpecKindParameterList:
         generateTYPESPEC_paramCount = generateTYPESPEC_paramCount + countIDENT(ts->ident);
         generateTYPESPEC(ts->next, false);
         generateTYPESPEC_paramList(ts, ts->ident);
