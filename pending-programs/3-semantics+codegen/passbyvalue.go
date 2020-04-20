@@ -12,7 +12,7 @@ type ccc struct {
 func foo(a [5]int, b []int, c struct{ f int; }) { 
 	a[0] = 1
 	b[0] = 1	
-	c.f = 1 
+	c.f = 1
 }
 
 func main () {

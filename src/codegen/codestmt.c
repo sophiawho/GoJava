@@ -631,42 +631,23 @@ void generateSTRUCTSPEC(STRUCTSPEC *ss)
     if (ss == NULL) return;
     generateSTRUCTSPEC(ss->next);
 
-    // If the field is only one blank identifier, ignore it
-    bool onlyBlankId = true;
+    char *type = getStringFromType(ss->type, !containsSlice(ss->type));
+
     for (IDENT *id = ss->attribute; id; id=id->next)
     {
-        if (!isBlankId(id->ident)) onlyBlankId = false;
-    }
-    if (onlyBlankId) return;
- 
-    generateINDENT(indent);
-
-    // There is only 1 TYPE per STRUCTSPEC
-    fprintf(outputFile, "%s ", getStringFromType(ss->type, !containsSlice(ss->type)));
-    bool firstGenerated = false;
-    for (IDENT *id = ss->attribute; id; id=id->next)
-    {
-
-        if (!isBlankId(id->ident)) 
-        {
-            fprintf(outputFile, "%s", prepend(id->ident));
-            firstGenerated = true;
+        if (isBlankId(id->ident)) continue;
+        generateINDENT(indent);
+        fprintf(outputFile, "%s %s", type, prepend(id->ident));
+        if (strcmp(getStringFromType(ss->type, true), "String") == 0) {
+            fprintf(outputFile, " = \"\"");
+        } else if (ss->type->kind == k_typeArray) {
+            char *arrayType = getStringFromType(ss->type->val.arrayType.type, true);
+            fprintf(outputFile, " = new %s[%d]", arrayType, ss->type->val.arrayType.size);
+        } else if (ss->type->kind == k_typeSlice) {
+            fprintf(outputFile, " = new Slice<>()");
         }
-        if (id->next != NULL && !isBlankId(id->next->ident) && firstGenerated)
-        {
-            fprintf(outputFile, ", ");
-        }
+        fprintf(outputFile, ";\n");
     }
-    // Edge case: Generate correct zero value for String (in Java it is null, in golite it is ""), initialize Slices + Arrays
-    if (strcmp(getStringFromType(ss->type, true), "String") == 0) {
-        fprintf(outputFile, " = \"\"");
-    } else if (ss->type->kind == k_typeArray) {
-        char *arrayType = getStringFromType(ss->type->val.arrayType.type, true);
-        fprintf(outputFile, " = new %s[%d]", arrayType, ss->type->val.arrayType.size);
-    } else if (ss->type->kind == k_typeSlice) {
-        fprintf(outputFile, " = new Slice<>()");
-    }
-    fprintf(outputFile, ";\n");
 }
 
 // Generate function call arguments in order
