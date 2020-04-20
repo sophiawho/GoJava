@@ -1,3 +1,4 @@
+//~0
 //~0 1 0
 //~
 
@@ -7,6 +8,18 @@ type ccc struct {
 	aa, bb int
 	cc int 
 	d rune
+}
+
+func init() {
+	type s1 struct {
+		a int
+		b int
+		c int
+	}
+
+	var b s1
+
+	println(b.a)
 }
 
 func foo(a [5]int, b []int, c struct{ f int; }) { 
