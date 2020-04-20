@@ -121,7 +121,27 @@ void addToStructList(TYPE *t) {
         return;
     }
     // Else, add tag number and increment codegenTag
+    t->val.structType.codegenTag = codegenTag;
+    
     // Print out struct
+    fprintf(outputFile, "\nclass __golite__struct__%d {\n", codegenTag);
+    indent++;
+    generateSTRUCTSPEC(t->val.structType.structSpec);
+    indent--;
+    fprintf(outputFile, "}\n");
+    codegenTag++;
+
+    // Add type to current list of structs
+    StructElement *se = makeStructElement(t);
+    if (head == NULL) {
+        head = se;
+    } else {
+        StructElement *cur = head;
+        while (cur->next != NULL) {
+            cur = cur->next;
+        }
+        cur->next = se;
+    }
 }
 
 int checkExists(TYPE *t) {

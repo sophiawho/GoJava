@@ -1,6 +1,8 @@
 #ifndef CODESTRUCT_H
 #define CODESTRUCT_H
 
+#include "code.h"
+#include "codestmt.h"
 #include "../ast/tree.h"
 #include "../ast/stmt.h"
 #include <stdbool.h>

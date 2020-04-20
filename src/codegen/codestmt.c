@@ -624,36 +624,9 @@ void generateTYPESPEC(TYPESPEC *ts, bool isTopLevelTypeDecl)
     {
     case k_typeSpecKindTypeDeclaration:
         generateTYPESPEC(ts->next, isTopLevelTypeDecl);
-        // The only type required to emit is struct types
-        if (ts->type->kind == k_typeStruct)
-        {
-            generateINDENT(indent);
-            if (isTopLevelTypeDecl) fprintf(outputFile, "static ");
-            // Structs are implemented as Classes in Java
-            fprintf(outputFile, "class %s {\n", prepend(ts->ident->ident));
-            indent++;
-            
-            generateSTRUCTSPEC(ts->type->val.structType.structSpec);
-            
-            indent--;
-            generateINDENT(indent);
-            fprintf(outputFile, "}\n");
-        }
-        else if (ts->type->kind == k_typeArray)
-        {
-            // TODO ?
-            // generateINDENT(indent);
-            // fprintf(outputFile, "class ")
-        }
-        else 
-        {
-            // TODO type declaration?
-            // generateINDENT(indent);
-            // fprintf(outputFile, "class %s extends %s {}", prepend(ts->ident->ident), prepend(ts->type->typeName));
-        }
         break;
     
-    case k_typeSpecKindParameterList:
+    case k_typeSpecKindParameterList: // TODO (Sophia) Do stuff
         generateTYPESPEC_paramCount = generateTYPESPEC_paramCount + countIDENT(ts->ident);
         generateTYPESPEC(ts->next, false);
         generateTYPESPEC_paramList(ts, ts->ident);
@@ -694,9 +667,15 @@ void generateSTRUCTSPEC(STRUCTSPEC *ss)
             fprintf(outputFile, ", ");
         }
     }
-    // Edge case: Generate correct zero value for String (in Java it is null, in golite it is "")
+    // Edge case: Generate correct zero value for String (in Java it is null, in golite it is ""), initialize Slices + Arrays
     if (strcmp(getStringFromType(ss->type, true), "String") == 0) {
         fprintf(outputFile, " = \"\"");
+    } else if (ss->type->kind == k_typeArray) {
+        char *arrayType = getStringFromType(ss->type->val.arrayType.type, true);
+        fprintf(outputFile, " = new %s[%d]", arrayType, ss->type->val.arrayType.size);
+        // TODO (Sophia) Edge case: Arrays.fill(%s, ""); -> Put in constructor function
+    } else if (ss->type->kind == k_typeSlice) {
+        fprintf(outputFile, " = new Slice<>()");
     }
     fprintf(outputFile, ";\n");
 }
@@ -859,14 +838,16 @@ void generateEXP(EXP *e, bool recurse)
             break;
         
         case k_expKindArrayAccess: ;
-            char *arrayIdent = e->val.arrayAccess.arrayReference->val.identExp.ident;
+            EXP *refExp = e->val.arrayAccess.arrayReference;
             EXP *indexExp = e->val.arrayAccess.indexExp;
-            if (e->val.arrayAccess.arrayReference->type->kind == k_typeSlice) {
-                fprintf(outputFile, "%s.get(", prepend(arrayIdent));
+            if (refExp->type->kind == k_typeSlice) {
+                generateEXP(refExp, false);
+                fprintf(outputFile, ".get(");
                 generateEXP(indexExp, false);
                 fprintf(outputFile, ")");
-            } else if (e->val.arrayAccess.arrayReference->type->kind == k_typeArray) {
-                fprintf(outputFile, "%s[", prepend(arrayIdent));
+            } else if (refExp->type->kind == k_typeArray) {
+                generateEXP(refExp, false);
+                fprintf(outputFile, "[");
                 generateEXP(indexExp, false);
                 fprintf(outputFile, "]");
             }
@@ -954,9 +935,11 @@ char *getStringFromType(TYPE *t, bool isPrimitive){
                 return "String";
             case k_typeFloat:
                 return isPrimitive ? "double" : "Double";
-            case k_typeStruct:
+            case k_typeStruct: ;
                 // Structs are implemented as Classes in Java so we need their declared type name
-                return prepend(t->typeName);
+                char structname[100];
+                sprintf(structname, "__golite__struct__%d", t->val.structType.codegenTag);
+                return strdup(structname);
             case k_typeSlice: ;
                 char slice[100];
                 sprintf(slice, "Slice<%s>", getStringFromType(t->val.sliceType.type, isPrimitive));
