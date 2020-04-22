@@ -22,14 +22,19 @@ rm ${1%.*}.class 2> /dev/null
 # Note the bash replacement which changes:
 #   programs/3-semantics+codegen/valid/test.min -> programs/3-semantics+codegen/valid/test.c
 # stdout is redirected to /dev/null
-FILEPATH="$(dirname ${1%.*})"
+FILE_DIR="$(dirname ${1%.*})"
 FILENAME="$(basename ${1%.*})"
 OUTPUT_DIR="output/"
 
-cd $FILEPATH
+cd $FILE_DIR
 if [ ! -d $OUTPUT_DIR ] ; then
     mkdir $OUTPUT_DIR
 fi
+
+# Need to remove non alphabetical characters because the compiler generates Java file names
+# that only contain alphabetical characters
+FILENAME=${FILENAME//[0-9_-]/}
+FILENAME="${FILENAME}GoLite"
 
 javac -d $OUTPUT_DIR $FILENAME.java 
 
