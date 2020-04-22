@@ -2,6 +2,7 @@
 #include "../ast/stmt.h"
 #include "codestmt.h"
 
+#include <ctype.h>
 #include <libgen.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,6 +10,9 @@
 #include "code.h"
 
 int initFuncCounter = 0;
+char *parseFilename(char *filename);
+int lastForwardSlashIndex(char *str);
+void removeNonAlpha(char *str, int start);
 
 void generateINDENT(int indent){
     for (int i = 0; i < indent; i++) {
@@ -29,6 +33,14 @@ void generatePROG(PROG *root, char *filename) {
     temp_counter = 0;
     indent = 0; 
     initFuncCounter = 0;
+
+    // Java class names can only contain alphabetical characters
+    int lastSlashIndex = lastForwardSlashIndex(filename);
+    removeNonAlpha(filename, lastSlashIndex + 1);
+
+    // Append filenames to avoid generating class names that conflict with reserved keywords
+    filename = strcat(filename, "GoLite");
+
     openOutputFile(filename);
 
     char *basec = strdup(filename);
@@ -219,4 +231,29 @@ void openOutputFile(char *filename) {
     }
     strcat(outputFileName, ".java");
     outputFile = fopen(outputFileName, "w+");
+}
+
+int lastForwardSlashIndex(char *str)
+{
+    int index = -1;
+    for (int i = 0; i <= strlen(str); i++){
+        if (str[i] == '/') index = i;
+    }
+    return index;
+}
+
+void removeNonAlpha(char *str, int start)
+{
+    unsigned long dirtyStrIndex = start;
+    unsigned long cleanStrIndex = start;
+
+    char c;
+    while ((c = str[dirtyStrIndex++]) != '\0')
+    {
+        if (isalpha(c))
+        {
+            str[cleanStrIndex++] = c;
+        }
+    }
+    str[cleanStrIndex] = '\0';
 }
