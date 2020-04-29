@@ -260,8 +260,8 @@ void generateSTMT(STMT *s) {
         case k_stmtKindIncDec:
             generateINDENT(indent);
             generateEXP(s->val.incDecStmt.exp, false);
-            if (s->val.incDecStmt.amount == 1) fprintf(outputFile, "++;\n");
-            else fprintf(outputFile, "--;\n");
+            if (s->val.incDecStmt.amount == 1) fprintf(outputFile, "+=1;\n");
+            else fprintf(outputFile, "-=1;\n");
             break;
         case k_stmtKindAssign:
             switch (s->val.assignStmt.kind) {
