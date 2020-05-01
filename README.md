@@ -1,4 +1,8 @@
-# Golite
+<div align="center">
+    <img src='logo.png'>
+</div>
+
+***
 
 ## Group Members
 - Matthew Lesko 260692352
