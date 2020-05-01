@@ -12,6 +12,7 @@
 
 int labelId = -1;
 void generateSwitch(STMT *s);
+bool isEscapeRune(char rune);
 
 void traverseExpForPrint(EXP *e, bool newLine, bool last) {
     if (e == NULL) return;
@@ -534,6 +535,7 @@ void generateZeroValue(TYPE *t) {
     }
 }
 
+int blankIdCount=0;
 void generateVarDecl(VARSPEC *vs) {
     if (vs == NULL) return;
     generateVarDecl(vs->next);
@@ -548,7 +550,12 @@ void generateVarDecl(VARSPEC *vs) {
         char *type = getStringFromType(vs->type, !containsSlice(vs->type));
         generateINDENT(indent); 
         if (indent == 1) fprintf(outputFile, "static ");
-        fprintf(outputFile, "%s %s = ", type, prepend(curIdent->ident));
+        if (isBlankId(curIdent->ident)) 
+        {
+            fprintf(outputFile, "%s %s_%d = ", type, prepend(curIdent->ident), blankIdCount);
+            blankIdCount++;
+        }
+        else fprintf(outputFile, "%s %s = ", type, prepend(curIdent->ident));
         if (vs->type->kind == k_typeArray) {
             char *arrayType = getStringFromType(vs->type->val.arrayType.type, true);
             fprintf(outputFile, "new %s[%d]", arrayType, vs->type->val.arrayType.size);
@@ -686,7 +693,44 @@ void generateEXP(EXP *e, bool recurse)
             fprintf(outputFile, "%s", e->val.boolLiteral ? "true" : "false");
             break;
         case k_expKindRuneLiteral: // Interpret runes as integers
-            fprintf(outputFile, "(int) '%c'", e->val.runeLiteral);
+            if (isEscapeRune(e->val.runeLiteral))
+            {
+                switch (e->val.runeLiteral)
+                {
+                case '\a':
+                    // Bell Unicode character unsupported in Java, need to generate its int equivalent
+                    fprintf(outputFile, "7");
+                    break;
+                case '\b':
+                    fprintf(outputFile, "(int) '\\b'");
+                    break;
+                case '\f':
+                    fprintf(outputFile, "(int) '\\f'");
+                    break;
+                case '\n':
+                    fprintf(outputFile, "(int) '\\n'");
+                    break;
+                case '\r':
+                    fprintf(outputFile, "(int) '\\r'");
+                    break;
+                case '\t':
+                    fprintf(outputFile, "(int) '\\t'");
+                    break;
+                case '\v':
+                    fprintf(outputFile, "(int) '\\v'");
+                    break;
+                case '\\':
+                    fprintf(outputFile, "(int) '\\'");
+                    break;
+                case '\'':
+                    fprintf(outputFile, "(int) '\\\''");
+                    break;
+                case '\"':
+                    fprintf(outputFile, "(int) '\\\"'");
+                    break;
+                }
+            }
+            else fprintf(outputFile, "(int) '%c'", e->val.runeLiteral);
             break;
         case k_expKindStringLiteral: ;
             char *formatted = strdup(e->val.stringLiteral);
@@ -926,4 +970,19 @@ char *getStringFromType(TYPE *t, bool isPrimitive){
         }
     }
     return "";
+}
+
+bool isEscapeRune(char rune)
+{
+    return (rune == '\a' ||
+            rune == '\b' || 
+            rune == '\f' || 
+            rune == '\n' || 
+            rune == '\r' || 
+            rune == '\t' || 
+            rune == '\v' || 
+            rune == '\\' || 
+            rune == '\'' || 
+            rune == '\"'
+    );
 }
