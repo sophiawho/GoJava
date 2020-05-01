@@ -534,6 +534,7 @@ void generateZeroValue(TYPE *t) {
     }
 }
 
+int blankIdCount=0;
 void generateVarDecl(VARSPEC *vs) {
     if (vs == NULL) return;
     generateVarDecl(vs->next);
@@ -548,7 +549,12 @@ void generateVarDecl(VARSPEC *vs) {
         char *type = getStringFromType(vs->type, !containsSlice(vs->type));
         generateINDENT(indent); 
         if (indent == 1) fprintf(outputFile, "static ");
-        fprintf(outputFile, "%s %s = ", type, prepend(curIdent->ident));
+        if (isBlankId(curIdent->ident)) 
+        {
+            fprintf(outputFile, "%s %s_%d = ", type, prepend(curIdent->ident), blankIdCount);
+            blankIdCount++;
+        }
+        else fprintf(outputFile, "%s %s = ", type, prepend(curIdent->ident));
         if (vs->type->kind == k_typeArray) {
             char *arrayType = getStringFromType(vs->type->val.arrayType.type, true);
             fprintf(outputFile, "new %s[%d]", arrayType, vs->type->val.arrayType.size);
