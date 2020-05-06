@@ -10,7 +10,8 @@ src/*.output
 *.bak
 *.h.gch
 .idea
-solutions/2-typecheck/*
+solutions/
+test-solution.sh
 programs/3-semantics+codegen/valid/*.class
 programs/3-semantics+codegen/valid/**/*.java
 programs/3-semantics+codegen/valid/**/output/

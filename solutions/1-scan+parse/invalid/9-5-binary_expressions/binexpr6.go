@@ -1,6 +1,0 @@
-package main
-
-func main() {
-	print(1) * print(2)
-}
- 
