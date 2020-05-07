@@ -13,7 +13,7 @@ This is a compiler built for a subset of Go, called **GoLite**. Golite includes 
 - slices
 - optional semi-colons. 
 
-Our compiler is wrtiten in C, and we used the flex (fast lexical analyzer) and bison toolchains. Our target langugae is Java.
+Our compiler is wrtiten in C, and we used the flex (fast lexical analyzer) and bison toolchains. Our target language is Java.
 
 ## Usage
 ```
